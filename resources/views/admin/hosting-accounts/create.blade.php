@@ -65,6 +65,12 @@
                     <x-input-error :messages="$errors->get('php_version')" class="mt-2" />
                 </div>
 
+                <div class="form-check mb-3">
+                    <input type="hidden" name="create_database" value="0">
+                    <input type="checkbox" class="form-check-input" id="create_database" name="create_database" value="1" @checked(old('create_database'))>
+                    <label class="form-check-label" for="create_database">{{ __('Criar banco de dados MySQL junto') }}</label>
+                </div>
+
                 <button type="submit" class="btn btn-primary">{{ __('Criar e provisionar') }}</button>
             </form>
         </div>

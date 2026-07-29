@@ -10,6 +10,7 @@ use App\Domain\Hosting\Support\UsernameGenerator;
 use App\Domain\Servers\Models\Server;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Throwable;
 
 class HostingAccountController extends Controller
 {
@@ -36,6 +37,8 @@ class HostingAccountController extends Controller
     public function store(StoreHostingAccountRequest $request, HostingAccountProvisioningService $provisioning)
     {
         $data = $request->validated();
+        $createDatabase = (bool) ($data['create_database'] ?? false);
+        unset($data['create_database']);
 
         $account = HostingAccount::create([
             ...$data,
@@ -45,18 +48,32 @@ class HostingAccountController extends Controller
 
         $provisioning->provision($account);
 
-        return redirect()
-            ->route('admin.hosting-accounts.show', $account)
-            ->with('status', $account->status === 'active'
-                ? 'Conta de hospedagem provisionada com sucesso.'
-                : 'Falha ao provisionar — veja o erro abaixo.');
+        $redirect = redirect()->route('admin.hosting-accounts.show', $account);
+
+        if ($account->status !== 'active') {
+            return $redirect->with('error', 'Falha ao provisionar — veja o erro abaixo.');
+        }
+
+        if ($createDatabase) {
+            try {
+                $database = $provisioning->provisionDatabase($account);
+
+                return $redirect
+                    ->with('status', 'Conta de hospedagem provisionada com sucesso.')
+                    ->with('plain_db_password', $database->db_password);
+            } catch (Throwable $e) {
+                return $redirect->with('status', 'Conta provisionada, mas o banco de dados falhou: '.$e->getMessage());
+            }
+        }
+
+        return $redirect->with('status', 'Conta de hospedagem provisionada com sucesso.');
     }
 
     public function show(HostingAccount $hosting_account)
     {
         $this->authorize('view', $hosting_account);
 
-        $hosting_account->load(['client', 'server', 'plan']);
+        $hosting_account->load(['client', 'server', 'plan', 'database']);
 
         return view('admin.hosting-accounts.show', ['account' => $hosting_account]);
     }
@@ -80,5 +97,59 @@ class HostingAccountController extends Controller
         $hosting_account->delete();
 
         return redirect()->route('admin.hosting-accounts.index')->with('status', 'Conta de hospedagem removida.');
+    }
+
+    public function createDatabase(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        if ($hosting_account->database) {
+            return back()->with('error', 'Essa conta já tem um banco de dados.');
+        }
+
+        try {
+            $database = $provisioning->provisionDatabase($hosting_account);
+
+            return back()
+                ->with('status', 'Banco de dados criado.')
+                ->with('plain_db_password', $database->db_password);
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao criar banco: '.$e->getMessage());
+        }
+    }
+
+    public function deleteDatabase(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $provisioning->deleteDatabase($hosting_account);
+
+        return back()->with('status', 'Banco de dados removido.');
+    }
+
+    public function suspend(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        try {
+            $provisioning->suspend($hosting_account);
+
+            return back()->with('status', 'Conta suspensa.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao suspender: '.$e->getMessage());
+        }
+    }
+
+    public function reactivate(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        try {
+            $provisioning->reactivate($hosting_account);
+
+            return back()->with('status', 'Conta reativada.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao reativar: '.$e->getMessage());
+        }
     }
 }

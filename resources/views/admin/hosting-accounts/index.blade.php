@@ -38,6 +38,7 @@
                                 @php
                                     $badge = match ($account->status) {
                                         'active' => 'success',
+                                        'suspended' => 'warning',
                                         'error' => 'danger',
                                         default => 'secondary',
                                     };

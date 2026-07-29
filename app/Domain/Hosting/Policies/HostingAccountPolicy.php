@@ -22,6 +22,11 @@ class HostingAccountPolicy
         return $user->isAdmin();
     }
 
+    public function update(User $user, HostingAccount $account): bool
+    {
+        return $user->isAdmin();
+    }
+
     public function delete(User $user, HostingAccount $account): bool
     {
         return $user->isAdmin();

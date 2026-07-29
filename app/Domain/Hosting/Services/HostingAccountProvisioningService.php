@@ -3,8 +3,11 @@
 namespace App\Domain\Hosting\Services;
 
 use App\Domain\Hosting\Models\HostingAccount;
+use App\Domain\Hosting\Models\HostingDatabase;
 use App\Domain\Servers\Models\Server;
 use App\Domain\Servers\Services\AgentHttpClient;
+use Illuminate\Support\Str;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -53,7 +56,71 @@ class HostingAccountProvisioningService
      */
     public function deprovision(HostingAccount $account): void
     {
+        if ($account->database) {
+            $this->deleteDatabase($account);
+        }
+
         $this->rollback($account->server, ['vhost', 'pool', 'user'], $account->linux_username, $account->primary_domain);
+    }
+
+    /**
+     * Banco é opcional e por conta (1:1 nesta fase). Usa o mesmo
+     * username Linux como nome do banco/usuário MySQL — já validado
+     * pelo UsernameGenerator e compatível com a regex do Agent.
+     */
+    public function provisionDatabase(HostingAccount $account): HostingDatabase
+    {
+        $dbName = $account->linux_username;
+        $dbUsername = $account->linux_username;
+        $dbPassword = Str::password(24);
+
+        $this->runStep($account->server, 'database.create_mysql', [
+            'db_name' => $dbName,
+            'db_username' => $dbUsername,
+            'db_password' => $dbPassword,
+        ]);
+
+        return $account->database()->create([
+            'db_name' => $dbName,
+            'db_username' => $dbUsername,
+            'db_password' => $dbPassword,
+        ]);
+    }
+
+    public function deleteDatabase(HostingAccount $account): void
+    {
+        $database = $account->database;
+
+        if (! $database) {
+            return;
+        }
+
+        $this->client->dispatch($account->server, 'database.delete_mysql', [
+            'db_name' => $database->db_name,
+            'db_username' => $database->db_username,
+        ]);
+
+        $database->delete();
+    }
+
+    public function suspend(HostingAccount $account): void
+    {
+        $this->runStep($account->server, 'hosting.suspend', [
+            'username' => $account->linux_username,
+            'domain' => $account->primary_domain,
+        ]);
+
+        $account->update(['status' => 'suspended']);
+    }
+
+    public function reactivate(HostingAccount $account): void
+    {
+        $this->runStep($account->server, 'hosting.reactivate', [
+            'username' => $account->linux_username,
+            'domain' => $account->primary_domain,
+        ]);
+
+        $account->update(['status' => 'active']);
     }
 
     private function runStep(Server $server, string $action, array $payload): void
@@ -61,7 +128,7 @@ class HostingAccountProvisioningService
         $job = $this->client->dispatch($server, $action, $payload);
 
         if ($job->status !== 'completed') {
-            throw new \RuntimeException($job->error ?? "Falha ao executar {$action}");
+            throw new RuntimeException($job->error ?? "Falha ao executar {$action}");
         }
     }
 

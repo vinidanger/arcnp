@@ -26,6 +26,7 @@ class StoreHostingAccountRequest extends FormRequest
                 Rule::unique('hosting_accounts', 'primary_domain'),
             ],
             'php_version' => ['required', 'string', 'max:10'],
+            'create_database' => ['boolean'],
         ];
     }
 }

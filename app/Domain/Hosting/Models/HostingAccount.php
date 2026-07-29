@@ -6,6 +6,7 @@ use App\Domain\Servers\Models\Server;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class HostingAccount extends Model
 {
@@ -33,5 +34,10 @@ class HostingAccount extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    public function database(): HasOne
+    {
+        return $this->hasOne(HostingDatabase::class);
     }
 }

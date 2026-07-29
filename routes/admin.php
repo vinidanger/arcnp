@@ -19,3 +19,11 @@ Route::resource('plans', PlanController::class)->except(['show']);
 Route::resource('hosting-accounts', HostingAccountController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
 Route::post('hosting-accounts/{hosting_account}/retry', [HostingAccountController::class, 'retry'])
     ->name('hosting-accounts.retry');
+Route::post('hosting-accounts/{hosting_account}/suspend', [HostingAccountController::class, 'suspend'])
+    ->name('hosting-accounts.suspend');
+Route::post('hosting-accounts/{hosting_account}/reactivate', [HostingAccountController::class, 'reactivate'])
+    ->name('hosting-accounts.reactivate');
+Route::post('hosting-accounts/{hosting_account}/database', [HostingAccountController::class, 'createDatabase'])
+    ->name('hosting-accounts.database.store');
+Route::delete('hosting-accounts/{hosting_account}/database', [HostingAccountController::class, 'deleteDatabase'])
+    ->name('hosting-accounts.database.destroy');
