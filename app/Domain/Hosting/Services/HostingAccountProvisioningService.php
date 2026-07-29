@@ -80,17 +80,19 @@ class HostingAccountProvisioningService
      * Domínio adicional/subdomínio — reaproveita usuário Linux e pool
      * PHP-FPM da conta, só ganha subdiretório e vhost próprios.
      */
-    public function addDomain(HostingAccount $account, string $domainName, string $type): Domain
+    public function addDomain(HostingAccount $account, string $domainName, string $type, string $location = 'inside_public_html'): Domain
     {
         if ($account->domains()->count() >= $account->plan->max_addon_domains) {
             throw new RuntimeException('Limite de domínios adicionais do plano atingido.');
         }
 
-        $subdir = SubdirectoryGenerator::fromDomain($account, $domainName);
+        $outside = $location === 'outside_public_html';
+        $subdir = $outside ? null : SubdirectoryGenerator::fromDomain($account, $domainName);
 
         $domain = $account->domains()->create([
             'domain' => $domainName,
             'type' => $type,
+            'location' => $location,
             'subdirectory' => $subdir,
             'status' => 'creating',
         ]);
@@ -99,6 +101,7 @@ class HostingAccountProvisioningService
             $this->runStep($account->server, 'web.create_addon_domain', [
                 'username' => $account->linux_username,
                 'domain' => $domainName,
+                'location' => $outside ? 'outside' : 'inside',
                 'subdir' => $subdir,
                 'php_version' => $account->php_version,
             ]);
@@ -120,6 +123,7 @@ class HostingAccountProvisioningService
         $this->client->dispatch($account->server, 'web.delete_addon_domain', [
             'username' => $account->linux_username,
             'domain' => $domain->domain,
+            'location' => $domain->isOutsidePublicHtml() ? 'outside' : 'inside',
             'subdir' => $domain->subdirectory,
         ]);
 
@@ -191,6 +195,7 @@ class HostingAccountProvisioningService
         $this->client->dispatch($account->server, 'ssl.issue_certificate', [
             'username' => $account->linux_username,
             'domain' => $domain ? $domain->domain : $account->primary_domain,
+            'location' => $domain?->isOutsidePublicHtml() ? 'outside' : 'inside',
             'subdir' => $domain?->subdirectory,
             'php_version' => $account->php_version,
         ]);
@@ -237,6 +242,7 @@ class HostingAccountProvisioningService
             $this->runStep($server, 'web.update_vhost_php_version', [
                 'username' => $username,
                 'domain' => $domain->domain,
+                'location' => $domain->isOutsidePublicHtml() ? 'outside' : 'inside',
                 'subdir' => $domain->subdirectory,
                 'php_version' => $newVersion,
                 'ssl_active' => $domain->ssl_status === 'active',

@@ -11,16 +11,30 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
+    @if ($outsideDomains->isNotEmpty())
+        <div class="mb-3">
+            <div class="small text-secondary mb-1">{{ __('Gerenciando arquivos de:') }}</div>
+            <div class="btn-group btn-group-sm" role="group">
+                <a href="{{ route('admin.hosting-accounts.files.index', $account) }}"
+                   class="btn {{ $root === null ? 'btn-primary' : 'btn-outline-secondary' }}">{{ $account->primary_domain }} (public_html)</a>
+                @foreach ($outsideDomains as $outsideDomain)
+                    <a href="{{ route('admin.hosting-accounts.files.index', [$account, 'root' => $outsideDomain->domain]) }}"
+                       class="btn {{ $root === $outsideDomain->domain ? 'btn-primary' : 'btn-outline-secondary' }}">{{ $outsideDomain->domain }}</a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a href="{{ route('admin.hosting-accounts.files.index', $account) }}">public_html</a>
+                <a href="{{ route('admin.hosting-accounts.files.index', [$account, 'root' => $root]) }}">{{ $root ?? 'public_html' }}</a>
             </li>
             @php $accumulated = ''; @endphp
             @foreach (array_filter(explode('/', $path)) as $segment)
                 @php $accumulated = trim($accumulated.'/'.$segment, '/'); @endphp
                 <li class="breadcrumb-item">
-                    <a href="{{ route('admin.hosting-accounts.files.index', [$account, 'path' => $accumulated]) }}">{{ $segment }}</a>
+                    <a href="{{ route('admin.hosting-accounts.files.index', [$account, 'path' => $accumulated, 'root' => $root]) }}">{{ $segment }}</a>
                 </li>
             @endforeach
         </ol>
@@ -33,6 +47,7 @@
                     <form method="POST" action="{{ route('admin.hosting-accounts.files.directories.store', $account) }}" class="d-flex gap-1">
                         @csrf
                         <input type="hidden" name="current_path" value="{{ $path }}">
+                        <input type="hidden" name="root" value="{{ $root }}">
                         <input type="text" name="name" class="form-control form-control-sm" placeholder="{{ __('Nova pasta') }}" required>
                         <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Criar') }}</button>
                     </form>
@@ -41,6 +56,7 @@
                     <form method="POST" action="{{ route('admin.hosting-accounts.files.store', $account) }}" class="d-flex gap-1">
                         @csrf
                         <input type="hidden" name="current_path" value="{{ $path }}">
+                        <input type="hidden" name="root" value="{{ $root }}">
                         <input type="text" name="name" class="form-control form-control-sm" placeholder="{{ __('Novo arquivo') }}" required>
                         <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Criar') }}</button>
                     </form>
@@ -66,9 +82,9 @@
                         <tr>
                             <td>
                                 @if ($entry['type'] === 'directory')
-                                    <a href="{{ route('admin.hosting-accounts.files.index', [$account, 'path' => $entryPath]) }}">📁 {{ $entry['name'] }}</a>
+                                    <a href="{{ route('admin.hosting-accounts.files.index', [$account, 'path' => $entryPath, 'root' => $root]) }}">📁 {{ $entry['name'] }}</a>
                                 @else
-                                    <a href="{{ route('admin.hosting-accounts.files.edit', [$account, 'path' => $entryPath]) }}">📄 {{ $entry['name'] }}</a>
+                                    <a href="{{ route('admin.hosting-accounts.files.edit', [$account, 'path' => $entryPath, 'root' => $root]) }}">📄 {{ $entry['name'] }}</a>
                                 @endif
                             </td>
                             <td class="small text-secondary">{{ $entry['size'] !== null ? number_format($entry['size'] / 1024, 1).' KB' : '—' }}</td>
@@ -78,6 +94,7 @@
                                     <form method="POST" action="{{ route('admin.hosting-accounts.files.rename', $account) }}" class="d-flex gap-1">
                                         @csrf
                                         <input type="hidden" name="from" value="{{ $entryPath }}">
+                                        <input type="hidden" name="root" value="{{ $root }}">
                                         <input type="text" name="name" value="{{ $entry['name'] }}" class="form-control form-control-sm" style="width: 10rem;">
                                         <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Renomear') }}</button>
                                     </form>
@@ -86,6 +103,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <input type="hidden" name="path" value="{{ $entryPath }}">
+                                        <input type="hidden" name="root" value="{{ $root }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
                                     </form>
                                 </div>

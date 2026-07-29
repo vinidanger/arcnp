@@ -9,9 +9,11 @@ use RuntimeException;
 /**
  * Todas as operações são síncronas — o Agent já responde na mesma
  * requisição (nada assíncrono aqui, ao contrário de SSL/backup).
- * Restrito a public_html (ver FileManagerPath no Agent); nada aqui
- * decide isso, só repassa o path — a fronteira é sempre imposta do
- * lado do Agent.
+ * Restrito a UMA raiz por vez (ver FileManagerPath no Agent): por
+ * padrão public_html, ou — quando $root é informado — a árvore própria
+ * de um domínio location=outside_public_html. $root só pode ser um
+ * domínio que REALMENTE pertence à conta e está nessa location; quem
+ * garante isso é este serviço, não o Agent (ele só valida formato).
  */
 class FileManagerService
 {
@@ -19,32 +21,32 @@ class FileManagerService
     {
     }
 
-    public function list(HostingAccount $account, string $path): array
+    public function list(HostingAccount $account, string $path, ?string $root = null): array
     {
-        return $this->run($account, 'files.list', ['path' => $path]);
+        return $this->run($account, 'files.list', ['path' => $path], $root);
     }
 
-    public function read(HostingAccount $account, string $path): array
+    public function read(HostingAccount $account, string $path, ?string $root = null): array
     {
-        return $this->run($account, 'files.read', ['path' => $path]);
+        return $this->run($account, 'files.read', ['path' => $path], $root);
     }
 
-    public function write(HostingAccount $account, string $path, string $content): void
+    public function write(HostingAccount $account, string $path, string $content, ?string $root = null): void
     {
         $this->assertUnderQuota($account);
-        $this->run($account, 'files.write', ['path' => $path, 'content' => $content]);
+        $this->run($account, 'files.write', ['path' => $path, 'content' => $content], $root);
     }
 
-    public function createDirectory(HostingAccount $account, string $path): void
+    public function createDirectory(HostingAccount $account, string $path, ?string $root = null): void
     {
         $this->assertUnderQuota($account);
-        $this->run($account, 'files.create_directory', ['path' => $path]);
+        $this->run($account, 'files.create_directory', ['path' => $path], $root);
     }
 
-    public function createFile(HostingAccount $account, string $path): void
+    public function createFile(HostingAccount $account, string $path, ?string $root = null): void
     {
         $this->assertUnderQuota($account);
-        $this->run($account, 'files.create_file', ['path' => $path]);
+        $this->run($account, 'files.create_file', ['path' => $path], $root);
     }
 
     /**
@@ -64,20 +66,25 @@ class FileManagerService
         }
     }
 
-    public function delete(HostingAccount $account, string $path): void
+    public function delete(HostingAccount $account, string $path, ?string $root = null): void
     {
-        $this->run($account, 'files.delete', ['path' => $path]);
+        $this->run($account, 'files.delete', ['path' => $path], $root);
     }
 
-    public function rename(HostingAccount $account, string $from, string $to): void
+    public function rename(HostingAccount $account, string $from, string $to, ?string $root = null): void
     {
-        $this->run($account, 'files.rename', ['from' => $from, 'to' => $to]);
+        $this->run($account, 'files.rename', ['from' => $from, 'to' => $to], $root);
     }
 
-    private function run(HostingAccount $account, string $action, array $payload): array
+    private function run(HostingAccount $account, string $action, array $payload, ?string $root = null): array
     {
+        if ($root !== null) {
+            $this->assertRootBelongsToAccount($account, $root);
+        }
+
         $job = $this->client->dispatch($account->server, $action, [
             'username' => $account->linux_username,
+            'root' => $root,
             ...$payload,
         ]);
 
@@ -86,5 +93,17 @@ class FileManagerService
         }
 
         return $job->result ?? [];
+    }
+
+    private function assertRootBelongsToAccount(HostingAccount $account, string $root): void
+    {
+        $exists = $account->domains()
+            ->where('domain', $root)
+            ->where('location', 'outside_public_html')
+            ->exists();
+
+        if (! $exists) {
+            throw new RuntimeException('Raiz inválida pra essa conta.');
+        }
     }
 }

@@ -13,6 +13,10 @@ class Plan extends Model
         'bandwidth_quota_mb',
         'max_databases',
         'max_addon_domains',
+        'max_cron_jobs',
+        'max_email_accounts',
+        'cpu_cores',
+        'max_processes',
         'is_active',
     ];
 

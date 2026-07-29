@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(php -l \"C:/laragon/www/arcnp/app/Domain/Hosting/Services/SshAccessService.php\")",
-      "Bash(grep -rn 'ssh {{ \\\\$account->linux_username }}@{{ \\\\$sshHost }}' C:/laragon/www/arcnp/resources/views)"
+      "Bash(grep -rn 'ssh {{ \\\\$account->linux_username }}@{{ \\\\$sshHost }}' C:/laragon/www/arcnp/resources/views)",
+      "Bash(bash -n \"C:/laragon/www/arcnp-agent/scripts/create-addon-directory.sh\")",
+      "Bash(bash -n \"C:/laragon/www/arcnp-agent/scripts/delete-addon-directory.sh\")",
+      "Bash(chmod +x \"C:/laragon/www/arcnp-agent/scripts/create-addon-directory.sh\" \"C:/laragon/www/arcnp-agent/scripts/delete-addon-directory.sh\")",
+      "Bash(bash -c ' *)",
+      "Bash(php -l app/Actions/Web/CreateAddonDomainAction.php)",
+      "Bash(php -l app/Actions/Web/DeleteAddonDomainAction.php)",
+      "Bash(php -l database/migrations/2026_07_29_140000_add_location_to_domains_table.php)",
+      "Bash(php -l app/Support/FileManagerPath.php)",
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/FileManagerController.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

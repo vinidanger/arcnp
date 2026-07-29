@@ -20,6 +20,10 @@ class CronJobService
 
     public function create(HostingAccount $account, array $data): CronJob
     {
+        if ($account->cronJobs()->count() >= $account->plan->max_cron_jobs) {
+            throw new RuntimeException('Limite de tarefas cron do plano atingido.');
+        }
+
         $job = $account->cronJobs()->create($data);
 
         try {

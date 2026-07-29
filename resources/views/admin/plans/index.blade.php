@@ -23,6 +23,7 @@
                         <th>{{ __('Banda (MB)') }}</th>
                         <th>{{ __('Máx. bancos') }}</th>
                         <th>{{ __('Máx. domínios') }}</th>
+                        <th>{{ __('Máx. cron') }}</th>
                         <th>{{ __('Ativo') }}</th>
                         <th></th>
                     </tr>
@@ -35,6 +36,7 @@
                             <td>{{ $plan->bandwidth_quota_mb ?? '—' }}</td>
                             <td>{{ $plan->max_databases }}</td>
                             <td>{{ $plan->max_addon_domains }}</td>
+                            <td>{{ $plan->max_cron_jobs }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $plan->is_active ? 'success' : 'secondary' }}">
                                     {{ $plan->is_active ? 'sim' : 'não' }}
@@ -51,7 +53,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-secondary py-4">{{ __('Nenhum plano cadastrado.') }}</td>
+                            <td colspan="8" class="text-center text-secondary py-4">{{ __('Nenhum plano cadastrado.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

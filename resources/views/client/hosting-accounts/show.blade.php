@@ -52,6 +52,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                 $diskBar = $diskPercent >= 90 ? 'bg-danger' : ($diskPercent >= 70 ? 'bg-warning' : 'bg-success');
                 $dbCount = $account->databases->count();
                 $domainCount = $account->domains->count();
+                $cronCount = $account->cronJobs->count();
             @endphp
             <div class="row g-3 small">
                 <div class="col-md-6">
@@ -68,11 +69,14 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         <div class="text-secondary mt-1">{{ __('Atualizado em') }} {{ $account->disk_usage_checked_at->format('d/m/Y H:i') }}</div>
                     @endif
                 </div>
-                <div class="col-md-3">
-                    {{ __('Bancos de dados') }}: <strong>{{ $dbCount }} / {{ $account->plan->max_databases }}</strong>
+                <div class="col-md-2">
+                    {{ __('Bancos') }}: <strong>{{ $dbCount }} / {{ $account->plan->max_databases }}</strong>
                 </div>
-                <div class="col-md-3">
-                    {{ __('Domínios adicionais') }}: <strong>{{ $domainCount }} / {{ $account->plan->max_addon_domains }}</strong>
+                <div class="col-md-2">
+                    {{ __('Domínios') }}: <strong>{{ $domainCount }} / {{ $account->plan->max_addon_domains }}</strong>
+                </div>
+                <div class="col-md-2">
+                    {{ __('Cron') }}: <strong>{{ $cronCount }} / {{ $account->plan->max_cron_jobs }}</strong>
                 </div>
             </div>
         </div>
@@ -218,6 +222,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                             <tr>
                                 <th>{{ __('Domínio') }}</th>
                                 <th>{{ __('Tipo') }}</th>
+                                <th>{{ __('Document root') }}</th>
                                 <th>{{ __('Status') }}</th>
                                 <th>{{ __('SSL') }}</th>
                                 <th></th>
@@ -228,6 +233,13 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 <tr>
                                     <td>{{ $domain->domain }}</td>
                                     <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
+                                    <td>
+                                        @if ($domain->isOutsidePublicHtml())
+                                            <code>domains/{{ $domain->domain }}/public_html</code>
+                                        @else
+                                            <code>public_html/{{ $domain->subdirectory }}</code>
+                                        @endif
+                                    </td>
                                     <td>
                                         @php
                                             $domainBadge = match ($domain->status) {
@@ -281,10 +293,17 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         </select>
                     </div>
                     <div class="col-auto">
+                        <select name="location" class="form-select">
+                            <option value="inside_public_html">{{ __('Dentro de public_html') }}</option>
+                            <option value="outside_public_html">{{ __('Fora de public_html (domains/)') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
                         <button type="submit" class="btn btn-outline-primary">{{ __('Adicionar') }}</button>
                     </div>
                 </form>
                 <x-input-error :messages="$errors->get('domain')" class="mt-2" />
+                <x-input-error :messages="$errors->get('location')" class="mt-2" />
             @else
                 <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
             @endif

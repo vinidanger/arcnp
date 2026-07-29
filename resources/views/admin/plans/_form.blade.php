@@ -28,6 +28,32 @@
         <x-text-input id="max_addon_domains" name="max_addon_domains" type="number" :value="old('max_addon_domains', $plan?->max_addon_domains ?? 0)" required />
         <x-input-error :messages="$errors->get('max_addon_domains')" class="mt-2" />
     </div>
+    <div class="col-4 mb-3">
+        <x-input-label for="max_cron_jobs" value="{{ __('Máx. tarefas cron') }}" />
+        <x-text-input id="max_cron_jobs" name="max_cron_jobs" type="number" :value="old('max_cron_jobs', $plan?->max_cron_jobs ?? 0)" required />
+        <x-input-error :messages="$errors->get('max_cron_jobs')" class="mt-2" />
+    </div>
+    <div class="col-4 mb-3">
+        <x-input-label for="max_email_accounts" value="{{ __('Máx. contas de e-mail') }}" />
+        <x-text-input id="max_email_accounts" name="max_email_accounts" type="number" :value="old('max_email_accounts', $plan?->max_email_accounts ?? 0)" required />
+        <x-input-error :messages="$errors->get('max_email_accounts')" class="mt-2" />
+        <div class="form-text">{{ __('Ainda sem sistema de e-mail — guardado pra quando existir.') }}</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-4 mb-3">
+        <x-input-label for="cpu_cores" value="{{ __('Núcleos de CPU') }}" />
+        <x-text-input id="cpu_cores" name="cpu_cores" type="number" :value="old('cpu_cores', $plan?->cpu_cores)" />
+        <x-input-error :messages="$errors->get('cpu_cores')" class="mt-2" />
+        <div class="form-text">{{ __('Ainda sem aplicação real (cgroup) — guardado pra quando existir.') }}</div>
+    </div>
+    <div class="col-4 mb-3">
+        <x-input-label for="max_processes" value="{{ __('Máx. processos simultâneos') }}" />
+        <x-text-input id="max_processes" name="max_processes" type="number" :value="old('max_processes', $plan?->max_processes)" />
+        <x-input-error :messages="$errors->get('max_processes')" class="mt-2" />
+        <div class="form-text">{{ __('Ainda sem aplicação real (pm.max_children) — guardado pra quando existir.') }}</div>
+    </div>
 </div>
 
 <div class="form-check mb-3">

@@ -11,6 +11,7 @@ class Domain extends Model
         'hosting_account_id',
         'domain',
         'type',
+        'location',
         'subdirectory',
         'status',
         'last_error',
@@ -29,5 +30,10 @@ class Domain extends Model
     public function hostingAccount(): BelongsTo
     {
         return $this->belongsTo(HostingAccount::class);
+    }
+
+    public function isOutsidePublicHtml(): bool
+    {
+        return $this->location === 'outside_public_html';
     }
 }

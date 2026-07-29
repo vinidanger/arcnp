@@ -82,7 +82,7 @@ class HostingAccountController extends Controller
     {
         $this->authorize('view', $hosting_account);
 
-        $hosting_account->load(['client', 'server', 'plan', 'databases', 'domains', 'backups']);
+        $hosting_account->load(['client', 'server', 'plan', 'databases', 'domains', 'backups', 'cronJobs']);
 
         return view('admin.hosting-accounts.show', ['account' => $hosting_account]);
     }
@@ -278,10 +278,11 @@ class HostingAccountController extends Controller
                 Rule::notIn([$hosting_account->primary_domain]),
             ],
             'type' => ['required', 'in:addon,subdomain'],
+            'location' => ['required', 'in:inside_public_html,outside_public_html'],
         ]);
 
         try {
-            $domain = $provisioning->addDomain($hosting_account, strtolower($data['domain']), $data['type']);
+            $domain = $provisioning->addDomain($hosting_account, strtolower($data['domain']), $data['type'], $data['location']);
 
             return back()->with($domain->status === 'active'
                 ? ['status' => 'Domínio adicionado.']
