@@ -25,7 +25,7 @@
             <strong>{{ __('Credenciais de pareamento — copie agora, não aparecem de novo.') }}</strong>
             <pre class="mb-0 mt-2 bg-white p-2 rounded border small">AGENT_SERVER_ID={{ $server->currentCredential->agent_uuid }}
 AGENT_SHARED_SECRET={{ session('plain_secret') }}
-AGENT_PANEL_CALLBACK_URL={{ url("/agent-webhooks/{$server->currentCredential->agent_uuid}/callback") }}</pre>
+AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
         </div>
     @endif
 
