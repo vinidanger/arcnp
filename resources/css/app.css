@@ -9,15 +9,19 @@ body {
     height: 2rem;
 }
 
+/*
+ * view.dom (o elemento que ganha essa classe via JS) JÁ é o .cm-editor
+ * do CodeMirror — a altura precisa ir direto aqui, não em
+ * ".code-editor .cm-editor" (isso seria procurar um descendente que
+ * não existe, os dois são o mesmo elemento).
+ */
 .code-editor {
     border: 1px solid #30363d;
     border-radius: 0.375rem;
     overflow: hidden;
     font-size: 0.875rem;
-}
-
-.code-editor .cm-editor {
-    height: 65vh;
+    height: calc(100vh - 300px);
+    min-height: 400px;
 }
 
 .code-editor .cm-scroller {

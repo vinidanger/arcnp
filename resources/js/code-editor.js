@@ -1,5 +1,6 @@
 import { EditorView, basicSetup } from 'codemirror';
 import { keymap } from '@codemirror/view';
+import { Compartment } from '@codemirror/state';
 import { indentWithTab, copyLineDown, copyLineUp } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -28,19 +29,26 @@ const LANGUAGE_BY_EXTENSION = {
     yaml: yaml(),
 };
 
+const THEME_STORAGE_KEY = 'arcnp-editor-theme';
+
 function languageForFilename(filename) {
     const extension = filename.split('.').pop().toLowerCase();
 
     return LANGUAGE_BY_EXTENSION[extension] ?? null;
 }
 
+function preferredTheme() {
+    return localStorage.getItem(THEME_STORAGE_KEY) === 'light' ? 'light' : 'dark';
+}
+
 document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
     const filename = textarea.dataset.filename ?? '';
     const language = languageForFilename(filename);
+    const themeCompartment = new Compartment();
 
     const extensions = [
         basicSetup,
-        oneDark,
+        themeCompartment.of(preferredTheme() === 'dark' ? oneDark : []),
         indentUnit.of('    '),
         // basicSetup não trata Tab por padrão (deixa o foco sair do
         // editor, comportamento padrão do navegador) — indentWithTab é
@@ -69,8 +77,33 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
         extensions,
     });
 
-    textarea.insertAdjacentElement('afterend', view.dom);
+    // view.dom JÁ é o elemento .cm-editor — não criar um wrapper novo
+    // em volta, ou o CSS de altura (.code-editor) nunca bate em nada
+    // (foi exatamente o bug do editor renderizando minúsculo antes).
     view.dom.classList.add('code-editor');
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'd-flex justify-content-end mb-1';
+
+    const themeToggle = document.createElement('button');
+    themeToggle.type = 'button';
+    themeToggle.className = 'btn btn-sm btn-outline-secondary';
+
+    const updateToggleLabel = () => {
+        themeToggle.textContent = preferredTheme() === 'dark' ? '☀️ Tema claro' : '🌙 Tema escuro';
+    };
+    updateToggleLabel();
+
+    themeToggle.addEventListener('click', () => {
+        const next = preferredTheme() === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(THEME_STORAGE_KEY, next);
+        view.dispatch({ effects: themeCompartment.reconfigure(next === 'dark' ? oneDark : []) });
+        updateToggleLabel();
+    });
+
+    toolbar.appendChild(themeToggle);
+    textarea.insertAdjacentElement('afterend', toolbar);
+    toolbar.insertAdjacentElement('afterend', view.dom);
     textarea.style.display = 'none';
 
     textarea.closest('form')?.addEventListener('submit', () => {
