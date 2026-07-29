@@ -27,6 +27,20 @@
 
 <div class="row">
     <div class="col-6 mb-3">
+        <x-input-label for="dns_ns1" value="{{ __('Nameserver 1 (DNS)') }}" />
+        <x-text-input id="dns_ns1" name="dns_ns1" type="text" :value="old('dns_ns1', $server?->dns_ns1)" placeholder="ns1.seudominio.com" />
+        <x-input-error :messages="$errors->get('dns_ns1')" class="mt-2" />
+    </div>
+    <div class="col-6 mb-3">
+        <x-input-label for="dns_ns2" value="{{ __('Nameserver 2 (DNS)') }}" />
+        <x-text-input id="dns_ns2" name="dns_ns2" type="text" :value="old('dns_ns2', $server?->dns_ns2)" placeholder="ns2.seudominio.com" />
+        <x-input-error :messages="$errors->get('dns_ns2')" class="mt-2" />
+    </div>
+    <div class="form-text mt-n2 mb-3">{{ __('Preencha só se esse servidor for autoritativo pra zonas DNS (BIND) — precisa de pelo menos um nameserver configurado pra criar zonas.') }}</div>
+</div>
+
+<div class="row">
+    <div class="col-6 mb-3">
         <x-input-label for="agent_port" value="{{ __('Porta do Agent') }}" />
         <x-text-input id="agent_port" name="agent_port" type="number" :value="old('agent_port', $server?->agent_port ?? 8443)" required />
         <x-input-error :messages="$errors->get('agent_port')" class="mt-2" />

@@ -2,6 +2,7 @@
 
 use App\Domain\Clients\Http\Controllers\Admin\ClientController;
 use App\Domain\Hosting\Http\Controllers\Admin\CronJobController;
+use App\Domain\Hosting\Http\Controllers\Admin\DnsZoneController;
 use App\Domain\Hosting\Http\Controllers\Admin\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\PlanController;
@@ -81,3 +82,18 @@ Route::post('hosting-accounts/{hosting_account}/ssh/keys', [SshAccessController:
     ->name('hosting-accounts.ssh.keys.store');
 Route::delete('hosting-accounts/{hosting_account}/ssh/keys/{ssh_key}', [SshAccessController::class, 'destroyKey'])
     ->name('hosting-accounts.ssh.keys.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/dns', [DnsZoneController::class, 'index'])
+    ->name('hosting-accounts.dns.index');
+Route::post('hosting-accounts/{hosting_account}/dns', [DnsZoneController::class, 'store'])
+    ->name('hosting-accounts.dns.store');
+Route::get('hosting-accounts/{hosting_account}/dns/{dns_zone}', [DnsZoneController::class, 'show'])
+    ->name('hosting-accounts.dns.show');
+Route::delete('hosting-accounts/{hosting_account}/dns/{dns_zone}', [DnsZoneController::class, 'destroy'])
+    ->name('hosting-accounts.dns.destroy');
+Route::post('hosting-accounts/{hosting_account}/dns/{dns_zone}/records', [DnsZoneController::class, 'storeRecord'])
+    ->name('hosting-accounts.dns.records.store');
+Route::put('hosting-accounts/{hosting_account}/dns/{dns_zone}/records/{dns_record}', [DnsZoneController::class, 'updateRecord'])
+    ->name('hosting-accounts.dns.records.update');
+Route::delete('hosting-accounts/{hosting_account}/dns/{dns_zone}/records/{dns_record}', [DnsZoneController::class, 'destroyRecord'])
+    ->name('hosting-accounts.dns.records.destroy');

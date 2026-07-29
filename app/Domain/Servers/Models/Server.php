@@ -2,9 +2,11 @@
 
 namespace App\Domain\Servers\Models;
 
+use App\Domain\Hosting\Models\DnsZone;
 use App\Domain\Hosting\Models\HostingAccount;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Server extends Model
@@ -14,6 +16,8 @@ class Server extends Model
         'hostname',
         'ip_address',
         'public_ip_address',
+        'dns_ns1',
+        'dns_ns2',
         'agent_port',
         'use_tls',
         'os',
@@ -52,6 +56,17 @@ class Server extends Model
     public function hostingAccounts(): HasMany
     {
         return $this->hasMany(HostingAccount::class);
+    }
+
+    public function dnsZones(): HasManyThrough
+    {
+        return $this->hasManyThrough(DnsZone::class, HostingAccount::class);
+    }
+
+    /** @return list<string> */
+    public function nsHosts(): array
+    {
+        return array_values(array_filter([$this->dns_ns1, $this->dns_ns2]));
     }
 
     public function agentBaseUrl(): string

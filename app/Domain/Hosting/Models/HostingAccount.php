@@ -80,4 +80,9 @@ class HostingAccount extends Model
     {
         return $this->hasMany(SshKey::class);
     }
+
+    public function dnsZones(): HasMany
+    {
+        return $this->hasMany(DnsZone::class);
+    }
 }

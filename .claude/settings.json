@@ -11,7 +11,13 @@
       "Bash(php -l app/Actions/Web/DeleteAddonDomainAction.php)",
       "Bash(php -l database/migrations/2026_07_29_140000_add_location_to_domains_table.php)",
       "Bash(php -l app/Support/FileManagerPath.php)",
-      "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/FileManagerController.php)"
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/FileManagerController.php)",
+      "Bash(php -l app/Support/DnsRecordValidator.php)",
+      "Bash(php -l app/Support/DnsZoneFile.php)",
+      "Bash(bash -n \"C:/laragon/www/arcnp-agent/scripts/manage-dns-zone.sh\")",
+      "Bash(chmod +x \"C:/laragon/www/arcnp-agent/scripts/manage-dns-zone.sh\")",
+      "Bash(sed -e s/x-client-layout/x-admin-layout/g -e 's/client\\\\.hosting-accounts\\\\.dns/admin.hosting-accounts.dns/g' resources/views/client/hosting-accounts/dns/index.blade.php)",
+      "Bash(sed -e s/x-client-layout/x-admin-layout/g -e 's/client\\\\.hosting-accounts\\\\.dns/admin.hosting-accounts.dns/g' resources/views/client/hosting-accounts/dns/show.blade.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",
