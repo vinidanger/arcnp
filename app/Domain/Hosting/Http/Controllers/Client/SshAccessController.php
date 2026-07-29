@@ -15,7 +15,7 @@ class SshAccessController extends Controller
     {
         $this->authorize('view', $hosting_account);
 
-        $hosting_account->load('sshKeys');
+        $hosting_account->load('sshKeys', 'server');
 
         return view('client.hosting-accounts.ssh.index', ['account' => $hosting_account]);
     }

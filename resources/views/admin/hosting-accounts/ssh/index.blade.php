@@ -11,12 +11,32 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
+    @php $sshHost = $account->server->public_ip_address ?: $account->server->ip_address; @endphp
+
     @if (session('plain_ssh_password'))
         <div class="alert alert-warning">
             <strong>{{ __('Senha SSH — copie agora, não aparece de novo.') }}</strong>
             <pre class="mb-0 mt-2 bg-white p-2 rounded border small">{{ session('plain_ssh_password') }}</pre>
         </div>
     @endif
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h6">{{ __('Como conectar') }}</h2>
+            <dl class="row mb-2 small">
+                <dt class="col-2">{{ __('Host') }}</dt>
+                <dd class="col-10"><code>{{ $sshHost }}</code></dd>
+                <dt class="col-2">{{ __('Porta') }}</dt>
+                <dd class="col-10"><code>22</code></dd>
+                <dt class="col-2">{{ __('Usuário') }}</dt>
+                <dd class="col-10"><code>{{ $account->linux_username }}</code></dd>
+            </dl>
+            <pre class="mb-0 bg-light p-2 rounded border small">ssh {{ $account->linux_username }}@{{ $sshHost }} -p 22</pre>
+            @unless ($account->ssh_enabled)
+                <p class="small text-secondary mt-2 mb-0">{{ __('Libere o acesso abaixo pra esses dados funcionarem.') }}</p>
+            @endunless
+        </div>
+    </div>
 
     <div class="card mb-3">
         <div class="card-body">
