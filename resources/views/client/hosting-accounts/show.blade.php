@@ -131,17 +131,30 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         <form method="POST" action="{{ route('client.hosting-accounts.databases.store', $account) }}" class="row g-2 align-items-end">
                             @csrf
                             <div class="col-auto">
-                                <x-input-label for="db_name" value="{{ __('Nome') }}" class="visually-hidden" />
+                                <x-input-label for="db_name" value="{{ __('Nome do banco') }}" class="small mb-1" />
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">{{ $account->linux_username }}_</span>
                                     <input id="db_name" name="name" type="text" class="form-control" placeholder="loja" required>
                                 </div>
                             </div>
                             <div class="col-auto">
+                                <x-input-label for="db_username" value="{{ __('Usuário (opcional)') }}" class="small mb-1" />
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">{{ $account->linux_username }}_</span>
+                                    <input id="db_username" name="username" type="text" class="form-control" placeholder="{{ __('igual ao nome do banco') }}">
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <x-input-label for="db_password" value="{{ __('Senha (opcional)') }}" class="small mb-1" />
+                                <input id="db_password" name="password" type="text" class="form-control form-control-sm" placeholder="{{ __('gerar automaticamente') }}">
+                            </div>
+                            <div class="col-auto">
                                 <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar banco') }}</button>
                             </div>
                         </form>
                         <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                        <x-input-error :messages="$errors->get('username')" class="mt-2" />
+                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     @else
                         <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
                     @endif

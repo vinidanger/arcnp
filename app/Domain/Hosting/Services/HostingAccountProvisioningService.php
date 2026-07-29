@@ -122,31 +122,38 @@ class HostingAccountProvisioningService
     }
 
     /**
-     * Uma conta pode ter vários bancos (estilo cPanel/DirectAdmin). O
-     * nome vem prefixado com o username Linux — que já é único
-     * globalmente — pra nunca colidir entre contas diferentes; só
-     * precisa ser único dentro da própria conta. Banco e usuário MySQL
-     * usam o mesmo nome (um usuário dedicado por banco).
+     * Uma conta pode ter vários bancos (estilo cPanel/DirectAdmin). Nome
+     * do banco e do usuário vêm prefixados com o username Linux — que
+     * já é único globalmente — pra nunca colidir entre contas
+     * diferentes; só precisam ser únicos dentro da própria conta.
+     * Usuário e senha são escolhidos por quem cria (admin/cliente); se
+     * não informar usuário, reaproveita o nome do banco; se não
+     * informar senha, gera uma aleatória.
      */
-    public function provisionDatabase(HostingAccount $account, string $suffix): HostingDatabase
+    public function provisionDatabase(HostingAccount $account, string $dbSuffix, ?string $userSuffix = null, ?string $password = null): HostingDatabase
     {
-        $dbName = "{$account->linux_username}_{$suffix}";
+        $dbName = "{$account->linux_username}_{$dbSuffix}";
+        $dbUsername = "{$account->linux_username}_".($userSuffix ?: $dbSuffix);
 
         if (HostingDatabase::where('db_name', $dbName)->exists()) {
             throw new RuntimeException('Já existe um banco com esse nome nessa conta.');
         }
 
-        $dbPassword = Str::password(24);
+        if (HostingDatabase::where('db_username', $dbUsername)->exists()) {
+            throw new RuntimeException('Já existe um usuário com esse nome nessa conta.');
+        }
+
+        $dbPassword = $password ?: Str::password(24);
 
         $this->runStep($account->server, 'database.create_mysql', [
             'db_name' => $dbName,
-            'db_username' => $dbName,
+            'db_username' => $dbUsername,
             'db_password' => $dbPassword,
         ]);
 
         return $account->databases()->create([
             'db_name' => $dbName,
-            'db_username' => $dbName,
+            'db_username' => $dbUsername,
             'db_password' => $dbPassword,
         ]);
     }

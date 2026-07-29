@@ -112,10 +112,17 @@ class HostingAccountController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'regex:/^[a-z0-9_]{1,32}$/i'],
+            'username' => ['nullable', 'string', 'regex:/^[a-z0-9_]{1,32}$/i'],
+            'password' => ['nullable', 'string', 'min:8', 'max:64'],
         ]);
 
         try {
-            $database = $provisioning->provisionDatabase($hosting_account, strtolower($data['name']));
+            $database = $provisioning->provisionDatabase(
+                $hosting_account,
+                strtolower($data['name']),
+                isset($data['username']) ? strtolower($data['username']) : null,
+                $data['password'] ?? null,
+            );
 
             return back()
                 ->with('status', 'Banco de dados criado.')
