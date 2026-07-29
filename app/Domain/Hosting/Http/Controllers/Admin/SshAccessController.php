@@ -27,11 +27,26 @@ class SshAccessController extends Controller
         $data = $request->validate(['enabled' => ['required', 'boolean']]);
 
         try {
-            $ssh->setEnabled($hosting_account, $data['enabled']);
+            $password = $ssh->setEnabled($hosting_account, $data['enabled']);
 
-            return back()->with('status', $data['enabled'] ? 'Acesso SSH liberado.' : 'Acesso SSH revogado.');
+            $redirect = back()->with('status', $data['enabled'] ? 'Acesso SSH liberado.' : 'Acesso SSH revogado.');
+
+            return $password ? $redirect->with('plain_ssh_password', $password) : $redirect;
         } catch (Throwable $e) {
             return back()->with('error', 'Falha ao alterar acesso SSH: '.$e->getMessage());
+        }
+    }
+
+    public function regeneratePassword(HostingAccount $hosting_account, SshAccessService $ssh)
+    {
+        $this->authorize('update', $hosting_account);
+
+        try {
+            $password = $ssh->regeneratePassword($hosting_account);
+
+            return back()->with('status', 'Senha SSH gerada.')->with('plain_ssh_password', $password);
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao gerar senha SSH: '.$e->getMessage());
         }
     }
 

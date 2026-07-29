@@ -11,22 +11,37 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
+    @if (session('plain_ssh_password'))
+        <div class="alert alert-warning">
+            <strong>{{ __('Senha SSH — copie agora, não aparece de novo.') }}</strong>
+            <pre class="mb-0 mt-2 bg-white p-2 rounded border small">{{ session('plain_ssh_password') }}</pre>
+        </div>
+    @endif
+
     <div class="card mb-3">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2 class="h6 mb-1">{{ __('Shell de login') }}</h2>
                     <p class="small text-secondary mb-0">
-                        {{ __('Autenticação sempre só por chave pública — nunca senha. Sem chave cadastrada, ligar isso não dá acesso a ninguém.') }}
+                        {{ __('Login por senha e por chave pública, ambos liberados junto. Sem chave nem senha gerada, ligar isso não dá acesso a ninguém.') }}
                     </p>
                 </div>
-                <form method="POST" action="{{ route('admin.hosting-accounts.ssh.toggle', $account) }}">
-                    @csrf
-                    <input type="hidden" name="enabled" value="{{ $account->ssh_enabled ? '0' : '1' }}">
-                    <button type="submit" class="btn btn-sm {{ $account->ssh_enabled ? 'btn-outline-danger' : 'btn-outline-success' }}">
-                        {{ $account->ssh_enabled ? __('Revogar acesso SSH') : __('Liberar acesso SSH') }}
-                    </button>
-                </form>
+                <div class="d-flex gap-2">
+                    @if ($account->ssh_enabled)
+                        <form method="POST" action="{{ route('admin.hosting-accounts.ssh.password.regenerate', $account) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Gerar nova senha') }}</button>
+                        </form>
+                    @endif
+                    <form method="POST" action="{{ route('admin.hosting-accounts.ssh.toggle', $account) }}">
+                        @csrf
+                        <input type="hidden" name="enabled" value="{{ $account->ssh_enabled ? '0' : '1' }}">
+                        <button type="submit" class="btn btn-sm {{ $account->ssh_enabled ? 'btn-outline-danger' : 'btn-outline-success' }}">
+                            {{ $account->ssh_enabled ? __('Revogar acesso SSH') : __('Liberar acesso SSH') }}
+                        </button>
+                    </form>
+                </div>
             </div>
             <div class="mt-2">
                 <span class="badge text-bg-{{ $account->ssh_enabled ? 'success' : 'secondary' }}">

@@ -27,6 +27,7 @@ class HostingAccount extends Model
         'disk_usage_mb',
         'disk_usage_checked_at',
         'ssh_enabled',
+        'ssh_password',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class HostingAccount extends Model
             'last_backup_at' => 'datetime',
             'disk_usage_checked_at' => 'datetime',
             'ssh_enabled' => 'boolean',
+            'ssh_password' => 'encrypted',
         ];
     }
 

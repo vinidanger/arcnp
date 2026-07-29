@@ -22,7 +22,12 @@ class CronJobService
     {
         $job = $account->cronJobs()->create($data);
 
-        $this->sync($account);
+        try {
+            $this->sync($account);
+        } catch (RuntimeException $e) {
+            $job->delete();
+            throw $e;
+        }
 
         return $job;
     }

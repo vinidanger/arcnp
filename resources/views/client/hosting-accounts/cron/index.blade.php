@@ -14,6 +14,23 @@
     <div class="card mb-3">
         <div class="card-body">
             <h2 class="h6">{{ __('Nova tarefa') }}</h2>
+
+            <div class="mb-2" style="max-width: 20rem;">
+                <x-input-label for="preset" value="{{ __('Frequência') }}" class="small mb-1" />
+                <select id="preset" class="form-select form-select-sm">
+                    <option value="">{{ __('Personalizado') }}</option>
+                    <option value="* * * * *">{{ __('A cada minuto') }}</option>
+                    <option value="*/5 * * * *">{{ __('A cada 5 minutos') }}</option>
+                    <option value="*/10 * * * *">{{ __('A cada 10 minutos') }}</option>
+                    <option value="*/15 * * * *">{{ __('A cada 15 minutos') }}</option>
+                    <option value="*/30 * * * *">{{ __('A cada 30 minutos') }}</option>
+                    <option value="0 * * * *">{{ __('De hora em hora') }}</option>
+                    <option value="0 0 * * *">{{ __('Todo dia (meia-noite)') }}</option>
+                    <option value="0 0 * * 0">{{ __('Toda semana (domingo, meia-noite)') }}</option>
+                    <option value="0 0 1 * *">{{ __('Todo mês (dia 1, meia-noite)') }}</option>
+                </select>
+            </div>
+
             <form method="POST" action="{{ route('client.hosting-accounts.cron.store', $account) }}" class="row g-2 align-items-end">
                 @csrf
                 <div class="col-auto">
@@ -55,6 +72,22 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('preset').addEventListener('change', function () {
+            if (! this.value) {
+                return;
+            }
+
+            const [minute, hour, day, month, weekday] = this.value.split(' ');
+
+            document.getElementById('minute').value = minute;
+            document.getElementById('hour').value = hour;
+            document.getElementById('day').value = day;
+            document.getElementById('month').value = month;
+            document.getElementById('weekday').value = weekday;
+        });
+    </script>
 
     <div class="card">
         <div class="table-responsive">
