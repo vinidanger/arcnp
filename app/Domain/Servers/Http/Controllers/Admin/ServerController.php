@@ -7,7 +7,7 @@ use App\Domain\Servers\Http\Requests\UpdateServerRequest;
 use App\Domain\Servers\Models\Server;
 use App\Domain\Servers\Services\AgentHttpClient;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Str;
+use Illuminate\Support\Str;
 
 class ServerController extends Controller
 {
