@@ -64,8 +64,8 @@ class HostingAccountProvisioningService
      */
     public function deprovision(HostingAccount $account): void
     {
-        if ($account->database) {
-            $this->deleteDatabase($account);
+        foreach ($account->databases as $database) {
+            $this->deleteDatabase($database);
         }
 
         foreach ($account->domains as $domain) {
@@ -122,36 +122,38 @@ class HostingAccountProvisioningService
     }
 
     /**
-     * Banco é opcional e por conta (1:1 nesta fase). Usa o mesmo
-     * username Linux como nome do banco/usuário MySQL — já validado
-     * pelo UsernameGenerator e compatível com a regex do Agent.
+     * Uma conta pode ter vários bancos (estilo cPanel/DirectAdmin). O
+     * nome vem prefixado com o username Linux — que já é único
+     * globalmente — pra nunca colidir entre contas diferentes; só
+     * precisa ser único dentro da própria conta. Banco e usuário MySQL
+     * usam o mesmo nome (um usuário dedicado por banco).
      */
-    public function provisionDatabase(HostingAccount $account): HostingDatabase
+    public function provisionDatabase(HostingAccount $account, string $suffix): HostingDatabase
     {
-        $dbName = $account->linux_username;
-        $dbUsername = $account->linux_username;
+        $dbName = "{$account->linux_username}_{$suffix}";
+
+        if (HostingDatabase::where('db_name', $dbName)->exists()) {
+            throw new RuntimeException('Já existe um banco com esse nome nessa conta.');
+        }
+
         $dbPassword = Str::password(24);
 
         $this->runStep($account->server, 'database.create_mysql', [
             'db_name' => $dbName,
-            'db_username' => $dbUsername,
+            'db_username' => $dbName,
             'db_password' => $dbPassword,
         ]);
 
-        return $account->database()->create([
+        return $account->databases()->create([
             'db_name' => $dbName,
-            'db_username' => $dbUsername,
+            'db_username' => $dbName,
             'db_password' => $dbPassword,
         ]);
     }
 
-    public function deleteDatabase(HostingAccount $account): void
+    public function deleteDatabase(HostingDatabase $database): void
     {
-        $database = $account->database;
-
-        if (! $database) {
-            return;
-        }
+        $account = $database->hostingAccount;
 
         $this->client->dispatch($account->server, 'database.delete_mysql', [
             'db_name' => $database->db_name,

@@ -5,12 +5,14 @@ namespace App\Domain\Hosting\Http\Controllers\Admin;
 use App\Domain\Hosting\Http\Requests\StoreHostingAccountRequest;
 use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
+use App\Domain\Hosting\Models\HostingDatabase;
 use App\Domain\Hosting\Models\Plan;
 use App\Domain\Hosting\Services\HostingAccountProvisioningService;
 use App\Domain\Hosting\Support\UsernameGenerator;
 use App\Domain\Servers\Models\Server;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\DatabaseSsoToken;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -59,10 +61,12 @@ class HostingAccountController extends Controller
 
         if ($createDatabase) {
             try {
-                $database = $provisioning->provisionDatabase($account);
+                $database = $provisioning->provisionDatabase($account, 'db1');
 
                 return $redirect
                     ->with('status', 'Conta de hospedagem provisionada com sucesso.')
+                    ->with('plain_db_name', $database->db_name)
+                    ->with('plain_db_username', $database->db_username)
                     ->with('plain_db_password', $database->db_password);
             } catch (Throwable $e) {
                 return $redirect->with('status', 'Conta provisionada, mas o banco de dados falhou: '.$e->getMessage());
@@ -76,7 +80,7 @@ class HostingAccountController extends Controller
     {
         $this->authorize('view', $hosting_account);
 
-        $hosting_account->load(['client', 'server', 'plan', 'database', 'domains']);
+        $hosting_account->load(['client', 'server', 'plan', 'databases', 'domains']);
 
         return view('admin.hosting-accounts.show', ['account' => $hosting_account]);
     }
@@ -102,32 +106,50 @@ class HostingAccountController extends Controller
         return redirect()->route('admin.hosting-accounts.index')->with('status', 'Conta de hospedagem removida.');
     }
 
-    public function createDatabase(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    public function createDatabase(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);
 
-        if ($hosting_account->database) {
-            return back()->with('error', 'Essa conta já tem um banco de dados.');
-        }
+        $data = $request->validate([
+            'name' => ['required', 'string', 'regex:/^[a-z0-9_]{1,32}$/i'],
+        ]);
 
         try {
-            $database = $provisioning->provisionDatabase($hosting_account);
+            $database = $provisioning->provisionDatabase($hosting_account, strtolower($data['name']));
 
             return back()
                 ->with('status', 'Banco de dados criado.')
+                ->with('plain_db_name', $database->db_name)
+                ->with('plain_db_username', $database->db_username)
                 ->with('plain_db_password', $database->db_password);
         } catch (Throwable $e) {
             return back()->with('error', 'Falha ao criar banco: '.$e->getMessage());
         }
     }
 
-    public function deleteDatabase(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    public function deleteDatabase(HostingAccount $hosting_account, HostingDatabase $database, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);
 
-        $provisioning->deleteDatabase($hosting_account);
+        abort_unless($database->hosting_account_id === $hosting_account->id, 404);
+
+        $provisioning->deleteDatabase($database);
 
         return back()->with('status', 'Banco de dados removido.');
+    }
+
+    public function phpMyAdminSso(HostingAccount $hosting_account, HostingDatabase $database)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($database->hosting_account_id === $hosting_account->id, 404);
+
+        $server = $hosting_account->server;
+        $secret = $server->currentCredential->shared_secret;
+
+        $token = DatabaseSsoToken::generate($database->db_username, $database->db_password, $secret);
+
+        return redirect()->away($server->phpMyAdminBaseUrl().'/sso-login.php?token='.urlencode($token));
     }
 
     public function issueSsl(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)

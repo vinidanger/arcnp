@@ -6,4 +6,8 @@ return [
     'php_versions' => ['8.1', '8.2', '8.3', '8.4'],
 
     'default_php_version' => '8.3',
+
+    // Porta dedicada do vhost do phpMyAdmin no Agent (deploy/README.md
+    // seção 15) — pública, diferente da 8443 privada do Agent.
+    'phpmyadmin_port' => 8444,
 ];

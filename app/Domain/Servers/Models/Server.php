@@ -59,4 +59,9 @@ class Server extends Model
 
         return "{$scheme}://{$this->ip_address}:{$this->agent_port}";
     }
+
+    public function phpMyAdminBaseUrl(): string
+    {
+        return "https://{$this->ip_address}:".config('hosting.phpmyadmin_port');
+    }
 }

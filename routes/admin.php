@@ -23,10 +23,12 @@ Route::post('hosting-accounts/{hosting_account}/suspend', [HostingAccountControl
     ->name('hosting-accounts.suspend');
 Route::post('hosting-accounts/{hosting_account}/reactivate', [HostingAccountController::class, 'reactivate'])
     ->name('hosting-accounts.reactivate');
-Route::post('hosting-accounts/{hosting_account}/database', [HostingAccountController::class, 'createDatabase'])
-    ->name('hosting-accounts.database.store');
-Route::delete('hosting-accounts/{hosting_account}/database', [HostingAccountController::class, 'deleteDatabase'])
-    ->name('hosting-accounts.database.destroy');
+Route::post('hosting-accounts/{hosting_account}/databases', [HostingAccountController::class, 'createDatabase'])
+    ->name('hosting-accounts.databases.store');
+Route::delete('hosting-accounts/{hosting_account}/databases/{database}', [HostingAccountController::class, 'deleteDatabase'])
+    ->name('hosting-accounts.databases.destroy');
+Route::get('hosting-accounts/{hosting_account}/databases/{database}/phpmyadmin', [HostingAccountController::class, 'phpMyAdminSso'])
+    ->name('hosting-accounts.databases.phpmyadmin');
 Route::post('hosting-accounts/{hosting_account}/ssl', [HostingAccountController::class, 'issueSsl'])
     ->name('hosting-accounts.ssl.store');
 Route::post('hosting-accounts/{hosting_account}/php-version', [HostingAccountController::class, 'changePhpVersion'])

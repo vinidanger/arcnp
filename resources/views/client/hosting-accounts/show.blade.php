@@ -28,8 +28,8 @@
     @if (session('plain_db_password'))
         <div class="alert alert-warning">
             <strong>{{ __('Credenciais do banco de dados — copie agora, não aparecem de novo.') }}</strong>
-            <pre class="mb-0 mt-2 bg-white p-2 rounded border small">DB_DATABASE={{ $account->database->db_name }}
-DB_USERNAME={{ $account->database->db_username }}
+            <pre class="mb-0 mt-2 bg-white p-2 rounded border small">DB_DATABASE={{ session('plain_db_name') }}
+DB_USERNAME={{ session('plain_db_username') }}
 DB_PASSWORD={{ session('plain_db_password') }}</pre>
         </div>
     @endif
@@ -92,29 +92,58 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-body">
-                    <h2 class="h6">{{ __('Banco de dados') }}</h2>
+                    <h2 class="h6">{{ __('Bancos de dados') }}</h2>
 
-                    @if ($account->database)
-                        <dl class="row mb-3 small">
-                            <dt class="col-4">{{ __('Banco') }}</dt>
-                            <dd class="col-8"><code>{{ $account->database->db_name }}</code></dd>
-                            <dt class="col-4">{{ __('Usuário') }}</dt>
-                            <dd class="col-8"><code>{{ $account->database->db_username }}</code></dd>
-                        </dl>
-                        <form method="POST" action="{{ route('client.hosting-accounts.database.destroy', $account) }}"
-                              onsubmit="return confirm('{{ __('Remove o banco e o usuário MySQL. Continuar?') }}')">
+                    @if ($account->databases->isNotEmpty())
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('Banco') }}</th>
+                                        <th>{{ __('Usuário') }}</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($account->databases as $database)
+                                        <tr>
+                                            <td><code>{{ $database->db_name }}</code></td>
+                                            <td><code>{{ $database->db_username }}</code></td>
+                                            <td class="text-end">
+                                                <a href="{{ route('client.hosting-accounts.databases.phpmyadmin', [$account, $database]) }}"
+                                                   class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{{ __('phpMyAdmin') }}</a>
+                                                <form method="POST" action="{{ route('client.hosting-accounts.databases.destroy', [$account, $database]) }}"
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('{{ __('Remove o banco e o usuário MySQL. Continuar?') }}')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+
+                    @if ($account->status === 'active')
+                        <form method="POST" action="{{ route('client.hosting-accounts.databases.store', $account) }}" class="row g-2 align-items-end">
                             @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover banco') }}</button>
+                            <div class="col-auto">
+                                <x-input-label for="db_name" value="{{ __('Nome') }}" class="visually-hidden" />
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">{{ $account->linux_username }}_</span>
+                                    <input id="db_name" name="name" type="text" class="form-control" placeholder="loja" required>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar banco') }}</button>
+                            </div>
                         </form>
-                    @elseif ($account->status === 'active')
-                        <p class="small text-secondary">{{ __('Essa conta ainda não tem banco de dados.') }}</p>
-                        <form method="POST" action="{{ route('client.hosting-accounts.database.store', $account) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar banco de dados') }}</button>
-                        </form>
+                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
                     @else
-                        <p class="small text-secondary">{{ __('Disponível quando a conta estiver ativa.') }}</p>
+                        <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
                     @endif
                 </div>
             </div>
