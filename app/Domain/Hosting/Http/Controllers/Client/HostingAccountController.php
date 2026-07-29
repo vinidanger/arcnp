@@ -179,16 +179,21 @@ class HostingAccountController extends Controller
                 'string',
                 'regex:/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i',
                 Rule::unique('domains', 'domain'),
+                Rule::unique('hosting_accounts', 'primary_domain'),
                 Rule::notIn([$hosting_account->primary_domain]),
             ],
             'type' => ['required', 'in:addon,subdomain'],
         ]);
 
-        $domain = $provisioning->addDomain($hosting_account, strtolower($data['domain']), $data['type']);
+        try {
+            $domain = $provisioning->addDomain($hosting_account, strtolower($data['domain']), $data['type']);
 
-        return back()->with($domain->status === 'active'
-            ? ['status' => 'Domínio adicionado.']
-            : ['error' => 'Falha ao adicionar domínio: '.$domain->last_error]);
+            return back()->with($domain->status === 'active'
+                ? ['status' => 'Domínio adicionado.']
+                : ['error' => 'Falha ao adicionar domínio: '.$domain->last_error]);
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao adicionar domínio: '.$e->getMessage());
+        }
     }
 
     public function destroyDomain(HostingAccount $hosting_account, Domain $domain, HostingAccountProvisioningService $provisioning)
