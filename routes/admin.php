@@ -29,3 +29,7 @@ Route::delete('hosting-accounts/{hosting_account}/database', [HostingAccountCont
     ->name('hosting-accounts.database.destroy');
 Route::post('hosting-accounts/{hosting_account}/ssl', [HostingAccountController::class, 'issueSsl'])
     ->name('hosting-accounts.ssl.store');
+Route::post('hosting-accounts/{hosting_account}/domains', [HostingAccountController::class, 'storeDomain'])
+    ->name('hosting-accounts.domains.store');
+Route::delete('hosting-accounts/{hosting_account}/domains/{domain}', [HostingAccountController::class, 'destroyDomain'])
+    ->name('hosting-accounts.domains.destroy');

@@ -149,4 +149,78 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             </div>
         </div>
     </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h2 class="h6">{{ __('Domínios adicionais / subdomínios') }}</h2>
+
+            @if ($account->domains->isNotEmpty())
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ __('Domínio') }}</th>
+                                <th>{{ __('Tipo') }}</th>
+                                <th>{{ __('Subdiretório') }}</th>
+                                <th>{{ __('Status') }}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($account->domains as $domain)
+                                <tr>
+                                    <td>{{ $domain->domain }}</td>
+                                    <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
+                                    <td><code>public_html/{{ $domain->subdirectory }}</code></td>
+                                    <td>
+                                        @php
+                                            $domainBadge = match ($domain->status) {
+                                                'active' => 'success',
+                                                'error' => 'danger',
+                                                default => 'secondary',
+                                            };
+                                        @endphp
+                                        <span class="badge text-bg-{{ $domainBadge }}">{{ $domain->status }}</span>
+                                        @if ($domain->status === 'error' && $domain->last_error)
+                                            <div class="small text-danger">{{ $domain->last_error }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <form method="POST" action="{{ route('admin.hosting-accounts.domains.destroy', [$account, $domain]) }}"
+                                              onsubmit="return confirm('{{ __('Remove o vhost e o diretório desse domínio. Continuar?') }}')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+            @if ($account->status === 'active')
+                <form method="POST" action="{{ route('admin.hosting-accounts.domains.store', $account) }}" class="row g-2 align-items-end">
+                    @csrf
+                    <div class="col-auto">
+                        <x-input-label for="domain" value="{{ __('Domínio') }}" class="visually-hidden" />
+                        <x-text-input id="domain" name="domain" type="text" placeholder="blog.{{ $account->primary_domain }}" required />
+                    </div>
+                    <div class="col-auto">
+                        <select name="type" class="form-select">
+                            <option value="subdomain">{{ __('Subdomínio') }}</option>
+                            <option value="addon">{{ __('Domínio adicional') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-primary">{{ __('Adicionar') }}</button>
+                    </div>
+                </form>
+                <x-input-error :messages="$errors->get('domain')" class="mt-2" />
+            @else
+                <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
+            @endif
+        </div>
+    </div>
 </x-admin-layout>

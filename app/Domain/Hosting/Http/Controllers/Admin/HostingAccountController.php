@@ -3,6 +3,7 @@
 namespace App\Domain\Hosting\Http\Controllers\Admin;
 
 use App\Domain\Hosting\Http\Requests\StoreHostingAccountRequest;
+use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\Plan;
 use App\Domain\Hosting\Services\HostingAccountProvisioningService;
@@ -10,6 +11,8 @@ use App\Domain\Hosting\Support\UsernameGenerator;
 use App\Domain\Servers\Models\Server;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Throwable;
 
 class HostingAccountController extends Controller
@@ -73,7 +76,7 @@ class HostingAccountController extends Controller
     {
         $this->authorize('view', $hosting_account);
 
-        $hosting_account->load(['client', 'server', 'plan', 'database']);
+        $hosting_account->load(['client', 'server', 'plan', 'database', 'domains']);
 
         return view('admin.hosting-accounts.show', ['account' => $hosting_account]);
     }
@@ -164,5 +167,42 @@ class HostingAccountController extends Controller
         } catch (Throwable $e) {
             return back()->with('error', 'Falha ao reativar: '.$e->getMessage());
         }
+    }
+
+    public function storeDomain(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        if ($hosting_account->status !== 'active') {
+            return back()->with('error', 'A conta precisa estar ativa para adicionar domínios.');
+        }
+
+        $data = $request->validate([
+            'domain' => [
+                'required',
+                'string',
+                'regex:/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i',
+                Rule::unique('domains', 'domain'),
+                Rule::notIn([$hosting_account->primary_domain]),
+            ],
+            'type' => ['required', 'in:addon,subdomain'],
+        ]);
+
+        $domain = $provisioning->addDomain($hosting_account, strtolower($data['domain']), $data['type']);
+
+        return back()->with($domain->status === 'active'
+            ? ['status' => 'Domínio adicionado.']
+            : ['error' => 'Falha ao adicionar domínio: '.$domain->last_error]);
+    }
+
+    public function destroyDomain(HostingAccount $hosting_account, Domain $domain, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($domain->hosting_account_id === $hosting_account->id, 404);
+
+        $provisioning->removeDomain($domain);
+
+        return back()->with('status', 'Domínio removido.');
     }
 }

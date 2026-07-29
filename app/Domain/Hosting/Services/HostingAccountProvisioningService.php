@@ -2,8 +2,10 @@
 
 namespace App\Domain\Hosting\Services;
 
+use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\HostingDatabase;
+use App\Domain\Hosting\Support\SubdirectoryGenerator;
 use App\Domain\Servers\Models\Server;
 use App\Domain\Servers\Services\AgentHttpClient;
 use Illuminate\Support\Str;
@@ -60,7 +62,54 @@ class HostingAccountProvisioningService
             $this->deleteDatabase($account);
         }
 
+        foreach ($account->domains as $domain) {
+            $this->removeDomain($domain);
+        }
+
         $this->rollback($account->server, ['vhost', 'pool', 'user'], $account->linux_username, $account->primary_domain);
+    }
+
+    /**
+     * Domínio adicional/subdomínio — reaproveita usuário Linux e pool
+     * PHP-FPM da conta, só ganha subdiretório e vhost próprios.
+     */
+    public function addDomain(HostingAccount $account, string $domainName, string $type): Domain
+    {
+        $subdir = SubdirectoryGenerator::fromDomain($account, $domainName);
+
+        $domain = $account->domains()->create([
+            'domain' => $domainName,
+            'type' => $type,
+            'subdirectory' => $subdir,
+            'status' => 'creating',
+        ]);
+
+        try {
+            $this->runStep($account->server, 'web.create_addon_domain', [
+                'username' => $account->linux_username,
+                'domain' => $domainName,
+                'subdir' => $subdir,
+            ]);
+
+            $domain->update(['status' => 'active']);
+        } catch (Throwable $e) {
+            $domain->update(['status' => 'error', 'last_error' => $e->getMessage()]);
+        }
+
+        return $domain->fresh();
+    }
+
+    public function removeDomain(Domain $domain): void
+    {
+        $account = $domain->hostingAccount;
+
+        $this->client->dispatch($account->server, 'web.delete_addon_domain', [
+            'username' => $account->linux_username,
+            'domain' => $domain->domain,
+            'subdir' => $domain->subdirectory,
+        ]);
+
+        $domain->delete();
     }
 
     /**
