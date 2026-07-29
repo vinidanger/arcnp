@@ -14,4 +14,8 @@ return [
     // Quantas cópias mais recentes de cada backup (arquivos + cada
     // banco) o Agent mantém antes de apagar as mais antigas.
     'backup_retention' => 5,
+
+    // "disabled" primeiro é o valor padrão (opt-in, não gera backup
+    // sem o admin/cliente pedir).
+    'backup_frequencies' => ['disabled', 'daily', 'weekly'],
 ];

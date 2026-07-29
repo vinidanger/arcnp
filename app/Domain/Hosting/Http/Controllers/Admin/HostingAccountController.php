@@ -221,6 +221,19 @@ class HostingAccountController extends Controller
         }
     }
 
+    public function updateBackupFrequency(Request $request, HostingAccount $hosting_account)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $data = $request->validate([
+            'backup_frequency' => ['required', Rule::in(config('hosting.backup_frequencies'))],
+        ]);
+
+        $hosting_account->update(['backup_frequency' => $data['backup_frequency']]);
+
+        return back()->with('status', 'Frequência de backup atualizada.');
+    }
+
     public function createBackup(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);

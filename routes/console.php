@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('servers:mark-stale-offline')->everyMinute();
+Schedule::command('backups:run-scheduled')->hourly();

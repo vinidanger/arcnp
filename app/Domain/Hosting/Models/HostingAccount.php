@@ -22,12 +22,15 @@ class HostingAccount extends Model
         'ssl_status',
         'ssl_error',
         'ssl_issued_at',
+        'backup_frequency',
+        'last_backup_at',
     ];
 
     protected function casts(): array
     {
         return [
             'ssl_issued_at' => 'datetime',
+            'last_backup_at' => 'datetime',
         ];
     }
 

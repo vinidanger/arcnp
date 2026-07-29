@@ -297,10 +297,22 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h2 class="h6 mb-0">{{ __('Backups') }}</h2>
                 @if ($account->status === 'active')
-                    <form method="POST" action="{{ route('admin.hosting-accounts.backups.store', $account) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar backup agora') }}</button>
-                    </form>
+                    <div class="d-flex gap-2">
+                        <form method="POST" action="{{ route('admin.hosting-accounts.backup-frequency.update', $account) }}" class="d-flex gap-1">
+                            @csrf
+                            <select name="backup_frequency" class="form-select form-select-sm" onchange="this.form.submit()">
+                                @foreach (config('hosting.backup_frequencies') as $frequency)
+                                    <option value="{{ $frequency }}" @selected($account->backup_frequency === $frequency)>
+                                        {{ match ($frequency) { 'daily' => __('Automático diário'), 'weekly' => __('Automático semanal'), default => __('Desativado') } }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                        <form method="POST" action="{{ route('admin.hosting-accounts.backups.store', $account) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar backup agora') }}</button>
+                        </form>
+                    </div>
                 @endif
             </div>
 
