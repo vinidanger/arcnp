@@ -1,11 +1,12 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(php -l \"C:/laragon/www/arcnp/app/Domain/Hosting/Services/SshAccessService.php\")",
+      "Bash(grep -rn 'ssh {{ \\\\$account->linux_username }}@{{ \\\\$sshHost }}' C:/laragon/www/arcnp/resources/views)"
+    ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",
       "C:\\laragon\\www\\arcnp-agent\\routes"
-    ],
-    "allow": [
-      "Bash(php -l \"C:/laragon/www/arcnp/app/Domain/Hosting/Services/SshAccessService.php\")"
     ]
   }
 }
