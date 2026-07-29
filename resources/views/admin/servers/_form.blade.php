@@ -13,6 +13,13 @@
 </div>
 
 <div class="mb-3">
+    <x-input-label for="public_ip_address" value="{{ __('IP público (opcional)') }}" />
+    <x-text-input id="public_ip_address" name="public_ip_address" type="text" :value="old('public_ip_address', $server?->public_ip_address)" />
+    <div class="form-text">{{ __('Usado só pra links que o navegador do admin/cliente precisa acessar direto (ex: phpMyAdmin) — se o Painel e o Agent estiverem na mesma máquina e o "IP" acima for 127.0.0.1/interno, preencha aqui o IP público real. Se vazio, usa o campo "IP" acima.') }}</div>
+    <x-input-error :messages="$errors->get('public_ip_address')" class="mt-2" />
+</div>
+
+<div class="mb-3">
     <x-input-label for="hostname" value="{{ __('Hostname') }}" />
     <x-text-input id="hostname" name="hostname" type="text" :value="old('hostname', $server?->hostname)" />
     <x-input-error :messages="$errors->get('hostname')" class="mt-2" />

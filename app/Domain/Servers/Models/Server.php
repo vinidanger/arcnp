@@ -13,6 +13,7 @@ class Server extends Model
         'name',
         'hostname',
         'ip_address',
+        'public_ip_address',
         'agent_port',
         'use_tls',
         'os',
@@ -62,6 +63,8 @@ class Server extends Model
 
     public function phpMyAdminBaseUrl(): string
     {
-        return "https://{$this->ip_address}:".config('hosting.phpmyadmin_port');
+        $host = $this->public_ip_address ?: $this->ip_address;
+
+        return "https://{$host}:".config('hosting.phpmyadmin_port');
     }
 }
