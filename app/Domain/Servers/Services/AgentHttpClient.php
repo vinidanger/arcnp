@@ -49,7 +49,10 @@ class AgentHttpClient
                 'Content-Type' => 'application/json',
             ])
                 ->timeout(10)
-                ->withOptions(['verify' => app()->isProduction()])
+                // O Agent sempre usa certificado self-signed por padrão (deploy/README.md
+                // do arcnp-agent) — autenticidade e integridade vêm da assinatura HMAC,
+                // não da cadeia de confiança TLS. Validar contra uma CA aqui nunca bateria.
+                ->withOptions(['verify' => false])
                 ->withBody($body, 'application/json')
                 ->post("{$server->agentBaseUrl()}/{$path}");
         } catch (\Throwable $e) {
