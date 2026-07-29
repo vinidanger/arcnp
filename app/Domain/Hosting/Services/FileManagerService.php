@@ -31,17 +31,37 @@ class FileManagerService
 
     public function write(HostingAccount $account, string $path, string $content): void
     {
+        $this->assertUnderQuota($account);
         $this->run($account, 'files.write', ['path' => $path, 'content' => $content]);
     }
 
     public function createDirectory(HostingAccount $account, string $path): void
     {
+        $this->assertUnderQuota($account);
         $this->run($account, 'files.create_directory', ['path' => $path]);
     }
 
     public function createFile(HostingAccount $account, string $path): void
     {
+        $this->assertUnderQuota($account);
         $this->run($account, 'files.create_file', ['path' => $path]);
+    }
+
+    /**
+     * Checagem "macia": usa o uso de disco da última verificação (ver
+     * comando agendado disk-usage:refresh), não em tempo real — medir
+     * de verdade a cada escrita exigiria chamar o Agent (du) a cada
+     * clique, caro demais. Só bloqueia criar/escrever; ler/apagar
+     * continuam liberados mesmo acima da cota, pra sempre dar pra
+     * liberar espaço.
+     */
+    private function assertUnderQuota(HostingAccount $account): void
+    {
+        $plan = $account->plan;
+
+        if ($account->disk_usage_mb !== null && $account->disk_usage_mb >= $plan->disk_quota_mb) {
+            throw new RuntimeException('Cota de disco do plano atingida — remova arquivos pra liberar espaço.');
+        }
     }
 
     public function delete(HostingAccount $account, string $path): void

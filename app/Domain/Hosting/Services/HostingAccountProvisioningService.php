@@ -82,6 +82,10 @@ class HostingAccountProvisioningService
      */
     public function addDomain(HostingAccount $account, string $domainName, string $type): Domain
     {
+        if ($account->domains()->count() >= $account->plan->max_addon_domains) {
+            throw new RuntimeException('Limite de domínios adicionais do plano atingido.');
+        }
+
         $subdir = SubdirectoryGenerator::fromDomain($account, $domainName);
 
         $domain = $account->domains()->create([
@@ -133,6 +137,10 @@ class HostingAccountProvisioningService
      */
     public function provisionDatabase(HostingAccount $account, string $dbSuffix, ?string $userSuffix = null, ?string $password = null): HostingDatabase
     {
+        if ($account->databases()->count() >= $account->plan->max_databases) {
+            throw new RuntimeException('Limite de bancos de dados do plano atingido.');
+        }
+
         $dbName = "{$account->linux_username}_{$dbSuffix}";
         $dbUsername = "{$account->linux_username}_".($userSuffix ?: $dbSuffix);
 
@@ -236,6 +244,20 @@ class HostingAccountProvisioningService
         }
 
         $account->update(['php_version' => $newVersion]);
+    }
+
+    public function refreshDiskUsage(HostingAccount $account): void
+    {
+        $job = $this->client->dispatch($account->server, 'disk.usage', ['username' => $account->linux_username]);
+
+        if ($job->status !== 'completed') {
+            throw new RuntimeException($job->error ?? 'Falha ao calcular uso de disco.');
+        }
+
+        $account->update([
+            'disk_usage_mb' => $job->result['used_mb'] ?? null,
+            'disk_usage_checked_at' => now(),
+        ]);
     }
 
     /**

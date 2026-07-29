@@ -24,6 +24,8 @@ class HostingAccount extends Model
         'ssl_issued_at',
         'backup_frequency',
         'last_backup_at',
+        'disk_usage_mb',
+        'disk_usage_checked_at',
     ];
 
     protected function casts(): array
@@ -31,6 +33,7 @@ class HostingAccount extends Model
         return [
             'ssl_issued_at' => 'datetime',
             'last_backup_at' => 'datetime',
+            'disk_usage_checked_at' => 'datetime',
         ];
     }
 

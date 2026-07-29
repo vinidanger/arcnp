@@ -12,6 +12,7 @@ class Plan extends Model
         'disk_quota_mb',
         'bandwidth_quota_mb',
         'max_databases',
+        'max_addon_domains',
         'is_active',
     ];
 

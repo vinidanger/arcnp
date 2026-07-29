@@ -22,6 +22,14 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-4 mb-3">
+        <x-input-label for="max_addon_domains" value="{{ __('Máx. domínios adicionais') }}" />
+        <x-text-input id="max_addon_domains" name="max_addon_domains" type="number" :value="old('max_addon_domains', $plan?->max_addon_domains ?? 0)" required />
+        <x-input-error :messages="$errors->get('max_addon_domains')" class="mt-2" />
+    </div>
+</div>
+
 <div class="form-check mb-3">
     <input type="hidden" name="is_active" value="0">
     <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1"

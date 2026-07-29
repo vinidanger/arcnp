@@ -40,6 +40,42 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         </div>
     @endif
 
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h6">{{ __('Uso do plano') }} — {{ $account->plan->name }}</h2>
+            @php
+                $diskUsed = $account->disk_usage_mb ?? 0;
+                $diskQuota = max($account->plan->disk_quota_mb, 1);
+                $diskPercent = min(100, (int) round(($diskUsed / $diskQuota) * 100));
+                $diskBar = $diskPercent >= 90 ? 'bg-danger' : ($diskPercent >= 70 ? 'bg-warning' : 'bg-success');
+                $dbCount = $account->databases->count();
+                $domainCount = $account->domains->count();
+            @endphp
+            <div class="row g-3 small">
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between">
+                        <span>{{ __('Disco') }}</span>
+                        <span>{{ $diskUsed }} / {{ $diskQuota }} MB</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar {{ $diskBar }}" style="width: {{ $diskPercent }}%"></div>
+                    </div>
+                    @if (! $account->disk_usage_checked_at)
+                        <div class="text-secondary mt-1">{{ __('Ainda não calculado.') }}</div>
+                    @else
+                        <div class="text-secondary mt-1">{{ __('Atualizado em') }} {{ $account->disk_usage_checked_at->format('d/m/Y H:i') }}</div>
+                    @endif
+                </div>
+                <div class="col-md-3">
+                    {{ __('Bancos de dados') }}: <strong>{{ $dbCount }} / {{ $account->plan->max_databases }}</strong>
+                </div>
+                <div class="col-md-3">
+                    {{ __('Domínios adicionais') }}: <strong>{{ $domainCount }} / {{ $account->plan->max_addon_domains }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-3">
         <div class="col-md-6">
             <div class="card h-100">

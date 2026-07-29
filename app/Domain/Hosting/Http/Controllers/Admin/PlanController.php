@@ -61,6 +61,7 @@ class PlanController extends Controller
             'disk_quota_mb' => ['required', 'integer', 'min:1'],
             'bandwidth_quota_mb' => ['nullable', 'integer', 'min:1'],
             'max_databases' => ['required', 'integer', 'min:0'],
+            'max_addon_domains' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
         ]);
     }

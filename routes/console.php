@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('servers:mark-stale-offline')->everyMinute();
 Schedule::command('backups:run-scheduled')->hourly();
+Schedule::command('disk-usage:refresh')->hourly();
