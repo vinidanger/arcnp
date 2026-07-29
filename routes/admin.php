@@ -75,6 +75,8 @@ Route::post('hosting-accounts/{hosting_account}/ssh/toggle', [SshAccessControlle
     ->name('hosting-accounts.ssh.toggle');
 Route::post('hosting-accounts/{hosting_account}/ssh/password', [SshAccessController::class, 'regeneratePassword'])
     ->name('hosting-accounts.ssh.password.regenerate');
+Route::post('hosting-accounts/{hosting_account}/ssh/password/custom', [SshAccessController::class, 'updatePassword'])
+    ->name('hosting-accounts.ssh.password.update');
 Route::post('hosting-accounts/{hosting_account}/ssh/keys', [SshAccessController::class, 'storeKey'])
     ->name('hosting-accounts.ssh.keys.store');
 Route::delete('hosting-accounts/{hosting_account}/ssh/keys/{ssh_key}', [SshAccessController::class, 'destroyKey'])

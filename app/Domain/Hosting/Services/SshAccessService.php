@@ -44,6 +44,17 @@ class SshAccessService
     {
         $password = Str::password(20);
 
+        $this->setPassword($account, $password);
+
+        return $password;
+    }
+
+    /**
+     * Deixa admin/cliente escolher a própria senha em vez de aceitar só
+     * a gerada automaticamente.
+     */
+    public function setPassword(HostingAccount $account, string $password): void
+    {
         $job = $this->client->dispatch($account->server, 'ssh.set_password', [
             'username' => $account->linux_username,
             'password' => $password,
@@ -54,8 +65,6 @@ class SshAccessService
         }
 
         $account->update(['ssh_password' => $password]);
-
-        return $password;
     }
 
     public function addKey(HostingAccount $account, string $name, string $publicKey): SshKey

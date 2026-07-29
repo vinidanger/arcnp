@@ -3,6 +3,9 @@
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",
       "C:\\laragon\\www\\arcnp-agent\\routes"
+    ],
+    "allow": [
+      "Bash(php -l \"C:/laragon/www/arcnp/app/Domain/Hosting/Services/SshAccessService.php\")"
     ]
   }
 }

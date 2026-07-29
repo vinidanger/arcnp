@@ -48,6 +48,26 @@
                     {{ $account->ssh_enabled ? __('Liberado') : __('Desativado') }}
                 </span>
             </div>
+
+            @if ($account->ssh_enabled)
+                <hr>
+                <h3 class="h6">{{ __('Definir minha senha') }}</h3>
+                <form method="POST" action="{{ route('admin.hosting-accounts.ssh.password.update', $account) }}" class="row g-2 align-items-end">
+                    @csrf
+                    <div class="col-auto">
+                        <x-input-label for="password" value="{{ __('Nova senha') }}" class="small mb-1" />
+                        <input type="password" id="password" name="password" class="form-control form-control-sm" minlength="8" required>
+                    </div>
+                    <div class="col-auto">
+                        <x-input-label for="password_confirmation" value="{{ __('Confirmar senha') }}" class="small mb-1" />
+                        <input type="password" id="password_confirmation" name="password_confirmation" class="form-control form-control-sm" minlength="8" required>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-sm btn-primary">{{ __('Salvar senha') }}</button>
+                    </div>
+                </form>
+                <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            @endif
         </div>
     </div>
 

@@ -50,6 +50,23 @@ class SshAccessController extends Controller
         }
     }
 
+    public function updatePassword(Request $request, HostingAccount $hosting_account, SshAccessService $ssh)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $data = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed'],
+        ]);
+
+        try {
+            $ssh->setPassword($hosting_account, $data['password']);
+
+            return back()->with('status', 'Senha SSH definida.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao definir senha SSH: '.$e->getMessage());
+        }
+    }
+
     public function storeKey(Request $request, HostingAccount $hosting_account, SshAccessService $ssh)
     {
         $this->authorize('update', $hosting_account);
