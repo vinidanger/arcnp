@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Domain\Hosting\Models;
+
+use App\Domain\Servers\Models\Server;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class HostingAccount extends Model
+{
+    protected $fillable = [
+        'user_id',
+        'server_id',
+        'plan_id',
+        'linux_username',
+        'primary_domain',
+        'php_version',
+        'status',
+        'last_provision_error',
+    ];
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function server(): BelongsTo
+    {
+        return $this->belongsTo(Server::class);
+    }
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
+    }
+}

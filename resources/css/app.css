@@ -1,0 +1,10 @@
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+body {
+    background-color: #f4f6f9;
+}
+
+.navbar-brand img,
+.navbar-brand svg {
+    height: 2rem;
+}

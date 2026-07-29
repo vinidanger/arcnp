@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "C:\\laragon\\www\\arcnp-agent\\bootstrap",
+      "C:\\laragon\\www\\arcnp-agent\\routes"
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+@php $server ??= null; @endphp
+
+<div class="mb-3">
+    <x-input-label for="name" value="{{ __('Nome') }}" />
+    <x-text-input id="name" name="name" type="text" :value="old('name', $server?->name)" required autofocus />
+    <x-input-error :messages="$errors->get('name')" class="mt-2" />
+</div>
+
+<div class="mb-3">
+    <x-input-label for="ip_address" value="{{ __('IP') }}" />
+    <x-text-input id="ip_address" name="ip_address" type="text" :value="old('ip_address', $server?->ip_address)" required />
+    <x-input-error :messages="$errors->get('ip_address')" class="mt-2" />
+</div>
+
+<div class="mb-3">
+    <x-input-label for="hostname" value="{{ __('Hostname') }}" />
+    <x-text-input id="hostname" name="hostname" type="text" :value="old('hostname', $server?->hostname)" />
+    <x-input-error :messages="$errors->get('hostname')" class="mt-2" />
+</div>
+
+<div class="row">
+    <div class="col-6 mb-3">
+        <x-input-label for="agent_port" value="{{ __('Porta do Agent') }}" />
+        <x-text-input id="agent_port" name="agent_port" type="number" :value="old('agent_port', $server?->agent_port ?? 8443)" required />
+        <x-input-error :messages="$errors->get('agent_port')" class="mt-2" />
+    </div>
+    <div class="col-6 mb-3">
+        <x-input-label for="use_tls" value="{{ __('Usa TLS') }}" />
+        <select id="use_tls" name="use_tls" class="form-select">
+            <option value="1" @selected(old('use_tls', $server?->use_tls ?? true))>{{ __('Sim (produção)') }}</option>
+            <option value="0" @selected(! old('use_tls', $server?->use_tls ?? true))>{{ __('Não (dev local)') }}</option>
+        </select>
+    </div>
+</div>
+
+<div class="mb-3">
+    <x-input-label for="os" value="{{ __('Sistema operacional') }}" />
+    <x-text-input id="os" name="os" type="text" :value="old('os', $server?->os)" placeholder="AlmaLinux 9" />
+</div>
+
+<div class="row">
+    <div class="col-4 mb-3">
+        <x-input-label for="cpu_cores" value="{{ __('vCPUs') }}" />
+        <x-text-input id="cpu_cores" name="cpu_cores" type="number" :value="old('cpu_cores', $server?->cpu_cores)" />
+    </div>
+    <div class="col-4 mb-3">
+        <x-input-label for="memory_mb" value="{{ __('RAM (MB)') }}" />
+        <x-text-input id="memory_mb" name="memory_mb" type="number" :value="old('memory_mb', $server?->memory_mb)" />
+    </div>
+    <div class="col-4 mb-3">
+        <x-input-label for="disk_gb" value="{{ __('Disco (GB)') }}" />
+        <x-text-input id="disk_gb" name="disk_gb" type="number" :value="old('disk_gb', $server?->disk_gb)" />
+    </div>
+</div>
