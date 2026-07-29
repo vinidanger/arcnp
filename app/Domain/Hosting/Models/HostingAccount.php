@@ -55,4 +55,9 @@ class HostingAccount extends Model
     {
         return $this->hasMany(Domain::class);
     }
+
+    public function backups(): HasMany
+    {
+        return $this->hasMany(HostingBackup::class)->latest();
+    }
 }

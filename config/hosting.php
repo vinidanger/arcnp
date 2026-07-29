@@ -10,4 +10,8 @@ return [
     // Porta dedicada do vhost do phpMyAdmin no Agent (deploy/README.md
     // seção 15) — pública, diferente da 8443 privada do Agent.
     'phpmyadmin_port' => 8444,
+
+    // Quantas cópias mais recentes de cada backup (arquivos + cada
+    // banco) o Agent mantém antes de apagar as mais antigas.
+    'backup_retention' => 5,
 ];

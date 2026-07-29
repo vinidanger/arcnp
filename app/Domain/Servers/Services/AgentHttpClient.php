@@ -7,6 +7,7 @@ use App\Domain\Servers\Models\Server;
 use App\Support\RequestSigner;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Único ponto do Painel que fala com o Agent. Assina cada requisição
@@ -89,5 +90,46 @@ class AgentHttpClient
         ]);
 
         return $job->fresh();
+    }
+
+    /**
+     * Download não passa pelo /api/commands (esse endpoint devolve
+     * JSON, não é feito pra binário) — é uma rota própria no Agent
+     * (ver routes/api.php dele), assinada com o mesmo esquema HMAC.
+     * Faz streaming nos dois sentidos (Agent -> Painel -> navegador)
+     * pra não bufferizar o arquivo inteiro na memória do Painel.
+     */
+    public function streamDownload(Server $server, string $path, string $filename): StreamedResponse
+    {
+        $credential = $server->currentCredential;
+
+        abort_if(! $credential, 422, 'Servidor sem credencial de pareamento ativa.');
+
+        $timestamp = (string) time();
+        $nonce = (string) Str::uuid();
+        $signature = RequestSigner::signature('GET', $path, $timestamp, $nonce, '', $credential->shared_secret);
+
+        $response = Http::withHeaders([
+            'X-Agent-Timestamp' => $timestamp,
+            'X-Agent-Nonce' => $nonce,
+            'X-Agent-Signature' => $signature,
+        ])
+            ->timeout(300)
+            ->withOptions(['verify' => false, 'stream' => true])
+            ->get("{$server->agentBaseUrl()}/{$path}");
+
+        abort_unless($response->successful(), 502, 'Falha ao baixar o backup do Agent.');
+
+        return new StreamedResponse(function () use ($response) {
+            $body = $response->toPsrResponse()->getBody();
+
+            while (! $body->eof()) {
+                echo $body->read(8192);
+                flush();
+            }
+        }, 200, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
     }
 }

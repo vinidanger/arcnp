@@ -4,6 +4,7 @@ namespace App\Domain\Hosting\Services;
 
 use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
+use App\Domain\Hosting\Models\HostingBackup;
 use App\Domain\Hosting\Models\HostingDatabase;
 use App\Domain\Hosting\Support\SubdirectoryGenerator;
 use App\Domain\Servers\Models\Server;
@@ -235,6 +236,28 @@ class HostingAccountProvisioningService
         }
 
         $account->update(['php_version' => $newVersion]);
+    }
+
+    /**
+     * Assíncrona — só dispara e marca "pending", igual issueSslCertificate().
+     * O resultado final (lista de arquivos gerados, ou erro) chega
+     * depois via callback do Agent, tratado em
+     * AgentWebhookController::callback() — correlacionado pelo id deste
+     * HostingBackup embutido no payload (não dá pra usar o domínio como
+     * a SSL faz, aqui não tem um).
+     */
+    public function createBackup(HostingAccount $account): HostingBackup
+    {
+        $backup = $account->backups()->create(['status' => 'pending']);
+
+        $this->client->dispatch($account->server, 'backup.create', [
+            'username' => $account->linux_username,
+            'databases' => $account->databases->pluck('db_name')->all(),
+            'retention' => config('hosting.backup_retention'),
+            'backup_id' => $backup->id,
+        ]);
+
+        return $backup;
     }
 
     public function suspend(HostingAccount $account): void

@@ -5,11 +5,13 @@ namespace App\Domain\Hosting\Http\Controllers\Admin;
 use App\Domain\Hosting\Http\Requests\StoreHostingAccountRequest;
 use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
+use App\Domain\Hosting\Models\HostingBackup;
 use App\Domain\Hosting\Models\HostingDatabase;
 use App\Domain\Hosting\Models\Plan;
 use App\Domain\Hosting\Services\HostingAccountProvisioningService;
 use App\Domain\Hosting\Support\UsernameGenerator;
 use App\Domain\Servers\Models\Server;
+use App\Domain\Servers\Services\AgentHttpClient;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\DatabaseSsoToken;
@@ -80,7 +82,7 @@ class HostingAccountController extends Controller
     {
         $this->authorize('view', $hosting_account);
 
-        $hosting_account->load(['client', 'server', 'plan', 'databases', 'domains']);
+        $hosting_account->load(['client', 'server', 'plan', 'databases', 'domains', 'backups']);
 
         return view('admin.hosting-accounts.show', ['account' => $hosting_account]);
     }
@@ -217,6 +219,32 @@ class HostingAccountController extends Controller
         } catch (Throwable $e) {
             return back()->with('error', 'Falha ao trocar versão de PHP: '.$e->getMessage());
         }
+    }
+
+    public function createBackup(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        if ($hosting_account->status !== 'active') {
+            return back()->with('error', 'A conta precisa estar ativa para gerar backup.');
+        }
+
+        $provisioning->createBackup($hosting_account);
+
+        return back()->with('status', 'Backup solicitado — pode levar alguns minutos. Atualize a página pra ver o resultado.');
+    }
+
+    public function downloadBackup(HostingAccount $hosting_account, HostingBackup $backup, string $filename, AgentHttpClient $client)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($backup->hosting_account_id === $hosting_account->id, 404);
+        abort_unless($backup->status === 'completed', 404);
+        abort_unless(collect($backup->files)->contains('filename', $filename), 404);
+
+        $path = "api/backups/{$hosting_account->linux_username}/{$filename}";
+
+        return $client->streamDownload($hosting_account->server, $path, $filename);
     }
 
     public function storeDomain(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)

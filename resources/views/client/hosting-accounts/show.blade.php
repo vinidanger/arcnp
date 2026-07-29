@@ -246,4 +246,60 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             @endif
         </div>
     </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h6 mb-0">{{ __('Backups') }}</h2>
+                @if ($account->status === 'active')
+                    <form method="POST" action="{{ route('client.hosting-accounts.backups.store', $account) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar backup agora') }}</button>
+                    </form>
+                @endif
+            </div>
+
+            @if ($account->backups->isNotEmpty())
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ __('Data') }}</th>
+                                <th>{{ __('Status') }}</th>
+                                <th>{{ __('Arquivos') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($account->backups as $backup)
+                                <tr>
+                                    <td>{{ $backup->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>
+                                        @php
+                                            $backupBadge = match ($backup->status) {
+                                                'completed' => 'success',
+                                                'failed' => 'danger',
+                                                default => 'info',
+                                            };
+                                        @endphp
+                                        <span class="badge text-bg-{{ $backupBadge }}">{{ $backup->status }}</span>
+                                        @if ($backup->status === 'failed' && $backup->error)
+                                            <div class="small text-danger">{{ $backup->error }}</div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @foreach ($backup->files ?? [] as $file)
+                                            <a href="{{ route('client.hosting-accounts.backups.download', [$account, $backup, $file['filename']]) }}"
+                                               class="d-block small">{{ $file['filename'] }} ({{ number_format($file['size'] / 1048576, 1) }} MB)</a>
+                                        @endforeach
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <p class="small text-secondary mb-0">{{ __('Nenhum backup ainda.') }}</p>
+            @endif
+        </div>
+    </div>
 </x-client-layout>

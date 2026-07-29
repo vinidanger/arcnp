@@ -4,6 +4,7 @@ namespace App\Domain\Servers\Http\Controllers;
 
 use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
+use App\Domain\Hosting\Models\HostingBackup;
 use App\Domain\Servers\Models\AgentCredential;
 use App\Domain\Servers\Models\AgentJob;
 use App\Http\Controllers\Controller;
@@ -50,6 +51,10 @@ class AgentWebhookController extends Controller
             $this->applySslResult($job);
         }
 
+        if ($job->action === 'backup.create') {
+            $this->applyBackupResult($job);
+        }
+
         return response()->json(['ok' => true]);
     }
 
@@ -78,6 +83,33 @@ class AgentWebhookController extends Controller
             $target->update(['ssl_status' => 'active', 'ssl_error' => null, 'ssl_issued_at' => now()]);
         } elseif ($job->status === 'failed') {
             $target->update(['ssl_status' => 'failed', 'ssl_error' => $job->error]);
+        }
+    }
+
+    /**
+     * Ao contrário do SSL (correlaciona pelo domínio), aqui usa o id do
+     * HostingBackup embutido no payload original do dispatch — mais
+     * direto, e um domínio nem sempre identifica a conta sem ambiguidade
+     * quando o que se quer é achar UM backup específico entre vários.
+     */
+    private function applyBackupResult(AgentJob $job): void
+    {
+        $backupId = $job->payload['backup_id'] ?? null;
+
+        if (! $backupId) {
+            return;
+        }
+
+        $backup = HostingBackup::find($backupId);
+
+        if (! $backup) {
+            return;
+        }
+
+        if ($job->status === 'completed') {
+            $backup->update(['status' => 'completed', 'files' => $job->result['files'] ?? []]);
+        } elseif ($job->status === 'failed') {
+            $backup->update(['status' => 'failed', 'error' => $job->error]);
         }
     }
 
