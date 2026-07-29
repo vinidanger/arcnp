@@ -24,6 +24,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="{{ route('admin.clients.index') }}" class="nav-link text-white {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
+                            {{ __('Clientes') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="{{ route('admin.servers.index') }}" class="nav-link text-white {{ request()->routeIs('admin.servers.*') ? 'active' : '' }}">
                             {{ __('Servidores') }}
                         </a>
