@@ -18,8 +18,10 @@
     <form method="POST" action="{{ route('client.hosting-accounts.files.update', $account) }}">
         @csrf
         <input type="hidden" name="path" value="{{ $path }}">
-        <textarea name="content" class="form-control" rows="28" style="font-family: monospace; font-size: 0.875rem;" spellcheck="false">{{ $content }}</textarea>
+        <textarea name="content" class="form-control" data-code-editor data-filename="{{ basename($path) }}" spellcheck="false">{{ $content }}</textarea>
         <x-input-error :messages="$errors->get('content')" class="mt-2" />
         <button type="submit" class="btn btn-primary mt-2">{{ __('Salvar') }}</button>
     </form>
+
+    @vite(['resources/js/code-editor.js'])
 </x-client-layout>

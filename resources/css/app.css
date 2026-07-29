@@ -8,3 +8,17 @@ body {
 .navbar-brand svg {
     height: 2rem;
 }
+
+.code-editor {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.code-editor .cm-editor {
+    height: 65vh;
+}
+
+.code-editor .cm-scroller {
+    overflow: auto;
+}
