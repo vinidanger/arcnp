@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
 
         $password = Str::password(16);
 
-        $admin = User::factory()->create([
+        $admin = User::create([
             'name' => 'Administrador',
             'email' => 'arcndev@gmail.com',
             'password' => $password,
