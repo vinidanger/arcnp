@@ -2,12 +2,18 @@
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
             <h1 class="h4 mb-0">{{ $account->primary_domain }}</h1>
-            @if ($account->status === 'active' && $account->ssl_status !== 'active')
-                <form method="POST" action="{{ route('client.hosting-accounts.ssl.store', $account) }}">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Emitir SSL') }}</button>
-                </form>
-            @endif
+            <div class="d-flex gap-2">
+                @if ($account->status === 'active')
+                    <a href="{{ route('client.hosting-accounts.files.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Arquivos') }}</a>
+                @endif
+
+                @if ($account->status === 'active' && $account->ssl_status !== 'active')
+                    <form method="POST" action="{{ route('client.hosting-accounts.ssl.store', $account) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Emitir SSL') }}</button>
+                    </form>
+                @endif
+            </div>
         </div>
     </x-slot>
 

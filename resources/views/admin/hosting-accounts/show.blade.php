@@ -3,6 +3,10 @@
         <div class="d-flex justify-content-between align-items-center">
             <h1 class="h4 mb-0">{{ $account->primary_domain }}</h1>
             <div class="d-flex gap-2">
+                @if ($account->status === 'active')
+                    <a href="{{ route('admin.hosting-accounts.files.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Arquivos') }}</a>
+                @endif
+
                 @if ($account->status === 'error')
                     <form method="POST" action="{{ route('admin.hosting-accounts.retry', $account) }}">
                         @csrf

@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Clients\Http\Controllers\Admin\ClientController;
+use App\Domain\Hosting\Http\Controllers\Admin\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\PlanController;
 use App\Domain\Servers\Http\Controllers\Admin\ServerController;
@@ -43,3 +44,18 @@ Route::post('hosting-accounts/{hosting_account}/backups', [HostingAccountControl
     ->name('hosting-accounts.backups.store');
 Route::get('hosting-accounts/{hosting_account}/backups/{backup}/{filename}', [HostingAccountController::class, 'downloadBackup'])
     ->name('hosting-accounts.backups.download');
+
+Route::get('hosting-accounts/{hosting_account}/files', [FileManagerController::class, 'index'])
+    ->name('hosting-accounts.files.index');
+Route::get('hosting-accounts/{hosting_account}/files/edit', [FileManagerController::class, 'edit'])
+    ->name('hosting-accounts.files.edit');
+Route::post('hosting-accounts/{hosting_account}/files/edit', [FileManagerController::class, 'update'])
+    ->name('hosting-accounts.files.update');
+Route::post('hosting-accounts/{hosting_account}/files/directories', [FileManagerController::class, 'storeDirectory'])
+    ->name('hosting-accounts.files.directories.store');
+Route::post('hosting-accounts/{hosting_account}/files/new', [FileManagerController::class, 'storeFile'])
+    ->name('hosting-accounts.files.store');
+Route::delete('hosting-accounts/{hosting_account}/files', [FileManagerController::class, 'destroy'])
+    ->name('hosting-accounts.files.destroy');
+Route::post('hosting-accounts/{hosting_account}/files/rename', [FileManagerController::class, 'rename'])
+    ->name('hosting-accounts.files.rename');
