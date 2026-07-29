@@ -26,6 +26,7 @@ class HostingAccount extends Model
         'last_backup_at',
         'disk_usage_mb',
         'disk_usage_checked_at',
+        'ssh_enabled',
     ];
 
     protected function casts(): array
@@ -34,6 +35,7 @@ class HostingAccount extends Model
             'ssl_issued_at' => 'datetime',
             'last_backup_at' => 'datetime',
             'disk_usage_checked_at' => 'datetime',
+            'ssh_enabled' => 'boolean',
         ];
     }
 
@@ -65,5 +67,15 @@ class HostingAccount extends Model
     public function backups(): HasMany
     {
         return $this->hasMany(HostingBackup::class)->latest();
+    }
+
+    public function cronJobs(): HasMany
+    {
+        return $this->hasMany(CronJob::class);
+    }
+
+    public function sshKeys(): HasMany
+    {
+        return $this->hasMany(SshKey::class);
     }
 }

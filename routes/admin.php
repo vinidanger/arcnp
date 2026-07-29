@@ -1,9 +1,11 @@
 <?php
 
 use App\Domain\Clients\Http\Controllers\Admin\ClientController;
+use App\Domain\Hosting\Http\Controllers\Admin\CronJobController;
 use App\Domain\Hosting\Http\Controllers\Admin\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\PlanController;
+use App\Domain\Hosting\Http\Controllers\Admin\SshAccessController;
 use App\Domain\Servers\Http\Controllers\Admin\ServerController;
 use Illuminate\Support\Facades\Route;
 
@@ -59,3 +61,19 @@ Route::delete('hosting-accounts/{hosting_account}/files', [FileManagerController
     ->name('hosting-accounts.files.destroy');
 Route::post('hosting-accounts/{hosting_account}/files/rename', [FileManagerController::class, 'rename'])
     ->name('hosting-accounts.files.rename');
+
+Route::get('hosting-accounts/{hosting_account}/cron', [CronJobController::class, 'index'])
+    ->name('hosting-accounts.cron.index');
+Route::post('hosting-accounts/{hosting_account}/cron', [CronJobController::class, 'store'])
+    ->name('hosting-accounts.cron.store');
+Route::delete('hosting-accounts/{hosting_account}/cron/{cron_job}', [CronJobController::class, 'destroy'])
+    ->name('hosting-accounts.cron.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/ssh', [SshAccessController::class, 'index'])
+    ->name('hosting-accounts.ssh.index');
+Route::post('hosting-accounts/{hosting_account}/ssh/toggle', [SshAccessController::class, 'toggle'])
+    ->name('hosting-accounts.ssh.toggle');
+Route::post('hosting-accounts/{hosting_account}/ssh/keys', [SshAccessController::class, 'storeKey'])
+    ->name('hosting-accounts.ssh.keys.store');
+Route::delete('hosting-accounts/{hosting_account}/ssh/keys/{ssh_key}', [SshAccessController::class, 'destroyKey'])
+    ->name('hosting-accounts.ssh.keys.destroy');
