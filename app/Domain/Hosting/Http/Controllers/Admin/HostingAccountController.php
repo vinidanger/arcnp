@@ -127,6 +127,19 @@ class HostingAccountController extends Controller
         return back()->with('status', 'Banco de dados removido.');
     }
 
+    public function issueSsl(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        if ($hosting_account->status !== 'active') {
+            return back()->with('error', 'A conta precisa estar ativa para emitir SSL.');
+        }
+
+        $provisioning->issueSslCertificate($hosting_account);
+
+        return back()->with('status', 'Emissão de certificado solicitada — deve levar alguns segundos. Atualize a página para ver o resultado.');
+    }
+
     public function suspend(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);

@@ -103,6 +103,21 @@ class HostingAccountProvisioningService
         $database->delete();
     }
 
+    /**
+     * Assíncrona — só dispara e marca "pending". O resultado final
+     * (ativo/falhou) chega depois via callback do Agent, tratado em
+     * AgentWebhookController::callback().
+     */
+    public function issueSslCertificate(HostingAccount $account): void
+    {
+        $this->client->dispatch($account->server, 'ssl.issue_certificate', [
+            'username' => $account->linux_username,
+            'domain' => $account->primary_domain,
+        ]);
+
+        $account->update(['ssl_status' => 'pending', 'ssl_error' => null]);
+    }
+
     public function suspend(HostingAccount $account): void
     {
         $this->runStep($account->server, 'hosting.suspend', [

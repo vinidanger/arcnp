@@ -2,6 +2,7 @@
 
 namespace App\Domain\Servers\Http\Controllers;
 
+use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Servers\Models\AgentCredential;
 use App\Domain\Servers\Models\AgentJob;
 use App\Http\Controllers\Controller;
@@ -44,7 +45,37 @@ class AgentWebhookController extends Controller
             'completed_at' => now(),
         ]);
 
+        if ($job->action === 'ssl.issue_certificate') {
+            $this->applySslResult($job);
+        }
+
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Não há vínculo direto agent_jobs -> hosting_accounts (agent_jobs
+     * é por servidor, não por conta) — encontra a conta pelo domínio
+     * que foi enviado no payload original do dispatch.
+     */
+    private function applySslResult(AgentJob $job): void
+    {
+        $domain = $job->payload['domain'] ?? null;
+
+        if (! $domain) {
+            return;
+        }
+
+        $account = HostingAccount::where('primary_domain', $domain)->first();
+
+        if (! $account) {
+            return;
+        }
+
+        if ($job->status === 'completed') {
+            $account->update(['ssl_status' => 'active', 'ssl_error' => null, 'ssl_issued_at' => now()]);
+        } elseif ($job->status === 'failed') {
+            $account->update(['ssl_status' => 'failed', 'ssl_error' => $job->error]);
+        }
     }
 
     /**

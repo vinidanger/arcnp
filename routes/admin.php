@@ -27,3 +27,5 @@ Route::post('hosting-accounts/{hosting_account}/database', [HostingAccountContro
     ->name('hosting-accounts.database.store');
 Route::delete('hosting-accounts/{hosting_account}/database', [HostingAccountController::class, 'deleteDatabase'])
     ->name('hosting-accounts.database.destroy');
+Route::post('hosting-accounts/{hosting_account}/ssl', [HostingAccountController::class, 'issueSsl'])
+    ->name('hosting-accounts.ssl.store');

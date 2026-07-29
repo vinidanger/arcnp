@@ -19,7 +19,17 @@ class HostingAccount extends Model
         'php_version',
         'status',
         'last_provision_error',
+        'ssl_status',
+        'ssl_error',
+        'ssl_issued_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'ssl_issued_at' => 'datetime',
+        ];
+    }
 
     public function client(): BelongsTo
     {

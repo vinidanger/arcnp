@@ -23,6 +23,13 @@
                     </form>
                 @endif
 
+                @if ($account->status === 'active' && $account->ssl_status !== 'active')
+                    <form method="POST" action="{{ route('admin.hosting-accounts.ssl.store', $account) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Emitir SSL') }}</button>
+                    </form>
+                @endif
+
                 <form method="POST" action="{{ route('admin.hosting-accounts.destroy', $account) }}"
                       onsubmit="return confirm('{{ __('Isso remove o usuário Linux, vhost, pool PHP-FPM e banco de dados do servidor. Continuar?') }}')">
                     @csrf
@@ -89,6 +96,22 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 };
                             @endphp
                             <span class="badge text-bg-{{ $badge }}">{{ $account->status }}</span>
+                        </dd>
+
+                        <dt class="col-4">{{ __('SSL') }}</dt>
+                        <dd class="col-8">
+                            @php
+                                $sslBadge = match ($account->ssl_status) {
+                                    'active' => 'success',
+                                    'pending' => 'info',
+                                    'failed' => 'danger',
+                                    default => 'secondary',
+                                };
+                            @endphp
+                            <span class="badge text-bg-{{ $sslBadge }}">{{ $account->ssl_status }}</span>
+                            @if ($account->ssl_status === 'failed' && $account->ssl_error)
+                                <div class="small text-danger mt-1">{{ $account->ssl_error }}</div>
+                            @endif
                         </dd>
                     </dl>
                 </div>
