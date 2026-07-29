@@ -27,3 +27,19 @@ body {
 .code-editor .cm-scroller {
     overflow: auto;
 }
+
+.code-editor-wrapper.is-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    background-color: var(--bs-body-bg, #f4f6f9);
+}
+
+.code-editor-wrapper.is-fullscreen .code-editor {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+}

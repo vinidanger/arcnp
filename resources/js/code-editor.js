@@ -84,8 +84,11 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
         extensions,
     });
 
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-editor-wrapper';
+
     const toolbar = document.createElement('div');
-    toolbar.className = 'd-flex justify-content-end mb-1';
+    toolbar.className = 'd-flex justify-content-end gap-2 mb-1';
 
     const themeToggle = document.createElement('button');
     themeToggle.type = 'button';
@@ -103,10 +106,42 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
         updateToggleLabel();
     });
 
-    toolbar.appendChild(themeToggle);
-    textarea.insertAdjacentElement('afterend', toolbar);
-    toolbar.insertAdjacentElement('afterend', view.dom);
+    const fullscreenToggle = document.createElement('button');
+    fullscreenToggle.type = 'button';
+    fullscreenToggle.className = 'btn btn-sm btn-outline-secondary';
+
+    const updateFullscreenLabel = () => {
+        fullscreenToggle.textContent = wrapper.classList.contains('is-fullscreen') ? '↙ Sair da tela cheia' : '⛶ Tela cheia';
+    };
+    updateFullscreenLabel();
+
+    const setFullscreen = (enabled) => {
+        wrapper.classList.toggle('is-fullscreen', enabled);
+        document.body.style.overflow = enabled ? 'hidden' : '';
+        updateFullscreenLabel();
+        view.requestMeasure();
+    };
+
+    fullscreenToggle.addEventListener('click', () => setFullscreen(!wrapper.classList.contains('is-fullscreen')));
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && wrapper.classList.contains('is-fullscreen')) {
+            setFullscreen(false);
+        }
+    });
+
+    toolbar.append(themeToggle, fullscreenToggle);
+
+    textarea.insertAdjacentElement('afterend', wrapper);
+    wrapper.append(toolbar, view.dom);
     textarea.style.display = 'none';
+
+    const saveButton = textarea.closest('form')?.querySelector('button[type="submit"]');
+
+    if (saveButton) {
+        saveButton.classList.add('mt-2');
+        wrapper.appendChild(saveButton);
+    }
 
     textarea.closest('form')?.addEventListener('submit', () => {
         textarea.value = view.state.doc.toString();
