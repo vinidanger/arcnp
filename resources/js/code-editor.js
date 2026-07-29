@@ -48,6 +48,13 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
 
     const extensions = [
         basicSetup,
+        // Precisa ser registrada via editorAttributes, não
+        // view.dom.classList.add() depois de criar a view — o
+        // CodeMirror recalcula e reaplica a lista de classes do próprio
+        // elemento quando o estado de foco muda, e uma classe colada
+        // "por fora" some nesse recálculo (foi exatamente o editor
+        // encolhendo ao clicar dentro dele).
+        EditorView.editorAttributes.of({ class: 'code-editor' }),
         themeCompartment.of(preferredTheme() === 'dark' ? oneDark : []),
         indentUnit.of('    '),
         // basicSetup não trata Tab por padrão (deixa o foco sair do
@@ -76,11 +83,6 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
         doc: textarea.value,
         extensions,
     });
-
-    // view.dom JÁ é o elemento .cm-editor — não criar um wrapper novo
-    // em volta, ou o CSS de altura (.code-editor) nunca bate em nada
-    // (foi exatamente o bug do editor renderizando minúsculo antes).
-    view.dom.classList.add('code-editor');
 
     const toolbar = document.createElement('div');
     toolbar.className = 'd-flex justify-content-end mb-1';
