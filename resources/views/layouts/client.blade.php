@@ -23,6 +23,11 @@
                             {{ __('Dashboard') }}
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('client.hosting-accounts.index') }}" class="nav-link text-white {{ request()->routeIs('client.hosting-accounts.*') ? 'active' : '' }}">
+                            {{ __('Minhas hospedagens') }}
+                        </a>
+                    </li>
                 </ul>
             </aside>
 

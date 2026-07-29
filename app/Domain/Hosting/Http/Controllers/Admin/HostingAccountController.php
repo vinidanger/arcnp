@@ -169,6 +169,27 @@ class HostingAccountController extends Controller
         }
     }
 
+    public function changePhpVersion(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        if ($hosting_account->status !== 'active') {
+            return back()->with('error', 'A conta precisa estar ativa para trocar a versão de PHP.');
+        }
+
+        $data = $request->validate([
+            'php_version' => ['required', Rule::in(config('hosting.php_versions'))],
+        ]);
+
+        try {
+            $provisioning->changePhpVersion($hosting_account, $data['php_version']);
+
+            return back()->with('status', 'Versão de PHP alterada para '.$data['php_version'].'.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao trocar versão de PHP: '.$e->getMessage());
+        }
+    }
+
     public function storeDomain(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);

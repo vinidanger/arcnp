@@ -14,7 +14,17 @@ class Domain extends Model
         'subdirectory',
         'status',
         'last_error',
+        'ssl_status',
+        'ssl_error',
+        'ssl_issued_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'ssl_issued_at' => 'datetime',
+        ];
+    }
 
     public function hostingAccount(): BelongsTo
     {

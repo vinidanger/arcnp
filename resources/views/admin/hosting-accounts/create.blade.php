@@ -61,7 +61,13 @@
 
                 <div class="mb-3">
                     <x-input-label for="php_version" value="{{ __('Versão do PHP') }}" />
-                    <x-text-input id="php_version" name="php_version" type="text" :value="old('php_version', '8.3')" required />
+                    <select id="php_version" name="php_version" class="form-select" required>
+                        @foreach (config('hosting.php_versions') as $version)
+                            <option value="{{ $version }}" @selected(old('php_version', config('hosting.default_php_version')) === $version)>
+                                {{ $version }}
+                            </option>
+                        @endforeach
+                    </select>
                     <x-input-error :messages="$errors->get('php_version')" class="mt-2" />
                 </div>
 

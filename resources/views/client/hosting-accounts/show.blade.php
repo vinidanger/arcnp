@@ -1,42 +1,13 @@
-<x-admin-layout>
+<x-client-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
             <h1 class="h4 mb-0">{{ $account->primary_domain }}</h1>
-            <div class="d-flex gap-2">
-                @if ($account->status === 'error')
-                    <form method="POST" action="{{ route('admin.hosting-accounts.retry', $account) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-warning">{{ __('Tentar provisionar novamente') }}</button>
-                    </form>
-                @endif
-
-                @if ($account->status === 'active')
-                    <form method="POST" action="{{ route('admin.hosting-accounts.suspend', $account) }}"
-                          onsubmit="return confirm('{{ __('Isso desativa o site e o e-mail do cliente até reativar. Continuar?') }}')">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Suspender') }}</button>
-                    </form>
-                @elseif ($account->status === 'suspended')
-                    <form method="POST" action="{{ route('admin.hosting-accounts.reactivate', $account) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-success">{{ __('Reativar') }}</button>
-                    </form>
-                @endif
-
-                @if ($account->status === 'active' && $account->ssl_status !== 'active')
-                    <form method="POST" action="{{ route('admin.hosting-accounts.ssl.store', $account) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Emitir SSL') }}</button>
-                    </form>
-                @endif
-
-                <form method="POST" action="{{ route('admin.hosting-accounts.destroy', $account) }}"
-                      onsubmit="return confirm('{{ __('Isso remove o usuário Linux, vhost, pool PHP-FPM e banco de dados do servidor. Continuar?') }}')">
+            @if ($account->status === 'active' && $account->ssl_status !== 'active')
+                <form method="POST" action="{{ route('client.hosting-accounts.ssl.store', $account) }}">
                     @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Excluir') }}</button>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Emitir SSL') }}</button>
                 </form>
-            </div>
+            @endif
         </div>
     </x-slot>
 
@@ -48,9 +19,9 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    @if ($account->status === 'error' && $account->last_provision_error)
-        <div class="alert alert-danger">
-            <strong>{{ __('Erro no provisionamento:') }}</strong> {{ $account->last_provision_error }}
+    @if ($account->status === 'suspended')
+        <div class="alert alert-warning">
+            {{ __('Essa conta está suspensa. Entre em contato com o suporte se isso for inesperado.') }}
         </div>
     @endif
 
@@ -68,24 +39,13 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             <div class="card h-100">
                 <div class="card-body">
                     <dl class="row mb-0 small">
-                        <dt class="col-4">{{ __('Cliente') }}</dt>
-                        <dd class="col-8">{{ $account->client->name }} ({{ $account->client->email }})</dd>
-
-                        <dt class="col-4">{{ __('Servidor') }}</dt>
-                        <dd class="col-8">
-                            <a href="{{ route('admin.servers.show', $account->server) }}">{{ $account->server->name }}</a>
-                        </dd>
-
                         <dt class="col-4">{{ __('Plano') }}</dt>
                         <dd class="col-8">{{ $account->plan->name }}</dd>
-
-                        <dt class="col-4">{{ __('Username Linux') }}</dt>
-                        <dd class="col-8"><code>{{ $account->linux_username }}</code></dd>
 
                         <dt class="col-4">{{ __('Versão PHP') }}</dt>
                         <dd class="col-8">
                             @if ($account->status === 'active')
-                                <form method="POST" action="{{ route('admin.hosting-accounts.php-version.update', $account) }}" class="d-flex gap-2">
+                                <form method="POST" action="{{ route('client.hosting-accounts.php-version.update', $account) }}" class="d-flex gap-2">
                                     @csrf
                                     <select name="php_version" class="form-select form-select-sm w-auto">
                                         @foreach (config('hosting.php_versions') as $version)
@@ -123,9 +83,6 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 };
                             @endphp
                             <span class="badge text-bg-{{ $sslBadge }}">{{ $account->ssl_status }}</span>
-                            @if ($account->ssl_status === 'failed' && $account->ssl_error)
-                                <div class="small text-danger mt-1">{{ $account->ssl_error }}</div>
-                            @endif
                         </dd>
                     </dl>
                 </div>
@@ -144,7 +101,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                             <dt class="col-4">{{ __('Usuário') }}</dt>
                             <dd class="col-8"><code>{{ $account->database->db_username }}</code></dd>
                         </dl>
-                        <form method="POST" action="{{ route('admin.hosting-accounts.database.destroy', $account) }}"
+                        <form method="POST" action="{{ route('client.hosting-accounts.database.destroy', $account) }}"
                               onsubmit="return confirm('{{ __('Remove o banco e o usuário MySQL. Continuar?') }}')">
                             @csrf
                             @method('DELETE')
@@ -152,7 +109,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         </form>
                     @elseif ($account->status === 'active')
                         <p class="small text-secondary">{{ __('Essa conta ainda não tem banco de dados.') }}</p>
-                        <form method="POST" action="{{ route('admin.hosting-accounts.database.store', $account) }}">
+                        <form method="POST" action="{{ route('client.hosting-accounts.database.store', $account) }}">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar banco de dados') }}</button>
                         </form>
@@ -175,7 +132,6 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                             <tr>
                                 <th>{{ __('Domínio') }}</th>
                                 <th>{{ __('Tipo') }}</th>
-                                <th>{{ __('Subdiretório') }}</th>
                                 <th>{{ __('Status') }}</th>
                                 <th>{{ __('SSL') }}</th>
                                 <th></th>
@@ -186,7 +142,6 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 <tr>
                                     <td>{{ $domain->domain }}</td>
                                     <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
-                                    <td><code>public_html/{{ $domain->subdirectory }}</code></td>
                                     <td>
                                         @php
                                             $domainBadge = match ($domain->status) {
@@ -212,8 +167,8 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                         <span class="badge text-bg-{{ $domainSslBadge }}">{{ $domain->ssl_status }}</span>
                                     </td>
                                     <td class="text-end">
-                                        <form method="POST" action="{{ route('admin.hosting-accounts.domains.destroy', [$account, $domain]) }}"
-                                              onsubmit="return confirm('{{ __('Remove o vhost e o diretório desse domínio. Continuar?') }}')">
+                                        <form method="POST" action="{{ route('client.hosting-accounts.domains.destroy', [$account, $domain]) }}"
+                                              onsubmit="return confirm('{{ __('Remove esse domínio. Continuar?') }}')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
@@ -227,7 +182,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             @endif
 
             @if ($account->status === 'active')
-                <form method="POST" action="{{ route('admin.hosting-accounts.domains.store', $account) }}" class="row g-2 align-items-end">
+                <form method="POST" action="{{ route('client.hosting-accounts.domains.store', $account) }}" class="row g-2 align-items-end">
                     @csrf
                     <div class="col-auto">
                         <x-input-label for="domain" value="{{ __('Domínio') }}" class="visually-hidden" />
@@ -249,4 +204,4 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             @endif
         </div>
     </div>
-</x-admin-layout>
+</x-client-layout>

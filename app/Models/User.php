@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Domain\Hosting\Models\HostingAccount;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -57,5 +59,10 @@ class User extends Authenticatable
     public function isClient(): bool
     {
         return $this->type === 'client';
+    }
+
+    public function hostingAccounts(): HasMany
+    {
+        return $this->hasMany(HostingAccount::class);
     }
 }

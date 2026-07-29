@@ -23,6 +23,8 @@ Route::middleware(['auth', 'verified', 'type:client'])->prefix('cliente')->name(
     Route::get('/dashboard', function () {
         return view('client.dashboard');
     })->name('dashboard');
+
+    require __DIR__.'/client.php';
 });
 
 Route::middleware('auth')->group(function () {

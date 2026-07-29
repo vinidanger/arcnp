@@ -25,7 +25,7 @@ class StoreHostingAccountRequest extends FormRequest
                 'regex:/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i',
                 Rule::unique('hosting_accounts', 'primary_domain'),
             ],
-            'php_version' => ['required', 'string', 'max:10'],
+            'php_version' => ['required', Rule::in(config('hosting.php_versions'))],
             'create_database' => ['boolean'],
         ];
     }

@@ -31,6 +31,7 @@ class HostingAccountProvisioningService
         $server = $account->server;
         $username = $account->linux_username;
         $domain = $account->primary_domain;
+        $phpVersion = $account->php_version;
 
         $completed = [];
 
@@ -38,13 +39,18 @@ class HostingAccountProvisioningService
             $this->runStep($server, 'linux.create_user', ['username' => $username]);
             $completed[] = 'user';
 
-            $this->runStep($server, 'php.create_pool', ['username' => $username]);
+            $this->runStep($server, 'php.create_pool', ['username' => $username, 'php_version' => $phpVersion]);
             $completed[] = 'pool';
 
-            $this->runStep($server, 'web.create_vhost', ['username' => $username, 'domain' => $domain]);
+            $this->runStep($server, 'web.create_vhost', ['username' => $username, 'domain' => $domain, 'php_version' => $phpVersion]);
             $completed[] = 'vhost';
 
             $account->update(['status' => 'active', 'last_provision_error' => null]);
+
+            // Best-effort: se o DNS ainda não estiver apontado, isso só
+            // fica "failed" — não desfaz a conta por causa disso, o
+            // admin/cliente pode tentar de novo manualmente depois.
+            $this->issueSslCertificate($account);
         } catch (Throwable $e) {
             $this->rollback($server, $completed, $username, $domain);
 
@@ -89,9 +95,12 @@ class HostingAccountProvisioningService
                 'username' => $account->linux_username,
                 'domain' => $domainName,
                 'subdir' => $subdir,
+                'php_version' => $account->php_version,
             ]);
 
             $domain->update(['status' => 'active']);
+
+            $this->issueSslCertificate($account, $domain);
         } catch (Throwable $e) {
             $domain->update(['status' => 'error', 'last_error' => $e->getMessage()]);
         }
@@ -155,16 +164,67 @@ class HostingAccountProvisioningService
     /**
      * Assíncrona — só dispara e marca "pending". O resultado final
      * (ativo/falhou) chega depois via callback do Agent, tratado em
-     * AgentWebhookController::callback().
+     * AgentWebhookController::callback(). Passar $domain emite para um
+     * domínio adicional/subdomínio; sem ele, emite para o domínio
+     * principal da conta.
      */
-    public function issueSslCertificate(HostingAccount $account): void
+    public function issueSslCertificate(HostingAccount $account, ?Domain $domain = null): void
     {
         $this->client->dispatch($account->server, 'ssl.issue_certificate', [
             'username' => $account->linux_username,
-            'domain' => $account->primary_domain,
+            'domain' => $domain ? $domain->domain : $account->primary_domain,
+            'subdir' => $domain?->subdirectory,
         ]);
 
-        $account->update(['ssl_status' => 'pending', 'ssl_error' => null]);
+        if ($domain) {
+            $domain->update(['ssl_status' => 'pending', 'ssl_error' => null]);
+        } else {
+            $account->update(['ssl_status' => 'pending', 'ssl_error' => null]);
+        }
+    }
+
+    /**
+     * Troca a versão de PHP de uma conta já provisionada: cria o pool
+     * na versão nova, apaga o da antiga (SwitchPhpVersionAction, uma
+     * chamada só), depois reescreve o vhost de cada domínio da conta
+     * (principal + adicionais) pra apontar pro socket novo, preservando
+     * SSL onde já tiver certificado ativo.
+     */
+    public function changePhpVersion(HostingAccount $account, string $newVersion): void
+    {
+        $oldVersion = $account->php_version;
+
+        if ($oldVersion === $newVersion) {
+            return;
+        }
+
+        $server = $account->server;
+        $username = $account->linux_username;
+
+        $this->runStep($server, 'php.switch_version', [
+            'username' => $username,
+            'old_php_version' => $oldVersion,
+            'new_php_version' => $newVersion,
+        ]);
+
+        $this->runStep($server, 'web.update_vhost_php_version', [
+            'username' => $username,
+            'domain' => $account->primary_domain,
+            'php_version' => $newVersion,
+            'ssl_active' => $account->ssl_status === 'active',
+        ]);
+
+        foreach ($account->domains as $domain) {
+            $this->runStep($server, 'web.update_vhost_php_version', [
+                'username' => $username,
+                'domain' => $domain->domain,
+                'subdir' => $domain->subdirectory,
+                'php_version' => $newVersion,
+                'ssl_active' => $domain->ssl_status === 'active',
+            ]);
+        }
+
+        $account->update(['php_version' => $newVersion]);
     }
 
     public function suspend(HostingAccount $account): void
