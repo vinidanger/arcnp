@@ -174,6 +174,7 @@ class HostingAccountProvisioningService
             'username' => $account->linux_username,
             'domain' => $domain ? $domain->domain : $account->primary_domain,
             'subdir' => $domain?->subdirectory,
+            'php_version' => $account->php_version,
         ]);
 
         if ($domain) {
