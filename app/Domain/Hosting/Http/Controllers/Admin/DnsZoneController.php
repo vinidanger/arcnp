@@ -129,7 +129,7 @@ class DnsZoneController extends Controller
         $data = $request->validate([
             'type' => ['required', 'string', 'in:A,AAAA,CNAME,MX,TXT,NS'],
             'name' => ['required', 'string', 'max:255'],
-            'content' => ['required', 'string', 'max:255'],
+            'content' => ['required', 'string', 'max:4000'],
             'ttl' => ['required', 'integer', 'min:60', 'max:604800'],
             'priority' => ['nullable', 'integer', 'min:0', 'max:65535', 'required_if:type,MX'],
         ]);
