@@ -17,7 +17,10 @@
       "Bash(bash -n \"C:/laragon/www/arcnp-agent/scripts/manage-dns-zone.sh\")",
       "Bash(chmod +x \"C:/laragon/www/arcnp-agent/scripts/manage-dns-zone.sh\")",
       "Bash(sed -e s/x-client-layout/x-admin-layout/g -e 's/client\\\\.hosting-accounts\\\\.dns/admin.hosting-accounts.dns/g' resources/views/client/hosting-accounts/dns/index.blade.php)",
-      "Bash(sed -e s/x-client-layout/x-admin-layout/g -e 's/client\\\\.hosting-accounts\\\\.dns/admin.hosting-accounts.dns/g' resources/views/client/hosting-accounts/dns/show.blade.php)"
+      "Bash(sed -e s/x-client-layout/x-admin-layout/g -e 's/client\\\\.hosting-accounts\\\\.dns/admin.hosting-accounts.dns/g' resources/views/client/hosting-accounts/dns/show.blade.php)",
+      "Bash(chmod +x scripts/manage-mail.sh scripts/manage-mail-dkim.sh)",
+      "Bash(bash -n scripts/manage-mail.sh)",
+      "Bash(bash -n scripts/manage-mail-dkim.sh)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

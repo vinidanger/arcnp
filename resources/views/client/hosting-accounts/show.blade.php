@@ -8,6 +8,7 @@
                     <a href="{{ route('client.hosting-accounts.cron.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Cron') }}</a>
                     <a href="{{ route('client.hosting-accounts.ssh.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('SSH') }}</a>
                     <a href="{{ route('client.hosting-accounts.dns.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('DNS') }}</a>
+                    <a href="{{ route('client.hosting-accounts.mail.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('E-mail') }}</a>
                 @endif
 
                 @if ($account->status === 'active' && $account->ssl_status !== 'active')

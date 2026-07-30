@@ -11,6 +11,10 @@ return [
     // seção 15) — pública, diferente da 8443 privada do Agent.
     'phpmyadmin_port' => 8444,
 
+    // Porta dedicada do vhost do Roundcube (webmail) no Agent
+    // (deploy/README.md seção 24) — pública, mesma lógica da 8444.
+    'webmail_port' => 8445,
+
     // Quantas cópias mais recentes de cada backup (arquivos + cada
     // banco) o Agent mantém antes de apagar as mais antigas.
     'backup_retention' => 5,

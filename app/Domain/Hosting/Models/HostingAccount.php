@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class HostingAccount extends Model
 {
@@ -84,5 +85,15 @@ class HostingAccount extends Model
     public function dnsZones(): HasMany
     {
         return $this->hasMany(DnsZone::class);
+    }
+
+    public function mailDomains(): HasMany
+    {
+        return $this->hasMany(MailDomain::class);
+    }
+
+    public function mailboxes(): HasManyThrough
+    {
+        return $this->hasManyThrough(Mailbox::class, MailDomain::class);
     }
 }

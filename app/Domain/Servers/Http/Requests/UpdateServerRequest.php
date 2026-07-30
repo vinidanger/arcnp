@@ -20,6 +20,7 @@ class UpdateServerRequest extends FormRequest
             'public_ip_address' => ['nullable', 'ip'],
             'dns_ns1' => ['nullable', 'string', 'max:255'],
             'dns_ns2' => ['nullable', 'string', 'max:255'],
+            'mail_hostname' => ['nullable', 'string', 'max:255'],
             'agent_port' => ['required', 'integer', 'min:1', 'max:65535'],
             'use_tls' => ['boolean'],
             'os' => ['nullable', 'string', 'max:255'],

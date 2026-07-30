@@ -39,6 +39,13 @@
     <div class="form-text mt-n2 mb-3">{{ __('Preencha só se esse servidor for autoritativo pra zonas DNS (BIND) — precisa de pelo menos um nameserver configurado pra criar zonas.') }}</div>
 </div>
 
+<div class="mb-3">
+    <x-input-label for="mail_hostname" value="{{ __('Hostname de e-mail (SMTP/IMAP)') }}" />
+    <x-text-input id="mail_hostname" name="mail_hostname" type="text" :value="old('mail_hostname', $server?->mail_hostname)" placeholder="mail.seudominio.com" />
+    <div class="form-text">{{ __('Hostname que os clientes configuram no Outlook/celular pra SMTP e IMAP. Precisa ter certificado TLS válido emitido nesse servidor (ver deploy/README.md seção 22 do Agent). Só preencha se o Postfix/Dovecot já estiverem instalados.') }}</div>
+    <x-input-error :messages="$errors->get('mail_hostname')" class="mt-2" />
+</div>
+
 <div class="row">
     <div class="col-6 mb-3">
         <x-input-label for="agent_port" value="{{ __('Porta do Agent') }}" />

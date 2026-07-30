@@ -4,6 +4,7 @@ namespace App\Domain\Servers\Models;
 
 use App\Domain\Hosting\Models\DnsZone;
 use App\Domain\Hosting\Models\HostingAccount;
+use App\Domain\Hosting\Models\MailDomain;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -18,6 +19,7 @@ class Server extends Model
         'public_ip_address',
         'dns_ns1',
         'dns_ns2',
+        'mail_hostname',
         'agent_port',
         'use_tls',
         'os',
@@ -63,6 +65,11 @@ class Server extends Model
         return $this->hasManyThrough(DnsZone::class, HostingAccount::class);
     }
 
+    public function mailDomains(): HasManyThrough
+    {
+        return $this->hasManyThrough(MailDomain::class, HostingAccount::class);
+    }
+
     /** @return list<string> */
     public function nsHosts(): array
     {
@@ -81,5 +88,12 @@ class Server extends Model
         $host = $this->public_ip_address ?: $this->ip_address;
 
         return "https://{$host}:".config('hosting.phpmyadmin_port');
+    }
+
+    public function webmailBaseUrl(): string
+    {
+        $host = $this->public_ip_address ?: $this->ip_address;
+
+        return "https://{$host}:".config('hosting.webmail_port');
     }
 }

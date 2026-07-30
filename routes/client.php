@@ -4,6 +4,7 @@ use App\Domain\Hosting\Http\Controllers\Client\CronJobController;
 use App\Domain\Hosting\Http\Controllers\Client\DnsZoneController;
 use App\Domain\Hosting\Http\Controllers\Client\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Client\HostingAccountController;
+use App\Domain\Hosting\Http\Controllers\Client\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Client\SshAccessController;
 use Illuminate\Support\Facades\Route;
 
@@ -78,3 +79,22 @@ Route::put('hosting-accounts/{hosting_account}/dns/{dns_zone}/records/{dns_recor
     ->name('hosting-accounts.dns.records.update');
 Route::delete('hosting-accounts/{hosting_account}/dns/{dns_zone}/records/{dns_record}', [DnsZoneController::class, 'destroyRecord'])
     ->name('hosting-accounts.dns.records.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/mail', [MailDomainController::class, 'index'])
+    ->name('hosting-accounts.mail.index');
+Route::post('hosting-accounts/{hosting_account}/mail', [MailDomainController::class, 'store'])
+    ->name('hosting-accounts.mail.store');
+Route::get('hosting-accounts/{hosting_account}/mail/{mail_domain}', [MailDomainController::class, 'show'])
+    ->name('hosting-accounts.mail.show');
+Route::delete('hosting-accounts/{hosting_account}/mail/{mail_domain}', [MailDomainController::class, 'destroy'])
+    ->name('hosting-accounts.mail.destroy');
+Route::post('hosting-accounts/{hosting_account}/mail/{mail_domain}/dns-records', [MailDomainController::class, 'createDnsRecords'])
+    ->name('hosting-accounts.mail.dns-records.store');
+Route::post('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes', [MailDomainController::class, 'storeMailbox'])
+    ->name('hosting-accounts.mail.mailboxes.store');
+Route::put('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mailbox}/password', [MailDomainController::class, 'updateMailboxPassword'])
+    ->name('hosting-accounts.mail.mailboxes.password.update');
+Route::delete('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mailbox}', [MailDomainController::class, 'destroyMailbox'])
+    ->name('hosting-accounts.mail.mailboxes.destroy');
+Route::get('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mailbox}/webmail', [MailDomainController::class, 'webmailSso'])
+    ->name('hosting-accounts.mail.mailboxes.webmail');

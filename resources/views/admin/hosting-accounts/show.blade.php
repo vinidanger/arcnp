@@ -8,6 +8,7 @@
                     <a href="{{ route('admin.hosting-accounts.cron.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Cron') }}</a>
                     <a href="{{ route('admin.hosting-accounts.ssh.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('SSH') }}</a>
                     <a href="{{ route('admin.hosting-accounts.dns.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('DNS') }}</a>
+                    <a href="{{ route('admin.hosting-accounts.mail.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('E-mail') }}</a>
                 @endif
 
                 @if ($account->status === 'error')
