@@ -12,6 +12,25 @@
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
 
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="GET" class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">{{ __('Todos os status') }}</option>
+                        <option value="online" @selected(request('status') === 'online')>{{ __('Online') }}</option>
+                        <option value="offline" @selected(request('status') === 'offline')>{{ __('Offline') }}</option>
+                    </select>
+                </div>
+                @if (request('status'))
+                    <div class="col-auto">
+                        <a href="{{ route('admin.servers.index') }}" class="btn btn-sm btn-link">{{ __('Limpar') }}</a>
+                    </div>
+                @endif
+            </form>
+        </div>
+    </div>
+
     <div class="card">
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">

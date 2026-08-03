@@ -6,12 +6,20 @@ use App\Domain\Clients\Http\Requests\StoreClientRequest;
 use App\Domain\Clients\Http\Requests\UpdateClientRequest;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $clients = User::where('type', 'client')->orderBy('name')->paginate(20);
+        $clients = User::where('type', 'client')
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->string('search');
+                $q->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+            })
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.clients.index', compact('clients'));
     }

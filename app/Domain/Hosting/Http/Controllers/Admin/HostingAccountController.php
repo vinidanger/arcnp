@@ -21,11 +21,16 @@ use Throwable;
 
 class HostingAccountController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', HostingAccount::class);
 
-        $accounts = HostingAccount::with(['client', 'server', 'plan'])->latest()->paginate(20);
+        $accounts = HostingAccount::with(['client', 'server', 'plan'])
+            ->when($request->filled('search'), fn ($q) => $q->where('primary_domain', 'like', '%'.$request->string('search').'%'))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.hosting-accounts.index', compact('accounts'));
     }

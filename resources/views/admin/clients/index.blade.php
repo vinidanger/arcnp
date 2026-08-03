@@ -10,6 +10,22 @@
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
 
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="GET" class="row g-2 align-items-center">
+                <div class="col-auto flex-grow-1" style="max-width: 20rem;">
+                    <input type="text" name="search" value="{{ request('search') }}" class="form-control form-control-sm" placeholder="{{ __('Buscar por nome ou e-mail...') }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Filtrar') }}</button>
+                    @if (request('search'))
+                        <a href="{{ route('admin.clients.index') }}" class="btn btn-sm btn-link">{{ __('Limpar') }}</a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card">
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">

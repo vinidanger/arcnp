@@ -23,9 +23,12 @@ use Throwable;
  */
 class HostingAccountController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $accounts = auth()->user()->hostingAccounts()->with('plan')->latest()->get();
+        $accounts = auth()->user()->hostingAccounts()->with('plan')
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->latest()
+            ->get();
 
         return view('client.hosting-accounts.index', compact('accounts'));
     }

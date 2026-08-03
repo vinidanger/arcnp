@@ -7,7 +7,7 @@
 
         <title>{{ config('app.name', 'Arcn Panel') }}</title>
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.scss', 'resources/js/app.js'])
     </head>
     <body>
         <div class="min-vh-100 d-flex flex-column justify-content-center align-items-center py-4">

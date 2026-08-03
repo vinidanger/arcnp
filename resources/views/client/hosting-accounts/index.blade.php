@@ -3,6 +3,26 @@
         <h1 class="h4 mb-0">{{ __('Minhas hospedagens') }}</h1>
     </x-slot>
 
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="GET" class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">{{ __('Todos os status') }}</option>
+                        @foreach (['active' => 'Ativo', 'suspended' => 'Suspenso', 'error' => 'Erro'] as $value => $label)
+                            <option value="{{ $value }}" @selected(request('status') === $value)>{{ __($label) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @if (request('status'))
+                    <div class="col-auto">
+                        <a href="{{ route('client.hosting-accounts.index') }}" class="btn btn-sm btn-link">{{ __('Limpar') }}</a>
+                    </div>
+                @endif
+            </form>
+        </div>
+    </div>
+
     <div class="card">
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">

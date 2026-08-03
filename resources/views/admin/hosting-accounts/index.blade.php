@@ -12,6 +12,30 @@
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
 
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="GET" class="row g-2 align-items-center">
+                <div class="col-auto flex-grow-1" style="max-width: 20rem;">
+                    <input type="text" name="search" value="{{ request('search') }}" class="form-control form-control-sm" placeholder="{{ __('Buscar por domínio...') }}">
+                </div>
+                <div class="col-auto">
+                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">{{ __('Todos os status') }}</option>
+                        @foreach (['active' => 'Ativo', 'suspended' => 'Suspenso', 'error' => 'Erro', 'creating' => 'Criando'] as $value => $label)
+                            <option value="{{ $value }}" @selected(request('status') === $value)>{{ __($label) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Filtrar') }}</button>
+                    @if (request('search') || request('status'))
+                        <a href="{{ route('admin.hosting-accounts.index') }}" class="btn btn-sm btn-link">{{ __('Limpar') }}</a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card">
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">

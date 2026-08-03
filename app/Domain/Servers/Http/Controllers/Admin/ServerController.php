@@ -7,15 +7,19 @@ use App\Domain\Servers\Http\Requests\UpdateServerRequest;
 use App\Domain\Servers\Models\Server;
 use App\Domain\Servers\Services\AgentHttpClient;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ServerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Server::class);
 
-        $servers = Server::orderBy('name')->paginate(20);
+        $servers = Server::when($request->filled('status'), fn ($q) => $q->where('agent_status', $request->string('status')))
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.servers.index', compact('servers'));
     }
