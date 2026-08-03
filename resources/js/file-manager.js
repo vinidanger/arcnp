@@ -79,12 +79,10 @@ function setupDropzone(config) {
     const importBtn = document.getElementById('btn-import');
     const statusEl = document.getElementById('upload-status');
 
-    if (! overlay) {
-        return;
-    }
-
-    let dragCounter = 0;
-
+    // Upload em si não depende da faixa de arrastar existir — botão
+    // "Importar" tem que funcionar mesmo se o overlay falhar por
+    // algum motivo (eram a mesma função antes, um dependia do outro
+    // sem necessidade).
     const uploadFiles = (fileList) => {
         if (! fileList || ! fileList.length) {
             return;
@@ -96,13 +94,15 @@ function setupDropzone(config) {
         formData.append('root', config.rootDomain);
         formData.append('_token', config.csrfToken);
 
-        statusEl.textContent = `Enviando ${fileList.length} arquivo(s)...`;
-        statusEl.classList.remove('d-none', 'text-danger');
+        if (statusEl) {
+            statusEl.textContent = `Enviando ${fileList.length} arquivo(s)...`;
+            statusEl.classList.remove('d-none', 'text-danger');
+        }
 
         fetch(config.uploadUrl, { method: 'POST', body: formData, headers: { Accept: 'application/json' } })
             .then((r) => r.json())
             .then((data) => {
-                if (data.errors && data.errors.length) {
+                if (statusEl && data.errors && data.errors.length) {
                     statusEl.textContent = `Falha em ${data.errors.length} arquivo(s): ${data.errors.join(' | ')}`;
                     statusEl.classList.add('text-danger');
                 }
@@ -112,11 +112,26 @@ function setupDropzone(config) {
                 }
             })
             .catch(() => {
-                statusEl.textContent = 'Falha ao enviar arquivos.';
-                statusEl.classList.add('text-danger');
+                if (statusEl) {
+                    statusEl.textContent = 'Falha ao enviar arquivos.';
+                    statusEl.classList.add('text-danger');
+                }
             });
     };
 
+    if (importBtn && fileInput) {
+        importBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => {
+            uploadFiles(fileInput.files);
+            fileInput.value = '';
+        });
+    }
+
+    if (! overlay) {
+        return;
+    }
+
+    let dragCounter = 0;
     const hasFiles = (e) => Array.from(e.dataTransfer?.types || []).includes('Files');
 
     window.addEventListener('dragenter', (e) => {
@@ -153,11 +168,6 @@ function setupDropzone(config) {
         overlay.classList.add('d-none');
         uploadFiles(e.dataTransfer.files);
     });
-
-    if (importBtn && fileInput) {
-        importBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', () => uploadFiles(fileInput.files));
-    }
 }
 
 /**

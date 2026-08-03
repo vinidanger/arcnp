@@ -38,6 +38,11 @@ body {
     // de tema em tempo de execução (data-bs-theme), não só ao valor
     // fixo calculado na hora de compilar o Sass.
     background-color: var(--bs-body-bg);
+    // Rede de segurança: nada nessa página deveria crescer mais largo
+    // que a viewport, mas se algo escapar (ex: menu lateral retraído),
+    // isso vira "clip" silencioso em vez de rolagem horizontal na
+    // página inteira.
+    overflow-x: hidden;
 }
 
 .card {
@@ -198,16 +203,25 @@ html.sidebar-collapsed .app-sidebar {
     // na página inteira.
     overflow: hidden;
     min-width: 4.25rem;
+    // p-3 padrão (1rem) some quase tudo dos 4.25rem — reduz aqui em vez
+    // de zerar padding item por item (mais fácil de esquecer um).
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
 }
 
 html.sidebar-collapsed .sidebar-label {
     display: none;
 }
 
-html.sidebar-collapsed .app-sidebar .nav-link {
+html.sidebar-collapsed .app-sidebar-brand,
+html.sidebar-collapsed .app-sidebar .nav-link,
+html.sidebar-collapsed #sidebar-toggle,
+html.sidebar-collapsed #theme-toggle,
+html.sidebar-collapsed .app-sidebar-footer .dropdown-toggle > div {
     justify-content: center;
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    gap: 0 !important;
 }
 
 html.sidebar-collapsed .app-sidebar .nav-link i {
@@ -216,20 +230,11 @@ html.sidebar-collapsed .app-sidebar .nav-link i {
 
 html.sidebar-collapsed #sidebar-toggle,
 html.sidebar-collapsed #theme-toggle {
-    justify-content: center;
     width: 100%;
-    padding-left: 0;
-    padding-right: 0;
 }
 
 html.sidebar-collapsed #sidebar-toggle i {
     transform: rotate(180deg);
-}
-
-html.sidebar-collapsed .app-sidebar-footer .dropdown-toggle > div {
-    justify-content: center;
-    padding-left: 0;
-    padding-right: 0;
 }
 
 // ---------------------------------------------------------------------
