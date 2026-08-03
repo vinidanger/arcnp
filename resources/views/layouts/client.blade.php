@@ -9,7 +9,7 @@
 
         <title>{{ config('app.name', 'Arcn Panel') }}</title>
 
-        @vite(['resources/css/app.scss', 'resources/js/app.js'])
+        @vite(['resources/css/app.scss', 'resources/js/app.js', 'resources/js/file-manager.js'])
     </head>
     <body>
         <div class="d-flex" style="min-height: 100vh;">

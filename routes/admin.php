@@ -73,6 +73,8 @@ Route::post('hosting-accounts/{hosting_account}/files/compress', [FileManagerCon
     ->name('hosting-accounts.files.compress');
 Route::post('hosting-accounts/{hosting_account}/files/extract', [FileManagerController::class, 'extract'])
     ->name('hosting-accounts.files.extract');
+Route::get('hosting-accounts/{hosting_account}/files/download', [FileManagerController::class, 'download'])
+    ->name('hosting-accounts.files.download');
 
 Route::get('hosting-accounts/{hosting_account}/cron', [CronJobController::class, 'index'])
     ->name('hosting-accounts.cron.index');

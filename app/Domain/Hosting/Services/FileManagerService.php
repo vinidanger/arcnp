@@ -5,6 +5,7 @@ namespace App\Domain\Hosting\Services;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Servers\Services\AgentHttpClient;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Todas as operações são síncronas — o Agent já responde na mesma
@@ -107,6 +108,25 @@ class FileManagerService
     {
         $this->assertUnderQuota($account);
         $this->run($account, 'files.extract', ['path' => $path, 'dest' => $dest], $root);
+    }
+
+    /**
+     * Não passa pelo dispatch() de ação JSON, mesmo motivo do upload —
+     * reaproveita o streamDownload() genérico (já usado pelos backups)
+     * com a rota própria de arquivo do Agent. path/root vão codificados
+     * num token de rota (ver FileDownloadController no Agent) em vez
+     * de querystring, pra bater com a assinatura HMAC.
+     */
+    public function download(HostingAccount $account, string $path, ?string $root = null): StreamedResponse
+    {
+        if ($root !== null) {
+            $this->assertRootBelongsToAccount($account, $root);
+        }
+
+        $token = rawurlencode(json_encode(['path' => $path, 'root' => $root]));
+        $agentPath = "api/files/{$account->linux_username}/download/{$token}";
+
+        return $this->client->streamDownload($account->server, $agentPath, basename($path));
     }
 
     private function run(HostingAccount $account, string $action, array $payload, ?string $root = null): array

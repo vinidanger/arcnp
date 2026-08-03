@@ -250,6 +250,16 @@ class FileManagerController extends Controller
         }
     }
 
+    public function download(Request $request, HostingAccount $hosting_account, FileManagerService $files)
+    {
+        $this->authorize('view', $hosting_account);
+
+        $path = (string) $request->query('path', '');
+        $root = $this->rootFrom($request);
+
+        return $files->download($hosting_account, $path, $root);
+    }
+
     private function rootFrom(Request $request): ?string
     {
         $root = $request->query('root');

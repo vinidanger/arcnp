@@ -1,12 +1,14 @@
 @php
     $entryPathOf = fn ($entry) => trim($path.'/'.$entry['name'], '/');
+    $parentPath = null;
+    if ($path !== '') {
+        $computed = dirname($path);
+        $parentPath = $computed === '.' ? '' : $computed;
+    }
+    $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'];
 @endphp
 
 <x-client-layout>
-    @push('scripts')
-        @vite('resources/js/file-manager.js')
-    @endpush
-
     <x-slot name="header">
         <h1 class="h4 mb-0">{{ __('Arquivos') }} — {{ $account->primary_domain }}</h1>
     </x-slot>
@@ -44,6 +46,13 @@
             <div class="vr"></div>
         @endif
 
+        @if ($parentPath !== null)
+            <a href="{{ route('client.hosting-accounts.files.index', [$account, 'path' => $parentPath, 'root' => $root]) }}"
+               class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 flex-shrink-0">
+                <i class="bi bi-arrow-left"></i> {{ __('Voltar') }}
+            </a>
+        @endif
+
         <nav aria-label="breadcrumb" class="flex-grow-1">
             <ol class="breadcrumb file-breadcrumb">
                 <li class="breadcrumb-item {{ $path === '' ? 'active' : '' }}">
@@ -77,7 +86,7 @@
          data-root="{{ $root }}"
          data-csrf="{{ csrf_token() }}">
 
-        <div class="d-flex gap-2 mb-3">
+        <div class="d-flex gap-2 mb-3 flex-wrap">
             <div class="dropdown">
                 <button class="btn btn-sm btn-primary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
                     <i class="bi bi-plus-lg"></i> {{ __('Criar novo') }}
@@ -102,7 +111,11 @@
             <input type="file" id="file-upload-input" class="d-none" multiple>
 
             <button type="button" id="btn-compress-selected" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
-                <i class="bi bi-file-earmark-zip"></i> {{ __('Compactar selecionados') }}
+                <i class="bi bi-file-earmark-zip"></i> {{ __('Compactar') }}
+            </button>
+
+            <button type="button" id="btn-delete-selected" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1">
+                <i class="bi bi-trash"></i> {{ __('Excluir selecionados') }}
             </button>
 
             <div id="upload-status" class="small align-self-center d-none"></div>
@@ -123,20 +136,43 @@
                         @forelse ($entries as $entry)
                             @php
                                 $entryPath = $entryPathOf($entry);
-                                $isZip = $entry['type'] === 'file' && \Illuminate\Support\Str::endsWith(strtolower($entry['name']), '.zip');
-                                $openUrl = $entry['type'] === 'directory'
-                                    ? route('client.hosting-accounts.files.index', [$account, 'path' => $entryPath, 'root' => $root])
-                                    : route('client.hosting-accounts.files.edit', [$account, 'path' => $entryPath, 'root' => $root]);
+                                $ext = strtolower(pathinfo($entry['name'], PATHINFO_EXTENSION));
+                                $isImage = $entry['type'] === 'file' && in_array($ext, $imageExtensions, true);
+                                $isZip = $entry['type'] === 'file' && $ext === 'zip';
+                                $kind = match (true) {
+                                    $entry['type'] === 'directory' => 'directory',
+                                    $isImage => 'image',
+                                    $isZip => 'other',
+                                    default => 'text',
+                                };
+                                $icon = match ($kind) {
+                                    'directory' => 'bi-folder-fill text-warning',
+                                    'image' => 'bi-file-earmark-image',
+                                    'other' => 'bi-file-earmark-zip',
+                                    default => 'bi-file-earmark-text',
+                                };
+                                $navigateUrl = match ($kind) {
+                                    'directory' => route('client.hosting-accounts.files.index', [$account, 'path' => $entryPath, 'root' => $root]),
+                                    'text' => route('client.hosting-accounts.files.edit', [$account, 'path' => $entryPath, 'root' => $root]),
+                                    default => null,
+                                };
+                                $downloadUrl = $entry['type'] === 'file'
+                                    ? route('client.hosting-accounts.files.download', [$account, 'path' => $entryPath, 'root' => $root])
+                                    : null;
                             @endphp
-                            <tr class="file-row" data-path="{{ $entryPath }}" data-name="{{ $entry['name'] }}" data-type="{{ $entry['type'] }}" data-zip="{{ $isZip ? '1' : '0' }}" data-href="{{ $openUrl }}">
+                            <tr class="file-row" data-path="{{ $entryPath }}" data-name="{{ $entry['name'] }}" data-type="{{ $entry['type'] }}"
+                                data-kind="{{ $kind }}" data-zip="{{ $isZip ? '1' : '0' }}" data-href="{{ $navigateUrl }}" data-download-url="{{ $downloadUrl }}">
                                 <td>
                                     <input type="checkbox" class="form-check-input file-select" value="{{ $entryPath }}">
                                 </td>
                                 <td>
-                                    <a href="{{ $openUrl }}">
-                                        <i class="bi {{ $entry['type'] === 'directory' ? 'bi-folder-fill text-warning' : ($isZip ? 'bi-file-earmark-zip' : 'bi-file-earmark') }}"></i>
-                                        {{ $entry['name'] }}
-                                    </a>
+                                    @if ($kind === 'other')
+                                        <span class="text-body"><i class="bi {{ $icon }}"></i> {{ $entry['name'] }}</span>
+                                    @elseif ($kind === 'image')
+                                        <a href="#" class="file-preview-image"><i class="bi {{ $icon }}"></i> {{ $entry['name'] }}</a>
+                                    @else
+                                        <a href="{{ $navigateUrl }}"><i class="bi {{ $icon }}"></i> {{ $entry['name'] }}</a>
+                                    @endif
                                 </td>
                                 <td class="small text-secondary">{{ $entry['size'] !== null ? number_format($entry['size'] / 1024, 1).' KB' : '—' }}</td>
                                 <td class="small text-secondary">{{ \Illuminate\Support\Carbon::parse($entry['modified_at'])->format('d/m/Y H:i') }}</td>
@@ -163,12 +199,24 @@
     {{-- Menu de contexto (botão direito) --}}
     <ul id="file-context-menu" class="dropdown-menu file-context-menu shadow">
         <li><a class="dropdown-item" href="#" data-ctx="open"><i class="bi bi-box-arrow-up-right me-2"></i>{{ __('Abrir') }}</a></li>
+        <li><a class="dropdown-item" href="#" data-ctx="download"><i class="bi bi-download me-2"></i>{{ __('Baixar') }}</a></li>
         <li><a class="dropdown-item" href="#" data-ctx="extract"><i class="bi bi-file-earmark-zip me-2"></i>{{ __('Extrair aqui') }}</a></li>
         <li><a class="dropdown-item" href="#" data-ctx="compress"><i class="bi bi-file-earmark-zip-fill me-2"></i>{{ __('Compactar') }}</a></li>
         <li><a class="dropdown-item" href="#" data-ctx="rename"><i class="bi bi-pencil me-2"></i>{{ __('Renomear') }}</a></li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item text-danger" href="#" data-ctx="delete"><i class="bi bi-trash me-2"></i>{{ __('Remover') }}</a></li>
     </ul>
+
+    {{-- Modal: preview de imagem --}}
+    <x-modal name="image-preview-modal" maxWidth="lg">
+        <div class="modal-header">
+            <h5 class="modal-title" id="image-preview-title"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+            <img id="image-preview-img" src="" alt="" class="img-fluid" style="max-height: 70vh;">
+        </div>
+    </x-modal>
 
     {{-- Modal: nova pasta --}}
     <x-modal name="new-folder-modal" maxWidth="sm">

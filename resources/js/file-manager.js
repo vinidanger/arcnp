@@ -1,10 +1,10 @@
 // Gerenciador de arquivos: upload por arrastar/soltar (só aparece
 // enquanto arrasta), menu de contexto (botão direito) com suporte a
-// seleção múltipla (shift+clique), e modais pra criar pasta/arquivo —
-// tudo num arquivo só, reaproveitado nas telas de admin e cliente.
-// Toda URL/estado vem de atributos data-* no elemento raiz
-// (#file-manager), já que aqui não tem acesso ao helper route() do
-// Laravel.
+// seleção múltipla (shift+clique), preview de imagem, e modais pra
+// criar pasta/arquivo — tudo num arquivo só, reaproveitado nas telas
+// de admin e cliente. Toda URL/estado vem de atributos data-* no
+// elemento raiz (#file-manager), já que aqui não tem acesso ao helper
+// route() do Laravel.
 document.addEventListener('DOMContentLoaded', () => {
     const root = document.getElementById('file-manager');
 
@@ -24,8 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupDropzone(config);
     setupSelection();
+    setupImagePreview();
     setupContextMenu(config);
-    setupCompressSelected();
+    setupToolbarSelectionActions(config);
 });
 
 function submitHiddenForm(url, fields, method = 'POST', csrfToken) {
@@ -65,6 +66,23 @@ function submitHiddenForm(url, fields, method = 'POST', csrfToken) {
 
     document.body.appendChild(form);
     form.submit();
+}
+
+function getSelectedPaths() {
+    return Array.from(document.querySelectorAll('.file-select:checked')).map((cb) => cb.value);
+}
+
+function confirmAndDelete(paths, config) {
+    if (! paths.length) {
+        return;
+    }
+    const message = paths.length > 1
+        ? `Remove ${paths.length} itens definitivamente. Continuar?`
+        : 'Remove definitivamente. Continuar?';
+    if (! confirm(message)) {
+        return;
+    }
+    submitHiddenForm(config.destroyUrl, { paths, current_path: config.currentPath, root: config.rootDomain }, 'DELETE', config.csrfToken);
 }
 
 /**
@@ -164,6 +182,7 @@ function setupDropzone(config) {
             return;
         }
         e.preventDefault();
+        e.stopPropagation();
         dragCounter = 0;
         overlay.classList.add('d-none');
         uploadFiles(e.dataTransfer.files);
@@ -188,6 +207,32 @@ function setupSelection() {
                 }
             }
             lastIndex = index;
+        });
+    });
+}
+
+/**
+ * Clique no nome de uma imagem abre um preview em modal (via a mesma
+ * URL de download — <img> sempre renderiza inline, o cabeçalho de
+ * download não afeta isso) em vez de tentar "editar" um binário.
+ */
+function setupImagePreview() {
+    window.openImagePreview = (url, name) => {
+        const img = document.getElementById('image-preview-img');
+        const title = document.getElementById('image-preview-title');
+        if (! img || ! title) {
+            return;
+        }
+        img.src = url;
+        title.textContent = name;
+        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('image-preview-modal')).show();
+    };
+
+    document.querySelectorAll('.file-preview-image').forEach((link) => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const row = link.closest('.file-row');
+            window.openImagePreview(row.dataset.downloadUrl, row.dataset.name);
         });
     });
 }
@@ -233,7 +278,10 @@ function setupContextMenu(config) {
             }
 
             const isMulti = selectedPaths.length > 1;
-            toggleItem('open', isMulti);
+            const kind = singleRow?.dataset.kind;
+
+            toggleItem('open', isMulti || ! singleRow || kind === 'other');
+            toggleItem('download', isMulti || ! singleRow || singleRow.dataset.type !== 'file');
             toggleItem('rename', isMulti);
             toggleItem('extract', isMulti || ! singleRow || singleRow.dataset.zip !== '1');
 
@@ -250,8 +298,20 @@ function setupContextMenu(config) {
 
     menu.querySelector('[data-ctx="open"]').addEventListener('click', (e) => {
         e.preventDefault();
-        if (singleRow) {
+        if (! singleRow) {
+            return;
+        }
+        if (singleRow.dataset.kind === 'image') {
+            window.openImagePreview(singleRow.dataset.downloadUrl, singleRow.dataset.name);
+        } else {
             window.location.href = singleRow.dataset.href;
+        }
+    });
+
+    menu.querySelector('[data-ctx="download"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (singleRow) {
+            window.location.href = singleRow.dataset.downloadUrl;
         }
     });
 
@@ -285,16 +345,7 @@ function setupContextMenu(config) {
 
     menu.querySelector('[data-ctx="delete"]').addEventListener('click', (e) => {
         e.preventDefault();
-        if (! selectedPaths.length) {
-            return;
-        }
-        const message = selectedPaths.length > 1
-            ? `Remove ${selectedPaths.length} itens definitivamente. Continuar?`
-            : 'Remove definitivamente. Continuar?';
-        if (! confirm(message)) {
-            return;
-        }
-        submitHiddenForm(config.destroyUrl, { paths: selectedPaths, current_path: config.currentPath, root: config.rootDomain }, 'DELETE', config.csrfToken);
+        confirmAndDelete(selectedPaths, config);
     });
 
     window.openCompressModal = (paths) => {
@@ -313,21 +364,29 @@ function setupContextMenu(config) {
     };
 }
 
-function setupCompressSelected() {
-    const btn = document.getElementById('btn-compress-selected');
+function setupToolbarSelectionActions(config) {
+    const compressBtn = document.getElementById('btn-compress-selected');
+    const deleteBtn = document.getElementById('btn-delete-selected');
 
-    if (! btn) {
-        return;
+    if (compressBtn) {
+        compressBtn.addEventListener('click', () => {
+            const paths = getSelectedPaths();
+            if (! paths.length) {
+                alert('Selecione ao menos um item.');
+                return;
+            }
+            window.openCompressModal(paths);
+        });
     }
 
-    btn.addEventListener('click', () => {
-        const paths = Array.from(document.querySelectorAll('.file-select:checked')).map((cb) => cb.value);
-
-        if (! paths.length) {
-            alert('Selecione ao menos um item.');
-            return;
-        }
-
-        window.openCompressModal(paths);
-    });
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            const paths = getSelectedPaths();
+            if (! paths.length) {
+                alert('Selecione ao menos um item.');
+                return;
+            }
+            confirmAndDelete(paths, config);
+        });
+    }
 }
