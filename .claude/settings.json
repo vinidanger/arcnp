@@ -21,7 +21,8 @@
       "Bash(chmod +x scripts/manage-mail.sh scripts/manage-mail-dkim.sh)",
       "Bash(bash -n scripts/manage-mail.sh)",
       "Bash(bash -n scripts/manage-mail-dkim.sh)",
-      "Bash(node --check resources/js/app.js)"
+      "Bash(node --check resources/js/app.js)",
+      "Bash(php -l resources/views/client/dashboard.blade.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

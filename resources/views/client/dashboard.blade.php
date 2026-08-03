@@ -111,31 +111,38 @@
     @if ($primary)
         <div class="card mb-4">
             <div class="card-body">
-                <h2 class="h6">{{ __('Plano de hospedagem') }} — {{ $primary->primary_domain }}</h2>
-                <dl class="row mb-0 small">
-                    <dt class="col-sm-3">{{ __('Plano') }}</dt>
-                    <dd class="col-sm-9">{{ $primary->plan->name }}</dd>
-
-                    <dt class="col-sm-3">{{ __('IP do servidor') }}</dt>
-                    <dd class="col-sm-9">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h2 class="h6 mb-0">{{ __('Plano de hospedagem') }} — {{ $primary->primary_domain }}</h2>
+                    <div class="d-flex align-items-center gap-3 small text-secondary">
+                        <span>{{ __('Plano') }}: <strong class="text-body">{{ $primary->plan->name }}</strong></span>
                         @if ($primary->server)
-                            <code>{{ $primary->server->public_ip_address ?: $primary->server->ip_address }}</code>
-                        @else
-                            —
+                            <span>{{ __('IP') }}: <code>{{ $primary->server->public_ip_address ?: $primary->server->ip_address }}</code></span>
                         @endif
-                    </dd>
+                    </div>
+                </div>
 
-                    <dt class="col-sm-3">{{ __('Limites') }}</dt>
-                    <dd class="col-sm-9">
-                        {{ __('Disco') }}: {{ number_format($primary->plan->disk_quota_mb / 1024, 1) }} GB
-                        · {{ __('Banda') }}: {{ $primary->plan->bandwidth_quota_mb ? number_format($primary->plan->bandwidth_quota_mb / 1024, 1).' GB' : __('Ilimitada') }}
-                        · {{ __('Bancos') }}: {{ $primary->plan->max_databases }}
-                        · {{ __('Domínios') }}: {{ $primary->plan->max_addon_domains }}
-                        · {{ __('E-mails') }}: {{ $primary->plan->max_email_accounts }}
-                        · {{ __('Cron') }}: {{ $primary->plan->max_cron_jobs }}
-                        · {{ __('Backups') }}: {{ $primary->plan->max_backups }}
-                    </dd>
-                </dl>
+                @php
+                    $limits = [
+                        ['icon' => 'bi-hdd', 'label' => __('Disco'), 'value' => number_format($primary->plan->disk_quota_mb / 1024, 1).' GB'],
+                        ['icon' => 'bi-router', 'label' => __('Banda'), 'value' => $primary->plan->bandwidth_quota_mb ? number_format($primary->plan->bandwidth_quota_mb / 1024, 1).' GB' : __('Ilimitada')],
+                        ['icon' => 'bi-database', 'label' => __('Bancos'), 'value' => $primary->plan->max_databases],
+                        ['icon' => 'bi-globe2', 'label' => __('Domínios'), 'value' => $primary->plan->max_addon_domains],
+                        ['icon' => 'bi-envelope', 'label' => __('E-mails'), 'value' => $primary->plan->max_email_accounts],
+                        ['icon' => 'bi-clock-history', 'label' => __('Cron'), 'value' => $primary->plan->max_cron_jobs],
+                        ['icon' => 'bi-archive', 'label' => __('Backups'), 'value' => $primary->plan->max_backups],
+                    ];
+                @endphp
+                <div class="row g-2">
+                    @foreach ($limits as $limit)
+                        <div class="col-6 col-md-3 col-lg">
+                            <div class="border rounded-3 p-2 text-center h-100">
+                                <i class="bi {{ $limit['icon'] }} text-secondary"></i>
+                                <div class="fw-semibold">{{ $limit['value'] }}</div>
+                                <div class="small text-secondary">{{ $limit['label'] }}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
 
