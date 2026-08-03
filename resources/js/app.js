@@ -52,3 +52,52 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+/**
+ * Mantém a aba ativa (Visão geral/Domínios/Bancos/Backups) através de
+ * reloads — sem isso, qualquer form dentro de uma aba (ex.: "Adicionar
+ * domínio") volta pra primeira aba depois do redirect do Laravel
+ * (back()), porque o estado de aba do Bootstrap é só classe CSS, não
+ * sobrevive a um load novo da página.
+ *
+ * A URL guarda a aba atual em #tab-x. O truque: quando um form é
+ * enviado, grudamos o #hash atual na própria action ANTES de submeter —
+ * o back() do Laravel redireciona sem fragmento próprio, mas o
+ * navegador propaga automaticamente o fragmento da requisição original
+ * pra URL final quando o Location do redirect não define um (comportamento
+ * padrão de fragmento em redirect, não precisa de nada server-side).
+ * Funciona pra QUALQUER form da página (inclusive os de fora das abas,
+ * tipo "Emitir SSL" no cabeçalho) sem precisar anotar cada form
+ * individualmente no Blade.
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"][data-bs-target^="#tab-"]');
+
+    if (! tabButtons.length) {
+        return;
+    }
+
+    if (location.hash) {
+        const target = document.querySelector(`[data-bs-toggle="tab"][data-bs-target="${location.hash}"]`);
+        if (target) {
+            bootstrap.Tab.getOrCreateInstance(target).show();
+        }
+    }
+
+    tabButtons.forEach((button) => {
+        button.addEventListener('shown.bs.tab', () => {
+            history.replaceState(null, '', button.dataset.bsTarget);
+        });
+    });
+
+    document.querySelectorAll('form').forEach((form) => {
+        form.addEventListener('submit', () => {
+            if (! location.hash) {
+                return;
+            }
+            const url = new URL(form.action, window.location.origin);
+            url.hash = location.hash;
+            form.action = url.toString();
+        });
+    });
+});
