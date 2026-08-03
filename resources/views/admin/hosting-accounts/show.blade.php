@@ -518,7 +518,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                             <td class="text-end">
                                                 @if ($backup->status === 'completed')
                                                     <div class="dropdown d-inline-block">
-                                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
+                                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" data-bs-strategy="fixed">
                                                             <i class="bi bi-download"></i> {{ __('Baixar') }}
                                                         </button>
                                                         <ul class="dropdown-menu dropdown-menu-end">

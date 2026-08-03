@@ -25,8 +25,7 @@ class DashboardController extends Controller
         $recentAccounts = HostingAccount::with(['client', 'plan'])->latest()->take(6)->get();
 
         $attentionAccounts = HostingAccount::with(['client', 'plan'])
-            ->whereIn('status', ['suspended', 'error'])
-            ->orWhere('ssl_status', 'failed')
+            ->needsAttention()
             ->latest()
             ->take(6)
             ->get();

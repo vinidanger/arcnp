@@ -13,14 +13,14 @@
 
         <x-slot name="content">
             <x-dropdown-link :href="route('profile.edit')">
-                <i class="bi bi-person me-1"></i> {{ __('Profile') }}
+                <i class="bi bi-person me-1"></i> {{ __('Perfil') }}
             </x-dropdown-link>
 
             <li>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="dropdown-item">
-                        <i class="bi bi-box-arrow-right me-1"></i> {{ __('Log Out') }}
+                        <i class="bi bi-box-arrow-right me-1"></i> {{ __('Sair') }}
                     </button>
                 </form>
             </li>

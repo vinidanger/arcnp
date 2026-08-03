@@ -18,9 +18,17 @@ class DashboardController extends Controller
             'disk_quota_mb' => (int) $accounts->sum(fn ($a) => $a->plan->disk_quota_mb ?? 0),
         ];
 
+        $attentionAccounts = Auth::user()->hostingAccounts()
+            ->with('plan')
+            ->needsAttention()
+            ->latest()
+            ->take(6)
+            ->get();
+
         return view('client.dashboard', [
             'stats' => $stats,
             'accounts' => $accounts->take(5),
+            'attentionAccounts' => $attentionAccounts,
         ]);
     }
 }

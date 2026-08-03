@@ -46,32 +46,63 @@
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h6 mb-0">{{ __('Minhas hospedagens') }}</h2>
-                <a href="{{ route('client.hosting-accounts.index') }}" class="btn btn-sm btn-outline-primary">{{ __('Ver todas') }}</a>
-            </div>
-
-            @forelse ($accounts as $account)
-                <div class="d-flex justify-content-between align-items-center py-2 {{ ! $loop->last ? 'border-bottom' : '' }}">
-                    <div>
-                        <a href="{{ route('client.hosting-accounts.show', $account) }}">{{ $account->primary_domain }}</a>
-                        <div class="small text-secondary">{{ $account->plan?->name }}</div>
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h6 mb-0">{{ __('Minhas hospedagens') }}</h2>
+                        <a href="{{ route('client.hosting-accounts.index') }}" class="btn btn-sm btn-outline-primary">{{ __('Ver todas') }}</a>
                     </div>
-                    @php
-                        $badge = match ($account->status) {
-                            'active' => 'success',
-                            'suspended' => 'warning',
-                            'error' => 'danger',
-                            default => 'secondary',
-                        };
-                    @endphp
-                    <span class="badge text-bg-{{ $badge }}">{{ $account->status }}</span>
+
+                    @forelse ($accounts as $account)
+                        <div class="d-flex justify-content-between align-items-center py-2 {{ ! $loop->last ? 'border-bottom' : '' }}">
+                            <div>
+                                <a href="{{ route('client.hosting-accounts.show', $account) }}">{{ $account->primary_domain }}</a>
+                                <div class="small text-secondary">{{ $account->plan?->name }}</div>
+                            </div>
+                            @php
+                                $badge = match ($account->status) {
+                                    'active' => 'success',
+                                    'suspended' => 'warning',
+                                    'error' => 'danger',
+                                    default => 'secondary',
+                                };
+                            @endphp
+                            <span class="badge text-bg-{{ $badge }}">{{ $account->status }}</span>
+                        </div>
+                    @empty
+                        <p class="small text-secondary mb-0">{{ __('Você ainda não tem nenhuma hospedagem.') }}</p>
+                    @endforelse
                 </div>
-            @empty
-                <p class="small text-secondary mb-0">{{ __('Você ainda não tem nenhuma hospedagem.') }}</p>
-            @endforelse
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">{{ __('Precisa de atenção') }}</h2>
+
+                    @forelse ($attentionAccounts as $account)
+                        <div class="d-flex justify-content-between align-items-center py-2 {{ ! $loop->last ? 'border-bottom' : '' }}">
+                            <div>
+                                <a href="{{ route('client.hosting-accounts.show', $account) }}">{{ $account->primary_domain }}</a>
+                                <div class="small text-secondary">{{ $account->plan?->name }}</div>
+                            </div>
+                            <div class="d-flex gap-1">
+                                @if ($account->status !== 'active')
+                                    <span class="badge text-bg-{{ $account->status === 'suspended' ? 'warning' : 'danger' }}">{{ $account->status }}</span>
+                                @endif
+                                @if ($account->ssl_status === 'failed')
+                                    <span class="badge text-bg-danger">SSL</span>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <p class="small text-secondary mb-0">{{ __('Nada precisando de atenção agora — tudo tranquilo.') }}</p>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </div>
 

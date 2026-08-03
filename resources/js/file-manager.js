@@ -27,7 +27,36 @@ document.addEventListener('DOMContentLoaded', () => {
     setupImagePreview();
     setupContextMenu(config);
     setupToolbarSelectionActions(config);
+    setupOperationOverlay();
 });
+
+/**
+ * Extrair/compactar são POST tradicionais (recarregam a página) — não
+ * dá pra mostrar progresso real (o servidor só responde quando termina
+ * a operação inteira), mas um overlay com spinner evita a tela parecer
+ * travada durante o tempo de espera. Some sozinho quando a página
+ * recarrega, então não precisa de lógica pra escondê-lo de novo.
+ */
+function showOperationOverlay(message) {
+    const overlay = document.getElementById('file-operation-overlay');
+    const label = document.getElementById('file-operation-label');
+
+    if (! overlay) {
+        return;
+    }
+
+    if (label) {
+        label.textContent = message;
+    }
+
+    overlay.classList.remove('d-none');
+}
+
+function setupOperationOverlay() {
+    document.getElementById('compress-form')?.addEventListener('submit', () => {
+        showOperationOverlay('Compactando arquivos...');
+    });
+}
 
 function submitHiddenForm(url, fields, method = 'POST', csrfToken) {
     const form = document.createElement('form');
@@ -447,6 +476,7 @@ function setupContextMenu(config) {
         if (! confirm('Extrair aqui? Arquivos com o mesmo nome já existentes serão sobrescritos.')) {
             return;
         }
+        showOperationOverlay('Extraindo arquivo...');
         submitHiddenForm(config.extractUrl, { path: singleRow.dataset.path, root: config.rootDomain }, 'POST', config.csrfToken);
     });
 

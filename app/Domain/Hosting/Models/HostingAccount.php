@@ -100,4 +100,19 @@ class HostingAccount extends Model
     {
         return $this->hasManyThrough(Mailbox::class, MailDomain::class);
     }
+
+    /**
+     * Agrupado num where(function...) de propósito: sem isso, encadear
+     * depois de uma relação já filtrada (ex.: hostingAccounts() do
+     * cliente, que carrega um "where user_id = ?" implícito) vazaria
+     * contas de OUTROS donos com ssl_status=failed pra fora do filtro,
+     * por causa da precedência de AND/OR do SQL.
+     */
+    public function scopeNeedsAttention($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn('status', ['suspended', 'error'])
+                ->orWhere('ssl_status', 'failed');
+        });
+    }
 }

@@ -5,7 +5,7 @@
 @php $layout = auth()->user()->isAdmin() ? 'admin-layout' : 'client-layout'; @endphp
 <x-dynamic-component :component="$layout">
     <x-slot name="header">
-        <h1 class="h4 mb-0">{{ __('Profile') }}</h1>
+        <h1 class="h4 mb-0">{{ __('Perfil') }}</h1>
     </x-slot>
 
     <div class="d-flex flex-column gap-3">

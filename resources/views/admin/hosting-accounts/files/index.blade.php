@@ -208,6 +208,17 @@
         </div>
     </div>
 
+    {{-- Overlay de operação em andamento (extrair/compactar) — sem progresso
+         real (o servidor só responde quando termina), mas evita a tela
+         parecer travada durante operações mais demoradas. Some sozinho
+         quando a página recarrega (sucesso ou erro). --}}
+    <div id="file-operation-overlay" class="file-dropzone-overlay d-none">
+        <div class="file-dropzone-overlay-box">
+            <div class="spinner-border mb-2" role="status"></div>
+            <div id="file-operation-label">{{ __('Processando...') }}</div>
+        </div>
+    </div>
+
     {{-- Menu de contexto (botão direito) --}}
     <ul id="file-context-menu" class="dropdown-menu file-context-menu shadow">
         <li><a class="dropdown-item" href="#" data-ctx="open"><i class="bi bi-box-arrow-up-right me-2"></i>{{ __('Abrir') }}</a></li>
@@ -295,7 +306,7 @@
 
     {{-- Modal: compactar --}}
     <x-modal name="compress-modal" maxWidth="sm">
-        <form method="POST" action="{{ route('admin.hosting-accounts.files.compress', $account) }}">
+        <form id="compress-form" method="POST" action="{{ route('admin.hosting-accounts.files.compress', $account) }}">
             @csrf
             <div class="modal-header">
                 <h5 class="modal-title">{{ __('Compactar') }}</h5>
