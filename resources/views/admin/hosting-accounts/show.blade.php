@@ -223,9 +223,19 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
 
                         <dt class="col-sm-3">{{ __('Versão PHP') }}</dt>
                         <dd class="col-sm-9">
-                            {{ $account->php_version }}
                             @if ($account->status === 'active')
-                                <a href="{{ route('admin.hosting-accounts.php.index', $account) }}" class="small">{{ __('gerenciar') }}</a>
+                                <form method="POST" action="{{ route('admin.hosting-accounts.php.version.update', $account) }}" class="d-flex align-items-center gap-2">
+                                    @csrf
+                                    <select name="php_version" class="form-select form-select-sm w-auto">
+                                        @foreach (config('hosting.php_versions') as $version)
+                                            <option value="{{ $version }}" @selected($account->php_version === $version)>{{ $version }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Trocar') }}</button>
+                                    <a href="{{ route('admin.hosting-accounts.php.index', $account) }}" class="small">{{ __('mais configurações') }}</a>
+                                </form>
+                            @else
+                                {{ $account->php_version }}
                             @endif
                         </dd>
 
