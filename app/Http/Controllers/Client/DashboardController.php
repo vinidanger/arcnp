@@ -9,7 +9,7 @@ class DashboardController extends Controller
 {
     public function __invoke()
     {
-        $accounts = Auth::user()->hostingAccounts()->with('plan')->latest()->get();
+        $accounts = Auth::user()->hostingAccounts()->with(['plan', 'server'])->latest()->get();
 
         $stats = [
             'accounts_total' => $accounts->count(),

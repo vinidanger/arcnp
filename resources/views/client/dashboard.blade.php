@@ -109,45 +109,91 @@
     @php $primary = $accounts->firstWhere('status', 'active') ?? $accounts->first(); @endphp
 
     @if ($primary)
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6">{{ __('Plano de hospedagem') }} — {{ $primary->primary_domain }}</h2>
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-3">{{ __('Plano') }}</dt>
+                    <dd class="col-sm-9">{{ $primary->plan->name }}</dd>
+
+                    <dt class="col-sm-3">{{ __('IP do servidor') }}</dt>
+                    <dd class="col-sm-9">
+                        @if ($primary->server)
+                            <code>{{ $primary->server->public_ip_address ?: $primary->server->ip_address }}</code>
+                        @else
+                            —
+                        @endif
+                    </dd>
+
+                    <dt class="col-sm-3">{{ __('Limites') }}</dt>
+                    <dd class="col-sm-9">
+                        {{ __('Disco') }}: {{ number_format($primary->plan->disk_quota_mb / 1024, 1) }} GB
+                        · {{ __('Banda') }}: {{ $primary->plan->bandwidth_quota_mb ? number_format($primary->plan->bandwidth_quota_mb / 1024, 1).' GB' : __('Ilimitada') }}
+                        · {{ __('Bancos') }}: {{ $primary->plan->max_databases }}
+                        · {{ __('Domínios') }}: {{ $primary->plan->max_addon_domains }}
+                        · {{ __('E-mails') }}: {{ $primary->plan->max_email_accounts }}
+                        · {{ __('Cron') }}: {{ $primary->plan->max_cron_jobs }}
+                        · {{ __('Backups') }}: {{ $primary->plan->max_backups }}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
         <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">
             {{ __('Acesso rápido') }} — {{ $primary->primary_domain }}
         </div>
-        <div class="row g-3">
-            <div class="col-6 col-md-4 col-lg-2">
-                <a href="{{ route('client.hosting-accounts.files.index', $primary) }}" class="quick-link-card">
-                    <span class="quick-link-icon"><i class="bi bi-folder2-open"></i></span>
-                    <div class="fw-semibold small">{{ __('Arquivos') }}</div>
-                </a>
+
+        <div class="mb-3">
+            <div class="small text-secondary mb-2">{{ __('Site') }}</div>
+            <div class="row g-3">
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.files.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-folder2-open"></i></span>
+                        <div class="fw-semibold small">{{ __('Arquivos') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.php.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-sliders"></i></span>
+                        <div class="fw-semibold small">{{ __('PHP') }}</div>
+                    </a>
+                </div>
             </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <a href="{{ route('client.hosting-accounts.mail.index', $primary) }}" class="quick-link-card">
-                    <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
-                    <div class="fw-semibold small">{{ __('E-mail') }}</div>
-                </a>
+        </div>
+
+        <div class="mb-3">
+            <div class="small text-secondary mb-2">{{ __('Domínio') }}</div>
+            <div class="row g-3">
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.dns.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-globe2"></i></span>
+                        <div class="fw-semibold small">{{ __('DNS') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.mail.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
+                        <div class="fw-semibold small">{{ __('E-mail') }}</div>
+                    </a>
+                </div>
             </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <a href="{{ route('client.hosting-accounts.dns.index', $primary) }}" class="quick-link-card">
-                    <span class="quick-link-icon"><i class="bi bi-globe2"></i></span>
-                    <div class="fw-semibold small">{{ __('DNS') }}</div>
-                </a>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <a href="{{ route('client.hosting-accounts.cron.index', $primary) }}" class="quick-link-card">
-                    <span class="quick-link-icon"><i class="bi bi-clock-history"></i></span>
-                    <div class="fw-semibold small">{{ __('Cron') }}</div>
-                </a>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <a href="{{ route('client.hosting-accounts.ssh.index', $primary) }}" class="quick-link-card">
-                    <span class="quick-link-icon"><i class="bi bi-terminal"></i></span>
-                    <div class="fw-semibold small">{{ __('SSH') }}</div>
-                </a>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <a href="{{ route('client.hosting-accounts.show', $primary) }}" class="quick-link-card">
-                    <span class="quick-link-icon"><i class="bi bi-database"></i></span>
-                    <div class="fw-semibold small">{{ __('Bancos/Backup') }}</div>
-                </a>
+        </div>
+
+        <div>
+            <div class="small text-secondary mb-2">{{ __('Avançado') }}</div>
+            <div class="row g-3">
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.ssh.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-terminal"></i></span>
+                        <div class="fw-semibold small">{{ __('SSH') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.cron.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-clock-history"></i></span>
+                        <div class="fw-semibold small">{{ __('Cron') }}</div>
+                    </a>
+                </div>
             </div>
         </div>
     @endif
