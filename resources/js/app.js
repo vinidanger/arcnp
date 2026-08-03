@@ -37,3 +37,18 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('theme', next);
     });
 });
+
+// Dropdowns dentro de .table-responsive (ex.: "Baixar" na listagem de
+// backups) ficam cortados pelo overflow:auto da tabela — o Popper do
+// Bootstrap por padrão posiciona o menu como "absolute", contido no
+// ancestral com overflow mais próximo. strategy:"fixed" posiciona
+// relativo à viewport em vez disso, escapando desse corte. Não existe
+// atributo data-bs-strategy nativo no Bootstrap — precisa passar via
+// popperConfig na inicialização mesmo.
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-bs-strategy="fixed"]').forEach((toggle) => {
+        bootstrap.Dropdown.getOrCreateInstance(toggle, {
+            popperConfig: (defaultConfig) => ({ ...defaultConfig, strategy: 'fixed' }),
+        });
+    });
+});

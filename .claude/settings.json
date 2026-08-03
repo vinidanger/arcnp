@@ -20,7 +20,8 @@
       "Bash(sed -e s/x-client-layout/x-admin-layout/g -e 's/client\\\\.hosting-accounts\\\\.dns/admin.hosting-accounts.dns/g' resources/views/client/hosting-accounts/dns/show.blade.php)",
       "Bash(chmod +x scripts/manage-mail.sh scripts/manage-mail-dkim.sh)",
       "Bash(bash -n scripts/manage-mail.sh)",
-      "Bash(bash -n scripts/manage-mail-dkim.sh)"
+      "Bash(bash -n scripts/manage-mail-dkim.sh)",
+      "Bash(node --check resources/js/app.js)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",
