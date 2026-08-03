@@ -56,13 +56,20 @@
             </aside>
 
             <div class="flex-grow-1 d-flex flex-column">
-                @isset($header)
-                    <header class="bg-body border-bottom">
-                        <div class="container-fluid px-4 py-3">
-                            {{ $header }}
+                <header class="bg-body border-bottom">
+                    <div class="container-fluid px-4 py-3 d-flex align-items-center justify-content-between gap-3">
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            @isset($header)
+                                {{ $header }}
+                            @endisset
                         </div>
-                    </header>
-                @endisset
+
+                        <button type="button" id="theme-toggle" class="btn btn-sm btn-outline-secondary flex-shrink-0" title="{{ __('Alternar tema claro/escuro') }}">
+                            <i class="bi bi-moon-stars theme-icon-light"></i>
+                            <i class="bi bi-sun theme-icon-dark"></i>
+                        </button>
+                    </div>
+                </header>
 
                 <main class="flex-grow-1 container-fluid px-4 py-4">
                     {{ $slot }}

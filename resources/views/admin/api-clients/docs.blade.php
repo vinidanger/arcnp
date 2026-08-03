@@ -14,7 +14,7 @@
             <p class="small text-secondary mb-2">
                 {{ __('Gere um token em "Integrações de API" → "Nova credencial" e envie em todo pedido:') }}
             </p>
-            <pre class="bg-light p-2 rounded border small mb-0">Authorization: Bearer SEU_TOKEN
+            <pre class="bg-body-tertiary p-2 rounded border small mb-0">Authorization: Bearer SEU_TOKEN
 Accept: application/json</pre>
             <p class="small text-secondary mt-2 mb-0">
                 {{ __('Todo token tem acesso completo a todas as contas (sem escopo por cliente nessa versão). Trate como um segredo de sistema, não de usuário final.') }}
@@ -27,12 +27,12 @@ Accept: application/json</pre>
             <h2 class="h6">{{ __('URL base e formato de erro') }}</h2>
             <p class="small mb-2"><code>{{ $base }}</code></p>
             <p class="small text-secondary mb-1">{{ __('Erro de validação (422):') }}</p>
-            <pre class="bg-light p-2 rounded border small mb-2">{
+            <pre class="bg-body-tertiary p-2 rounded border small mb-2">{
   "message": "The client.email field is required.",
   "errors": { "client.email": ["The client.email field is required."] }
 }</pre>
             <p class="small text-secondary mb-1">{{ __('Falha ao executar uma ação (422) ou recurso inexistente (404):') }}</p>
-            <pre class="bg-light p-2 rounded border small mb-0">{ "message": "descrição do erro" }</pre>
+            <pre class="bg-body-tertiary p-2 rounded border small mb-0">{ "message": "descrição do erro" }</pre>
         </div>
     </div>
 
@@ -40,11 +40,11 @@ Accept: application/json</pre>
         <div class="card-body">
             <h2 class="h6"><span class="badge text-bg-success me-2">GET</span><code>/plans</code></h2>
             <p class="small text-secondary">{{ __('Lista os planos ativos — use pra saber o que oferecer antes de criar uma conta.') }}</p>
-            <pre class="bg-light p-2 rounded border small mb-0">curl {{ $base }}/plans \
+            <pre class="bg-body-tertiary p-2 rounded border small mb-0">curl {{ $base }}/plans \
   -H "Authorization: Bearer SEU_TOKEN" \
   -H "Accept: application/json"</pre>
             <p class="small text-secondary mt-2 mb-1">{{ __('Resposta:') }}</p>
-            <pre class="bg-light p-2 rounded border small mb-0">{
+            <pre class="bg-body-tertiary p-2 rounded border small mb-0">{
   "data": [
     {
       "id": 1,
@@ -69,7 +69,7 @@ Accept: application/json</pre>
             <p class="small text-secondary">
                 {{ __('Cria a conta de hospedagem. Se "client.email" já existir como cliente, reaproveita — não cria duplicado. Se for cliente novo e "client.password" não for enviado, uma senha é gerada e devolvida UMA VEZ na resposta ("client_password") — se não for capturada aqui, não tem como recuperar depois (mesma lógica de qualquer senha gerada nesse sistema).') }}
             </p>
-            <pre class="bg-light p-2 rounded border small mb-0">curl -X POST {{ $base }}/hosting-accounts \
+            <pre class="bg-body-tertiary p-2 rounded border small mb-0">curl -X POST {{ $base }}/hosting-accounts \
   -H "Authorization: Bearer SEU_TOKEN" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
@@ -87,7 +87,7 @@ Accept: application/json</pre>
             <p class="small text-secondary mt-2 mb-1">
                 {{ __('Resposta 201 (provisionado) ou 422 (falhou provisionar — a conta fica registrada com status "error", cheque "status" na resposta):') }}
             </p>
-            <pre class="bg-light p-2 rounded border small mb-0">{
+            <pre class="bg-body-tertiary p-2 rounded border small mb-0">{
   "data": {
     "id": 42,
     "primary_domain": "sitedofulano.com.br",
@@ -112,7 +112,7 @@ Accept: application/json</pre>
         <div class="card-body">
             <h2 class="h6"><span class="badge text-bg-success me-2">GET</span><code>/hosting-accounts/{id}</code></h2>
             <p class="small text-secondary">{{ __('Status atual da conta — útil pra confirmar que terminou de provisionar (status "active") depois da criação.') }}</p>
-            <pre class="bg-light p-2 rounded border small mb-0">curl {{ $base }}/hosting-accounts/42 \
+            <pre class="bg-body-tertiary p-2 rounded border small mb-0">curl {{ $base }}/hosting-accounts/42 \
   -H "Authorization: Bearer SEU_TOKEN" \
   -H "Accept: application/json"</pre>
             <p class="small text-secondary mt-2 mb-0">{{ __('Mesmo formato de resposta do POST acima (sem "client_password").') }}</p>
@@ -125,7 +125,7 @@ Accept: application/json</pre>
                 <div class="card-body">
                     <h2 class="h6"><span class="badge text-bg-primary me-2">POST</span><code>/hosting-accounts/{id}/suspend</code></h2>
                     <p class="small text-secondary">{{ __('Suspende a conta (site/e-mail param de responder). Reversível.') }}</p>
-                    <pre class="bg-light p-2 rounded border small mb-0">curl -X POST {{ $base }}/hosting-accounts/42/suspend \
+                    <pre class="bg-body-tertiary p-2 rounded border small mb-0">curl -X POST {{ $base }}/hosting-accounts/42/suspend \
   -H "Authorization: Bearer SEU_TOKEN" \
   -H "Accept: application/json"</pre>
                 </div>
@@ -136,7 +136,7 @@ Accept: application/json</pre>
                 <div class="card-body">
                     <h2 class="h6"><span class="badge text-bg-primary me-2">POST</span><code>/hosting-accounts/{id}/reactivate</code></h2>
                     <p class="small text-secondary">{{ __('Reverte a suspensão.') }}</p>
-                    <pre class="bg-light p-2 rounded border small mb-0">curl -X POST {{ $base }}/hosting-accounts/42/reactivate \
+                    <pre class="bg-body-tertiary p-2 rounded border small mb-0">curl -X POST {{ $base }}/hosting-accounts/42/reactivate \
   -H "Authorization: Bearer SEU_TOKEN" \
   -H "Accept: application/json"</pre>
                 </div>
@@ -150,7 +150,7 @@ Accept: application/json</pre>
             <p class="small text-secondary">
                 {{ __('Cancela e apaga a conta pra sempre — remove usuário Linux, site, bancos, e-mails, DNS gerenciado por esse Painel, tudo. Não reversível. O cliente (usuário de login) continua existindo, só a conta de hospedagem some.') }}
             </p>
-            <pre class="bg-light p-2 rounded border small mb-0">curl -X DELETE {{ $base }}/hosting-accounts/42 \
+            <pre class="bg-body-tertiary p-2 rounded border small mb-0">curl -X DELETE {{ $base }}/hosting-accounts/42 \
   -H "Authorization: Bearer SEU_TOKEN" \
   -H "Accept: application/json"</pre>
         </div>

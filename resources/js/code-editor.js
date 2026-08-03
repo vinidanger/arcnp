@@ -13,6 +13,10 @@ import { sql } from '@codemirror/lang-sql';
 import { markdown } from '@codemirror/lang-markdown';
 import { yaml } from '@codemirror/lang-yaml';
 
+function isDarkTheme() {
+    return document.documentElement.getAttribute('data-bs-theme') === 'dark';
+}
+
 const LANGUAGE_BY_EXTENSION = {
     php: php(),
     phtml: php(),
@@ -29,17 +33,24 @@ const LANGUAGE_BY_EXTENSION = {
     yaml: yaml(),
 };
 
-const THEME_STORAGE_KEY = 'arcnp-editor-theme';
-
 function languageForFilename(filename) {
     const extension = filename.split('.').pop().toLowerCase();
 
     return LANGUAGE_BY_EXTENSION[extension] ?? null;
 }
 
-function preferredTheme() {
-    return localStorage.getItem(THEME_STORAGE_KEY) === 'light' ? 'light' : 'dark';
-}
+const themeCompartments = [];
+
+// O toggle de tema global não recarrega a página — um MutationObserver
+// no atributo data-bs-theme do <html> é o jeito de manter editores já
+// abertos sincronizados quando o usuário troca o tema.
+new MutationObserver(() => {
+    const dark = isDarkTheme();
+
+    themeCompartments.forEach(({ view, compartment }) => {
+        view.dispatch({ effects: compartment.reconfigure(dark ? oneDark : []) });
+    });
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
 
 document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
     const filename = textarea.dataset.filename ?? '';
@@ -55,7 +66,7 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
         // "por fora" some nesse recálculo (foi exatamente o editor
         // encolhendo ao clicar dentro dele).
         EditorView.editorAttributes.of({ class: 'code-editor' }),
-        themeCompartment.of(preferredTheme() === 'dark' ? oneDark : []),
+        themeCompartment.of(isDarkTheme() ? oneDark : []),
         indentUnit.of('    '),
         // basicSetup não trata Tab por padrão (deixa o foco sair do
         // editor, comportamento padrão do navegador) — indentWithTab é
@@ -84,27 +95,13 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
         extensions,
     });
 
+    themeCompartments.push({ view, compartment: themeCompartment });
+
     const wrapper = document.createElement('div');
     wrapper.className = 'code-editor-wrapper';
 
     const toolbar = document.createElement('div');
     toolbar.className = 'd-flex justify-content-end gap-2 mb-1';
-
-    const themeToggle = document.createElement('button');
-    themeToggle.type = 'button';
-    themeToggle.className = 'btn btn-sm btn-outline-secondary';
-
-    const updateToggleLabel = () => {
-        themeToggle.textContent = preferredTheme() === 'dark' ? '☀️ Tema claro' : '🌙 Tema escuro';
-    };
-    updateToggleLabel();
-
-    themeToggle.addEventListener('click', () => {
-        const next = preferredTheme() === 'dark' ? 'light' : 'dark';
-        localStorage.setItem(THEME_STORAGE_KEY, next);
-        view.dispatch({ effects: themeCompartment.reconfigure(next === 'dark' ? oneDark : []) });
-        updateToggleLabel();
-    });
 
     const fullscreenToggle = document.createElement('button');
     fullscreenToggle.type = 'button';
@@ -130,7 +127,7 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
         }
     });
 
-    toolbar.append(themeToggle, fullscreenToggle);
+    toolbar.append(fullscreenToggle);
 
     textarea.insertAdjacentElement('afterend', wrapper);
     wrapper.append(toolbar, view.dom);
