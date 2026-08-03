@@ -159,7 +159,13 @@ body {
     border-left-color: $primary;
 }
 
-.app-sidebar-footer .dropdown-toggle::after {
+// O componente <x-dropdown> envolve o trigger num div.dropdown-toggle —
+// o próprio conteúdo do trigger já é o botão/gatilho visual, então o
+// caret padrão do Bootstrap (::after) fica sobrando como uma "seta"
+// clicável extra ao lado dele. Seletor restrito a <div> pra não afetar
+// os dropdowns nativos (<button class="btn dropdown-toggle">) espalhados
+// pelo app, que dependem do caret como único indicador visual.
+div.dropdown-toggle::after {
     display: none;
 }
 
