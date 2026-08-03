@@ -102,9 +102,18 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         $diskQuota = max($account->plan->disk_quota_mb, 1);
         $diskPercent = min(100, (int) round(($diskUsed / $diskQuota) * 100));
         $diskSeverity = $diskPercent >= 90 ? 'danger' : ($diskPercent >= 70 ? 'warning' : 'success');
+        $severityOf = fn ($percent) => $percent >= 90 ? 'danger' : ($percent >= 70 ? 'warning' : 'success');
+        $percentOf = fn ($used, $limit) => min(100, (int) round($used / max($limit, 1) * 100));
+
         $dbCount = $account->databases->count();
+        $dbPercent = $percentOf($dbCount, $account->plan->max_databases);
+
         $domainCount = $account->domains->count();
+        $domainPercent = $percentOf($domainCount, $account->plan->max_addon_domains);
+
         $cronCount = $account->cronJobs->count();
+        $cronPercent = $percentOf($cronCount, $account->plan->max_cron_jobs);
+
         $backupCount = $account->backups->whereIn('status', ['pending', 'completed'])->count();
         $backupLimitReached = $backupCount >= $account->plan->max_backups;
     @endphp
@@ -151,29 +160,44 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     </div>
                 </div>
                 <div class="col-6 col-lg-3">
-                    <div class="stat-tile d-flex align-items-center gap-3">
-                        <div class="stat-tile-icon bg-primary-subtle text-primary"><i class="bi bi-database"></i></div>
-                        <div>
-                            <div class="stat-tile-value">{{ $dbCount }}<span class="fs-6 text-body-tertiary"> / {{ $account->plan->max_databases }}</span></div>
-                            <div class="small text-secondary">{{ __('Bancos de dados') }}</div>
+                    <div class="stat-tile">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="stat-tile-icon bg-primary-subtle text-primary"><i class="bi bi-database"></i></div>
+                            <div>
+                                <div class="stat-tile-value">{{ $dbCount }}<span class="fs-6 text-body-tertiary"> / {{ $account->plan->max_databases }}</span></div>
+                                <div class="small text-secondary">{{ __('Bancos de dados') }}</div>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-{{ $severityOf($dbPercent) }}" style="width: {{ $dbPercent }}%"></div>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-lg-3">
-                    <div class="stat-tile d-flex align-items-center gap-3">
-                        <div class="stat-tile-icon bg-info-subtle text-info"><i class="bi bi-globe2"></i></div>
-                        <div>
-                            <div class="stat-tile-value">{{ $domainCount }}<span class="fs-6 text-body-tertiary"> / {{ $account->plan->max_addon_domains }}</span></div>
-                            <div class="small text-secondary">{{ __('Domínios adicionais') }}</div>
+                    <div class="stat-tile">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="stat-tile-icon bg-info-subtle text-info"><i class="bi bi-globe2"></i></div>
+                            <div>
+                                <div class="stat-tile-value">{{ $domainCount }}<span class="fs-6 text-body-tertiary"> / {{ $account->plan->max_addon_domains }}</span></div>
+                                <div class="small text-secondary">{{ __('Domínios adicionais') }}</div>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-{{ $severityOf($domainPercent) }}" style="width: {{ $domainPercent }}%"></div>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-lg-3">
-                    <div class="stat-tile d-flex align-items-center gap-3">
-                        <div class="stat-tile-icon bg-warning-subtle text-warning"><i class="bi bi-clock-history"></i></div>
-                        <div>
-                            <div class="stat-tile-value">{{ $cronCount }}<span class="fs-6 text-body-tertiary"> / {{ $account->plan->max_cron_jobs }}</span></div>
-                            <div class="small text-secondary">{{ __('Tarefas cron') }}</div>
+                    <div class="stat-tile">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="stat-tile-icon bg-warning-subtle text-warning"><i class="bi bi-clock-history"></i></div>
+                            <div>
+                                <div class="stat-tile-value">{{ $cronCount }}<span class="fs-6 text-body-tertiary"> / {{ $account->plan->max_cron_jobs }}</span></div>
+                                <div class="small text-secondary">{{ __('Tarefas cron') }}</div>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-{{ $severityOf($cronPercent) }}" style="width: {{ $cronPercent }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -226,56 +250,57 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
 
             @if ($account->status === 'active')
                 <div class="mt-3 mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Acesso rápido') }}</div>
-                <div class="row g-3">
-                    <div class="col-12 col-md-4">
-                        <div class="small text-secondary mb-2">{{ __('Site') }}</div>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <a href="{{ route('admin.hosting-accounts.files.index', $account) }}" class="quick-link-card">
-                                    <span class="quick-link-icon"><i class="bi bi-folder2-open"></i></span>
-                                    <div class="fw-semibold small">{{ __('Arquivos') }}</div>
-                                </a>
-                            </div>
-                            <div class="col-6">
-                                <a href="{{ route('admin.hosting-accounts.php.index', $account) }}" class="quick-link-card">
-                                    <span class="quick-link-icon"><i class="bi bi-sliders"></i></span>
-                                    <div class="fw-semibold small">{{ __('PHP') }}</div>
-                                </a>
-                            </div>
+
+                <div class="mb-3">
+                    <div class="small text-secondary mb-2">{{ __('Site') }}</div>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.files.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-folder2-open"></i></span>
+                                <div class="fw-semibold small">{{ __('Arquivos') }}</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.php.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-sliders"></i></span>
+                                <div class="fw-semibold small">{{ __('PHP') }}</div>
+                            </a>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
-                        <div class="small text-secondary mb-2">{{ __('Domínio') }}</div>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <a href="{{ route('admin.hosting-accounts.dns.index', $account) }}" class="quick-link-card">
-                                    <span class="quick-link-icon"><i class="bi bi-globe2"></i></span>
-                                    <div class="fw-semibold small">{{ __('DNS') }}</div>
-                                </a>
-                            </div>
-                            <div class="col-6">
-                                <a href="{{ route('admin.hosting-accounts.mail.index', $account) }}" class="quick-link-card">
-                                    <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
-                                    <div class="fw-semibold small">{{ __('E-mail') }}</div>
-                                </a>
-                            </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="small text-secondary mb-2">{{ __('Domínio') }}</div>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.dns.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-globe2"></i></span>
+                                <div class="fw-semibold small">{{ __('DNS') }}</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.mail.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
+                                <div class="fw-semibold small">{{ __('E-mail') }}</div>
+                            </a>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
-                        <div class="small text-secondary mb-2">{{ __('Avançado') }}</div>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <a href="{{ route('admin.hosting-accounts.ssh.index', $account) }}" class="quick-link-card">
-                                    <span class="quick-link-icon"><i class="bi bi-terminal"></i></span>
-                                    <div class="fw-semibold small">{{ __('SSH') }}</div>
-                                </a>
-                            </div>
-                            <div class="col-6">
-                                <a href="{{ route('admin.hosting-accounts.cron.index', $account) }}" class="quick-link-card">
-                                    <span class="quick-link-icon"><i class="bi bi-clock-history"></i></span>
-                                    <div class="fw-semibold small">{{ __('Cron') }}</div>
-                                </a>
-                            </div>
+                </div>
+
+                <div>
+                    <div class="small text-secondary mb-2">{{ __('Avançado') }}</div>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.ssh.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-terminal"></i></span>
+                                <div class="fw-semibold small">{{ __('SSH') }}</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.cron.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-clock-history"></i></span>
+                                <div class="fw-semibold small">{{ __('Cron') }}</div>
+                            </a>
                         </div>
                     </div>
                 </div>
