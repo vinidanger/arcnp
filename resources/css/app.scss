@@ -216,7 +216,6 @@ html.sidebar-collapsed .sidebar-label {
 html.sidebar-collapsed .app-sidebar-brand,
 html.sidebar-collapsed .app-sidebar .nav-link,
 html.sidebar-collapsed #sidebar-toggle,
-html.sidebar-collapsed #theme-toggle,
 html.sidebar-collapsed .app-sidebar-footer .dropdown-toggle > div {
     justify-content: center;
     padding-left: 0 !important;
@@ -228,8 +227,7 @@ html.sidebar-collapsed .app-sidebar .nav-link i {
     width: auto;
 }
 
-html.sidebar-collapsed #sidebar-toggle,
-html.sidebar-collapsed #theme-toggle {
+html.sidebar-collapsed #sidebar-toggle {
     width: 100%;
 }
 
