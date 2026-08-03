@@ -101,6 +101,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         $diskUsed = $account->disk_usage_mb ?? 0;
         $diskQuota = max($account->plan->disk_quota_mb, 1);
         $diskPercent = min(100, (int) round(($diskUsed / $diskQuota) * 100));
+        $diskSeverity = $diskPercent >= 90 ? 'danger' : ($diskPercent >= 70 ? 'warning' : 'success');
         $dbCount = $account->databases->count();
         $domainCount = $account->domains->count();
         $cronCount = $account->cronJobs->count();
@@ -137,12 +138,15 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             <div class="row g-3 mb-3">
                 <div class="col-6 col-lg-3">
                     <div class="stat-tile">
-                        <div class="d-flex justify-content-between small mb-2">
-                            <span class="text-secondary">{{ __('Disco') }}</span>
-                            <span>{{ $diskUsed }} / {{ $diskQuota }} MB</span>
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="stat-tile-icon bg-{{ $diskSeverity }}-subtle text-{{ $diskSeverity }}"><i class="bi bi-hdd"></i></div>
+                            <div>
+                                <div class="stat-tile-value">{{ $diskPercent }}<span class="fs-6 text-body-tertiary">%</span></div>
+                                <div class="small text-secondary">{{ __('Disco') }} — {{ $diskUsed }}/{{ $diskQuota }} MB</div>
+                            </div>
                         </div>
                         <div class="progress" style="height: 6px;">
-                            <div class="progress-bar {{ $diskPercent >= 90 ? 'bg-danger' : ($diskPercent >= 70 ? 'bg-warning' : 'bg-success') }}" style="width: {{ $diskPercent }}%"></div>
+                            <div class="progress-bar bg-{{ $diskSeverity }}" style="width: {{ $diskPercent }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -175,42 +179,6 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                 </div>
             </div>
 
-            @if ($account->status === 'active')
-                <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Acesso rápido') }}</div>
-                <div class="row g-3 mb-3">
-                    <div class="col-6 col-md-4 col-lg-2">
-                        <a href="{{ route('admin.hosting-accounts.files.index', $account) }}" class="quick-link-card">
-                            <span class="quick-link-icon"><i class="bi bi-folder2-open"></i></span>
-                            <div class="fw-semibold small">{{ __('Arquivos') }}</div>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4 col-lg-2">
-                        <a href="{{ route('admin.hosting-accounts.mail.index', $account) }}" class="quick-link-card">
-                            <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
-                            <div class="fw-semibold small">{{ __('E-mail') }}</div>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4 col-lg-2">
-                        <a href="{{ route('admin.hosting-accounts.dns.index', $account) }}" class="quick-link-card">
-                            <span class="quick-link-icon"><i class="bi bi-globe2"></i></span>
-                            <div class="fw-semibold small">{{ __('DNS') }}</div>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4 col-lg-2">
-                        <a href="{{ route('admin.hosting-accounts.cron.index', $account) }}" class="quick-link-card">
-                            <span class="quick-link-icon"><i class="bi bi-clock-history"></i></span>
-                            <div class="fw-semibold small">{{ __('Cron') }}</div>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4 col-lg-2">
-                        <a href="{{ route('admin.hosting-accounts.ssh.index', $account) }}" class="quick-link-card">
-                            <span class="quick-link-icon"><i class="bi bi-terminal"></i></span>
-                            <div class="fw-semibold small">{{ __('SSH') }}</div>
-                        </a>
-                    </div>
-                </div>
-            @endif
-
             <div class="card">
                 <div class="card-body">
                     <h2 class="h6">{{ __('Detalhes da conta') }}</h2>
@@ -231,18 +199,9 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
 
                         <dt class="col-sm-3">{{ __('Versão PHP') }}</dt>
                         <dd class="col-sm-9">
+                            {{ $account->php_version }}
                             @if ($account->status === 'active')
-                                <form method="POST" action="{{ route('admin.hosting-accounts.php-version.update', $account) }}" class="d-flex gap-2">
-                                    @csrf
-                                    <select name="php_version" class="form-select form-select-sm w-auto">
-                                        @foreach (config('hosting.php_versions') as $version)
-                                            <option value="{{ $version }}" @selected($account->php_version === $version)>{{ $version }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Trocar') }}</button>
-                                </form>
-                            @else
-                                {{ $account->php_version }}
+                                <a href="{{ route('admin.hosting-accounts.php.index', $account) }}" class="small">{{ __('gerenciar') }}</a>
                             @endif
                         </dd>
 
@@ -265,49 +224,62 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                 </div>
             </div>
 
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h2 class="h6">{{ __('Configurações de PHP') }}</h2>
-                    <p class="small text-secondary">{{ __('Valores aplicados no pool PHP-FPM desta conta.') }}</p>
-
-                    @if ($account->status === 'active')
-                        @php $phpSettings = $account->php_fpm_settings ?? config('hosting.default_pool_settings'); @endphp
-                        <form method="POST" action="{{ route('admin.hosting-accounts.php-fpm-settings.update', $account) }}">
-                            @csrf
-                            <div class="row g-3">
-                                <div class="col-6 col-md-3">
-                                    <x-input-label for="memory_limit" value="{{ __('memory_limit (MB)') }}" class="small mb-1" />
-                                    <x-text-input id="memory_limit" name="memory_limit" type="number" min="32" max="2048" :value="old('memory_limit', $phpSettings['memory_limit'])" required />
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <x-input-label for="upload_max_filesize" value="{{ __('upload_max_filesize (MB)') }}" class="small mb-1" />
-                                    <x-text-input id="upload_max_filesize" name="upload_max_filesize" type="number" min="1" max="2048" :value="old('upload_max_filesize', $phpSettings['upload_max_filesize'])" required />
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <x-input-label for="post_max_size" value="{{ __('post_max_size (MB)') }}" class="small mb-1" />
-                                    <x-text-input id="post_max_size" name="post_max_size" type="number" min="1" max="2048" :value="old('post_max_size', $phpSettings['post_max_size'])" required />
-                                    <x-input-error :messages="$errors->get('post_max_size')" class="mt-1" />
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <x-input-label for="max_execution_time" value="{{ __('max_execution_time (s)') }}" class="small mb-1" />
-                                    <x-text-input id="max_execution_time" name="max_execution_time" type="number" min="1" max="300" :value="old('max_execution_time', $phpSettings['max_execution_time'])" required />
-                                </div>
+            @if ($account->status === 'active')
+                <div class="mt-3 mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Acesso rápido') }}</div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <div class="small text-secondary mb-2">{{ __('Site') }}</div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{{ route('admin.hosting-accounts.files.index', $account) }}" class="quick-link-card">
+                                    <span class="quick-link-icon"><i class="bi bi-folder2-open"></i></span>
+                                    <div class="fw-semibold small">{{ __('Arquivos') }}</div>
+                                </a>
                             </div>
-
-                            <div class="form-check mt-3">
-                                <input type="hidden" name="short_open_tag" value="0">
-                                <input type="checkbox" class="form-check-input" id="short_open_tag" name="short_open_tag" value="1"
-                                       @checked(old('short_open_tag', $phpSettings['short_open_tag'] ?? false))>
-                                <label class="form-check-label" for="short_open_tag">{{ __('short_open_tag') }} <span class="text-secondary">({{ __('permitir tag curta') }} <code>&lt;? ?&gt;</code>)</span></label>
+                            <div class="col-6">
+                                <a href="{{ route('admin.hosting-accounts.php.index', $account) }}" class="quick-link-card">
+                                    <span class="quick-link-icon"><i class="bi bi-sliders"></i></span>
+                                    <div class="fw-semibold small">{{ __('PHP') }}</div>
+                                </a>
                             </div>
-
-                            <button type="submit" class="btn btn-sm btn-outline-primary mt-3">{{ __('Salvar') }}</button>
-                        </form>
-                    @else
-                        <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
-                    @endif
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="small text-secondary mb-2">{{ __('Domínio') }}</div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{{ route('admin.hosting-accounts.dns.index', $account) }}" class="quick-link-card">
+                                    <span class="quick-link-icon"><i class="bi bi-globe2"></i></span>
+                                    <div class="fw-semibold small">{{ __('DNS') }}</div>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="{{ route('admin.hosting-accounts.mail.index', $account) }}" class="quick-link-card">
+                                    <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
+                                    <div class="fw-semibold small">{{ __('E-mail') }}</div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="small text-secondary mb-2">{{ __('Avançado') }}</div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{{ route('admin.hosting-accounts.ssh.index', $account) }}" class="quick-link-card">
+                                    <span class="quick-link-icon"><i class="bi bi-terminal"></i></span>
+                                    <div class="fw-semibold small">{{ __('SSH') }}</div>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="{{ route('admin.hosting-accounts.cron.index', $account) }}" class="quick-link-card">
+                                    <span class="quick-link-icon"><i class="bi bi-clock-history"></i></span>
+                                    <div class="fw-semibold small">{{ __('Cron') }}</div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         {{-- ============================== DOMÍNIOS ============================== --}}

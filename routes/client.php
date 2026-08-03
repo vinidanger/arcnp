@@ -5,16 +5,13 @@ use App\Domain\Hosting\Http\Controllers\Client\DnsZoneController;
 use App\Domain\Hosting\Http\Controllers\Client\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Client\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Client\MailDomainController;
+use App\Domain\Hosting\Http\Controllers\Client\PhpSettingsController;
 use App\Domain\Hosting\Http\Controllers\Client\SshAccessController;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('hosting-accounts', HostingAccountController::class)->only(['index', 'show']);
 Route::post('hosting-accounts/{hosting_account}/ssl', [HostingAccountController::class, 'issueSsl'])
     ->name('hosting-accounts.ssl.store');
-Route::post('hosting-accounts/{hosting_account}/php-version', [HostingAccountController::class, 'changePhpVersion'])
-    ->name('hosting-accounts.php-version.update');
-Route::post('hosting-accounts/{hosting_account}/php-fpm-settings', [HostingAccountController::class, 'updatePhpFpmSettings'])
-    ->name('hosting-accounts.php-fpm-settings.update');
 Route::post('hosting-accounts/{hosting_account}/databases', [HostingAccountController::class, 'createDatabase'])
     ->name('hosting-accounts.databases.store');
 Route::delete('hosting-accounts/{hosting_account}/databases/{database}', [HostingAccountController::class, 'deleteDatabase'])
@@ -78,6 +75,13 @@ Route::post('hosting-accounts/{hosting_account}/ssh/keys', [SshAccessController:
     ->name('hosting-accounts.ssh.keys.store');
 Route::delete('hosting-accounts/{hosting_account}/ssh/keys/{ssh_key}', [SshAccessController::class, 'destroyKey'])
     ->name('hosting-accounts.ssh.keys.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/php', [PhpSettingsController::class, 'index'])
+    ->name('hosting-accounts.php.index');
+Route::post('hosting-accounts/{hosting_account}/php/version', [PhpSettingsController::class, 'updateVersion'])
+    ->name('hosting-accounts.php.version.update');
+Route::post('hosting-accounts/{hosting_account}/php/settings', [PhpSettingsController::class, 'updateSettings'])
+    ->name('hosting-accounts.php.settings.update');
 
 Route::get('hosting-accounts/{hosting_account}/dns', [DnsZoneController::class, 'index'])
     ->name('hosting-accounts.dns.index');

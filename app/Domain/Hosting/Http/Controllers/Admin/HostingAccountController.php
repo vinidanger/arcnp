@@ -205,52 +205,6 @@ class HostingAccountController extends Controller
         }
     }
 
-    public function changePhpVersion(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
-    {
-        $this->authorize('update', $hosting_account);
-
-        if ($hosting_account->status !== 'active') {
-            return back()->with('error', 'A conta precisa estar ativa para trocar a versão de PHP.');
-        }
-
-        $data = $request->validate([
-            'php_version' => ['required', Rule::in(config('hosting.php_versions'))],
-        ]);
-
-        try {
-            $provisioning->changePhpVersion($hosting_account, $data['php_version']);
-
-            return back()->with('status', 'Versão de PHP alterada para '.$data['php_version'].'.');
-        } catch (Throwable $e) {
-            return back()->with('error', 'Falha ao trocar versão de PHP: '.$e->getMessage());
-        }
-    }
-
-    public function updatePhpFpmSettings(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
-    {
-        $this->authorize('update', $hosting_account);
-
-        if ($hosting_account->status !== 'active') {
-            return back()->with('error', 'A conta precisa estar ativa para ajustar configurações de PHP.');
-        }
-
-        $data = $request->validate([
-            'memory_limit' => ['required', 'integer', 'min:32', 'max:2048'],
-            'upload_max_filesize' => ['required', 'integer', 'min:1', 'max:2048'],
-            'post_max_size' => ['required', 'integer', 'min:1', 'max:2048', 'gte:upload_max_filesize'],
-            'max_execution_time' => ['required', 'integer', 'min:1', 'max:300'],
-        ]);
-
-        $data['short_open_tag'] = $request->boolean('short_open_tag');
-
-        try {
-            $provisioning->updatePhpFpmSettings($hosting_account, $data);
-
-            return back()->with('status', 'Configurações de PHP atualizadas.');
-        } catch (Throwable $e) {
-            return back()->with('error', 'Falha ao atualizar configurações de PHP: '.$e->getMessage());
-        }
-    }
 
     public function updateBackupFrequency(Request $request, HostingAccount $hosting_account)
     {

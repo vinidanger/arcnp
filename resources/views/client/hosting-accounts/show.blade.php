@@ -5,6 +5,7 @@
             <div class="d-flex gap-2">
                 @if ($account->status === 'active')
                     <a href="{{ route('client.hosting-accounts.files.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Arquivos') }}</a>
+                    <a href="{{ route('client.hosting-accounts.php.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>
                     <a href="{{ route('client.hosting-accounts.cron.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Cron') }}</a>
                     <a href="{{ route('client.hosting-accounts.ssh.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('SSH') }}</a>
                     <a href="{{ route('client.hosting-accounts.dns.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('DNS') }}</a>
@@ -99,18 +100,9 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
 
                         <dt class="col-4">{{ __('Versão PHP') }}</dt>
                         <dd class="col-8">
+                            {{ $account->php_version }}
                             @if ($account->status === 'active')
-                                <form method="POST" action="{{ route('client.hosting-accounts.php-version.update', $account) }}" class="d-flex gap-2">
-                                    @csrf
-                                    <select name="php_version" class="form-select form-select-sm w-auto">
-                                        @foreach (config('hosting.php_versions') as $version)
-                                            <option value="{{ $version }}" @selected($account->php_version === $version)>{{ $version }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Trocar') }}</button>
-                                </form>
-                            @else
-                                {{ $account->php_version }}
+                                <a href="{{ route('client.hosting-accounts.php.index', $account) }}" class="small">{{ __('gerenciar') }}</a>
                             @endif
                         </dd>
 
@@ -194,50 +186,6 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     @endunless
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="card mt-3">
-        <div class="card-body">
-            <h2 class="h6">{{ __('Configurações de PHP') }}</h2>
-            <p class="small text-secondary">{{ __('Valores aplicados no pool PHP-FPM desta conta.') }}</p>
-
-            @if ($account->status === 'active')
-                @php $phpSettings = $account->php_fpm_settings ?? config('hosting.default_pool_settings'); @endphp
-                <form method="POST" action="{{ route('client.hosting-accounts.php-fpm-settings.update', $account) }}">
-                    @csrf
-                    <div class="row g-3">
-                        <div class="col-6 col-md-3">
-                            <x-input-label for="memory_limit" value="{{ __('memory_limit (MB)') }}" class="small mb-1" />
-                            <x-text-input id="memory_limit" name="memory_limit" type="number" min="32" max="2048" :value="old('memory_limit', $phpSettings['memory_limit'])" required />
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <x-input-label for="upload_max_filesize" value="{{ __('upload_max_filesize (MB)') }}" class="small mb-1" />
-                            <x-text-input id="upload_max_filesize" name="upload_max_filesize" type="number" min="1" max="2048" :value="old('upload_max_filesize', $phpSettings['upload_max_filesize'])" required />
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <x-input-label for="post_max_size" value="{{ __('post_max_size (MB)') }}" class="small mb-1" />
-                            <x-text-input id="post_max_size" name="post_max_size" type="number" min="1" max="2048" :value="old('post_max_size', $phpSettings['post_max_size'])" required />
-                            <x-input-error :messages="$errors->get('post_max_size')" class="mt-1" />
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <x-input-label for="max_execution_time" value="{{ __('max_execution_time (s)') }}" class="small mb-1" />
-                            <x-text-input id="max_execution_time" name="max_execution_time" type="number" min="1" max="300" :value="old('max_execution_time', $phpSettings['max_execution_time'])" required />
-                        </div>
-                    </div>
-
-                    <div class="form-check mt-3">
-                        <input type="hidden" name="short_open_tag" value="0">
-                        <input type="checkbox" class="form-check-input" id="short_open_tag" name="short_open_tag" value="1"
-                               @checked(old('short_open_tag', $phpSettings['short_open_tag'] ?? false))>
-                        <label class="form-check-label" for="short_open_tag">{{ __('short_open_tag') }} <span class="text-secondary">({{ __('permitir tag curta') }} <code>&lt;? ?&gt;</code>)</span></label>
-                    </div>
-
-                    <button type="submit" class="btn btn-sm btn-outline-primary mt-3">{{ __('Salvar') }}</button>
-                </form>
-            @else
-                <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
-            @endif
         </div>
     </div>
 

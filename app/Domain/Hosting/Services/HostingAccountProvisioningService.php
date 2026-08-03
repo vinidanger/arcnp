@@ -23,6 +23,17 @@ use Throwable;
  */
 class HostingAccountProvisioningService
 {
+    /**
+     * Chave salva em php_fpm_settings.error_reporting => expressão PHP
+     * real escrita no pool (ver config('hosting.error_reporting_presets')
+     * pros rótulos mostrados no formulário).
+     */
+    private const ERROR_REPORTING_PRESETS = [
+        'production' => 'E_ALL & ~E_DEPRECATED & ~E_NOTICE',
+        'all' => 'E_ALL',
+        'none' => '0',
+    ];
+
     public function __construct(private AgentHttpClient $client)
     {
     }
@@ -256,9 +267,6 @@ class HostingAccountProvisioningService
         $account->update(['php_version' => $newVersion]);
     }
 
-    /**
-     * @param  array{memory_limit: int, upload_max_filesize: int, post_max_size: int, max_execution_time: int, short_open_tag: bool}  $settings
-     */
     public function updatePhpFpmSettings(HostingAccount $account, array $settings): void
     {
         $this->runStep($account->server, 'php.update_pool_settings', array_merge([
@@ -270,7 +278,6 @@ class HostingAccountProvisioningService
     }
 
     /**
-     * @param  array{memory_limit: int, upload_max_filesize: int, post_max_size: int, max_execution_time: int, short_open_tag?: bool}  $settings
      * @return array<string, string>
      */
     private function formatPoolSettings(array $settings): array
@@ -280,6 +287,14 @@ class HostingAccountProvisioningService
             'upload_max_filesize' => $settings['upload_max_filesize'].'M',
             'post_max_size' => $settings['post_max_size'].'M',
             'max_execution_time' => (string) $settings['max_execution_time'],
+            'max_input_time' => (string) $settings['max_input_time'],
+            'max_input_vars' => (string) $settings['max_input_vars'],
+            'max_file_uploads' => (string) $settings['max_file_uploads'],
+            'session.gc_maxlifetime' => (string) $settings['session_gc_maxlifetime'],
+            'display_errors' => ($settings['display_errors'] ?? false) ? 'On' : 'Off',
+            'log_errors' => ($settings['log_errors'] ?? true) ? 'On' : 'Off',
+            'error_reporting' => self::ERROR_REPORTING_PRESETS[$settings['error_reporting'] ?? 'production'] ?? self::ERROR_REPORTING_PRESETS['production'],
+            'file_uploads' => ($settings['file_uploads'] ?? true) ? 'On' : 'Off',
             'short_open_tag' => ($settings['short_open_tag'] ?? false) ? 'On' : 'Off',
         ];
     }
