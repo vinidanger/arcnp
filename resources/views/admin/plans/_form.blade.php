@@ -43,6 +43,11 @@
 
 <div class="row">
     <div class="col-4 mb-3">
+        <x-input-label for="max_backups" value="{{ __('Máx. backups') }}" />
+        <x-text-input id="max_backups" name="max_backups" type="number" :value="old('max_backups', $plan?->max_backups ?? 5)" required />
+        <x-input-error :messages="$errors->get('max_backups')" class="mt-2" />
+    </div>
+    <div class="col-4 mb-3">
         <x-input-label for="cpu_cores" value="{{ __('Núcleos de CPU') }}" />
         <x-text-input id="cpu_cores" name="cpu_cores" type="number" :value="old('cpu_cores', $plan?->cpu_cores)" />
         <x-input-error :messages="$errors->get('cpu_cores')" class="mt-2" />

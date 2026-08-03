@@ -36,9 +36,16 @@ class RunScheduledBackupsCommand extends Command
                 ->get();
 
             foreach ($accounts as $account) {
-                $provisioning->createBackup($account);
-                $account->update(['last_backup_at' => now()]);
-                $count++;
+                try {
+                    $provisioning->createBackup($account);
+                    $account->update(['last_backup_at' => now()]);
+                    $count++;
+                } catch (\Throwable $e) {
+                    // Não atualiza last_backup_at — se o limite do plano
+                    // subir depois, a próxima execução horária já tenta
+                    // de novo, em vez de esperar o próximo ciclo inteiro.
+                    $this->warn("Pulado {$account->primary_domain}: {$e->getMessage()}");
+                }
             }
         }
 

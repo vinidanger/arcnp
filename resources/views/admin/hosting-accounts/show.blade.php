@@ -104,6 +104,8 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         $dbCount = $account->databases->count();
         $domainCount = $account->domains->count();
         $cronCount = $account->cronJobs->count();
+        $backupCount = $account->backups->whereIn('status', ['pending', 'completed'])->count();
+        $backupLimitReached = $backupCount >= $account->plan->max_backups;
     @endphp
 
     <ul class="nav nav-tabs mb-3">
@@ -268,7 +270,14 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         <div class="tab-pane fade" id="tab-domains">
             <div class="card">
                 <div class="card-body">
-                    <h2 class="h6">{{ __('Domínios adicionais / subdomínios') }}</h2>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="h6 mb-0">{{ __('Domínios adicionais / subdomínios') }}</h2>
+                        @if ($account->status === 'active')
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#add-domain-modal">
+                                <i class="bi bi-plus-lg"></i> {{ __('Adicionar domínio') }}
+                            </button>
+                        @endif
+                    </div>
 
                     @if ($account->domains->isNotEmpty())
                         <div class="table-responsive mb-3">
@@ -334,34 +343,9 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         </div>
                     @endif
 
-                    @if ($account->status === 'active')
-                        <form method="POST" action="{{ route('admin.hosting-accounts.domains.store', $account) }}" class="row g-2 align-items-end">
-                            @csrf
-                            <div class="col-auto">
-                                <x-input-label for="domain" value="{{ __('Domínio') }}" class="visually-hidden" />
-                                <x-text-input id="domain" name="domain" type="text" placeholder="blog.{{ $account->primary_domain }}" required />
-                            </div>
-                            <div class="col-auto">
-                                <select name="type" class="form-select">
-                                    <option value="subdomain">{{ __('Subdomínio') }}</option>
-                                    <option value="addon">{{ __('Domínio adicional') }}</option>
-                                </select>
-                            </div>
-                            <div class="col-auto">
-                                <select name="location" class="form-select">
-                                    <option value="inside_public_html">{{ __('Dentro de public_html') }}</option>
-                                    <option value="outside_public_html">{{ __('Fora de public_html (domains/)') }}</option>
-                                </select>
-                            </div>
-                            <div class="col-auto">
-                                <button type="submit" class="btn btn-outline-primary">{{ __('Adicionar') }}</button>
-                            </div>
-                        </form>
-                        <x-input-error :messages="$errors->get('domain')" class="mt-2" />
-                        <x-input-error :messages="$errors->get('location')" class="mt-2" />
-                    @else
+                    @unless ($account->status === 'active')
                         <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
-                    @endif
+                    @endunless
                 </div>
             </div>
         </div>
@@ -370,7 +354,14 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         <div class="tab-pane fade" id="tab-databases">
             <div class="card">
                 <div class="card-body">
-                    <h2 class="h6">{{ __('Bancos de dados') }}</h2>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="h6 mb-0">{{ __('Bancos de dados') }}</h2>
+                        @if ($account->status === 'active')
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#add-database-modal">
+                                <i class="bi bi-plus-lg"></i> {{ __('Criar banco de dados') }}
+                            </button>
+                        @endif
+                    </div>
 
                     @if ($account->databases->isNotEmpty())
                         <div class="table-responsive mb-3">
@@ -405,37 +396,9 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         </div>
                     @endif
 
-                    @if ($account->status === 'active')
-                        <form method="POST" action="{{ route('admin.hosting-accounts.databases.store', $account) }}" class="row g-2 align-items-end">
-                            @csrf
-                            <div class="col-auto">
-                                <x-input-label for="db_name" value="{{ __('Nome do banco') }}" class="small mb-1" />
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">{{ $account->linux_username }}_</span>
-                                    <input id="db_name" name="name" type="text" class="form-control" placeholder="loja" required>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <x-input-label for="db_username" value="{{ __('Usuário (opcional)') }}" class="small mb-1" />
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">{{ $account->linux_username }}_</span>
-                                    <input id="db_username" name="username" type="text" class="form-control" placeholder="{{ __('igual ao nome do banco') }}">
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <x-input-label for="db_password" value="{{ __('Senha (opcional)') }}" class="small mb-1" />
-                                <input id="db_password" name="password" type="text" class="form-control form-control-sm" placeholder="{{ __('gerar automaticamente') }}">
-                            </div>
-                            <div class="col-auto">
-                                <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar banco') }}</button>
-                            </div>
-                        </form>
-                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                        <x-input-error :messages="$errors->get('username')" class="mt-2" />
-                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                    @else
+                    @unless ($account->status === 'active')
                         <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
-                    @endif
+                    @endunless
                 </div>
             </div>
         </div>
@@ -445,7 +408,10 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h2 class="h6 mb-0">{{ __('Backups') }}</h2>
+                        <div class="d-flex align-items-center gap-2">
+                            <h2 class="h6 mb-0">{{ __('Backups') }}</h2>
+                            <span class="badge text-bg-{{ $backupLimitReached ? 'warning' : 'secondary' }} rounded-pill">{{ $backupCount }} / {{ $account->plan->max_backups }}</span>
+                        </div>
                         @if ($account->status === 'active')
                             <div class="d-flex gap-2">
                                 <form method="POST" action="{{ route('admin.hosting-accounts.backup-frequency.update', $account) }}" class="d-flex gap-1">
@@ -460,7 +426,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 </form>
                                 <form method="POST" action="{{ route('admin.hosting-accounts.backups.store', $account) }}">
                                     @csrf
-                                    <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar backup agora') }}</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" @disabled($backupLimitReached) title="{{ $backupLimitReached ? __('Limite de backups do plano atingido') : '' }}">{{ __('Criar backup agora') }}</button>
                                 </form>
                             </div>
                         @endif
@@ -511,4 +477,79 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             </div>
         </div>
     </div>
+
+    {{-- Modal: adicionar domínio --}}
+    <x-modal name="add-domain-modal" maxWidth="sm" :show="$errors->has('domain') || $errors->has('location')">
+        <form method="POST" action="{{ route('admin.hosting-accounts.domains.store', $account) }}">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">{{ __('Adicionar domínio') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <x-input-label for="domain" value="{{ __('Domínio') }}" class="small mb-1" />
+                    <x-text-input id="domain" name="domain" type="text" placeholder="blog.{{ $account->primary_domain }}" :value="old('domain')" required autofocus />
+                    <x-input-error :messages="$errors->get('domain')" class="mt-2" />
+                </div>
+                <div class="mb-3">
+                    <x-input-label for="domain-type" value="{{ __('Tipo') }}" class="small mb-1" />
+                    <select id="domain-type" name="type" class="form-select">
+                        <option value="subdomain">{{ __('Subdomínio') }}</option>
+                        <option value="addon">{{ __('Domínio adicional') }}</option>
+                    </select>
+                </div>
+                <div class="mb-0">
+                    <x-input-label for="domain-location" value="{{ __('Localização') }}" class="small mb-1" />
+                    <select id="domain-location" name="location" class="form-select">
+                        <option value="inside_public_html">{{ __('Dentro de public_html') }}</option>
+                        <option value="outside_public_html">{{ __('Fora de public_html (domains/)') }}</option>
+                    </select>
+                    <x-input-error :messages="$errors->get('location')" class="mt-2" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('Adicionar') }}</button>
+            </div>
+        </form>
+    </x-modal>
+
+    {{-- Modal: criar banco de dados --}}
+    <x-modal name="add-database-modal" maxWidth="sm" :show="$errors->has('name') || $errors->has('username') || $errors->has('password')">
+        <form method="POST" action="{{ route('admin.hosting-accounts.databases.store', $account) }}">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">{{ __('Criar banco de dados') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <x-input-label for="db_name" value="{{ __('Nome do banco') }}" class="small mb-1" />
+                    <div class="input-group">
+                        <span class="input-group-text">{{ $account->linux_username }}_</span>
+                        <input id="db_name" name="name" type="text" class="form-control" placeholder="loja" value="{{ old('name') }}" required autofocus>
+                    </div>
+                    <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                </div>
+                <div class="mb-3">
+                    <x-input-label for="db_username" value="{{ __('Usuário (opcional)') }}" class="small mb-1" />
+                    <div class="input-group">
+                        <span class="input-group-text">{{ $account->linux_username }}_</span>
+                        <input id="db_username" name="username" type="text" class="form-control" placeholder="{{ __('igual ao nome do banco') }}" value="{{ old('username') }}">
+                    </div>
+                    <x-input-error :messages="$errors->get('username')" class="mt-2" />
+                </div>
+                <div class="mb-0">
+                    <x-input-label for="db_password" value="{{ __('Senha (opcional)') }}" class="small mb-1" />
+                    <input id="db_password" name="password" type="text" class="form-control" placeholder="{{ __('gerar automaticamente') }}">
+                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('Criar banco') }}</button>
+            </div>
+        </form>
+    </x-modal>
 </x-admin-layout>

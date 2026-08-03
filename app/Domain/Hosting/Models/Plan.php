@@ -15,6 +15,7 @@ class Plan extends Model
         'max_addon_domains',
         'max_cron_jobs',
         'max_email_accounts',
+        'max_backups',
         'cpu_cores',
         'max_processes',
         'is_active',

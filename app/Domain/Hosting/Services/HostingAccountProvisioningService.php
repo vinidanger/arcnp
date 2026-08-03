@@ -276,6 +276,15 @@ class HostingAccountProvisioningService
      */
     public function createBackup(HostingAccount $account): HostingBackup
     {
+        // Falhas não contam pra cota (não geram arquivo nenhum) — só
+        // pending/completed representam backup de fato armazenado ou em
+        // progresso.
+        $activeBackups = $account->backups()->whereIn('status', ['pending', 'completed'])->count();
+
+        if ($activeBackups >= $account->plan->max_backups) {
+            throw new RuntimeException('Limite de backups do plano atingido ('.$account->plan->max_backups.'). Baixe/apague backups antigos ou aumente o limite do plano.');
+        }
+
         $backup = $account->backups()->create(['status' => 'pending']);
 
         $this->client->dispatch($account->server, 'backup.create', [

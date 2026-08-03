@@ -64,6 +64,7 @@ class PlanController extends Controller
             'max_addon_domains' => ['required', 'integer', 'min:0'],
             'max_cron_jobs' => ['required', 'integer', 'min:0'],
             'max_email_accounts' => ['required', 'integer', 'min:0'],
+            'max_backups' => ['required', 'integer', 'min:0'],
             'cpu_cores' => ['nullable', 'integer', 'min:1'],
             'max_processes' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['boolean'],

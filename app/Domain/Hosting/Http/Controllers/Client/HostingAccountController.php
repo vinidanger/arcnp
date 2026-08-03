@@ -150,7 +150,11 @@ class HostingAccountController extends Controller
             return back()->with('error', 'A conta precisa estar ativa para gerar backup.');
         }
 
-        $provisioning->createBackup($hosting_account);
+        try {
+            $provisioning->createBackup($hosting_account);
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao gerar backup: '.$e->getMessage());
+        }
 
         return back()->with('status', 'Backup solicitado — pode levar alguns minutos. Atualize a página pra ver o resultado.');
     }
