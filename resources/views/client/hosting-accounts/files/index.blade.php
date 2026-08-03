@@ -19,38 +19,57 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    @if ($outsideDomains->isNotEmpty())
-        <div class="mb-3">
-            <div class="small text-secondary mb-1">{{ __('Gerenciando arquivos de:') }}</div>
-            <div class="btn-group btn-group-sm" role="group">
-                <a href="{{ route('client.hosting-accounts.files.index', $account) }}"
-                   class="btn {{ $root === null ? 'btn-primary' : 'btn-outline-secondary' }}">{{ $account->primary_domain }} (public_html)</a>
-                @foreach ($outsideDomains as $outsideDomain)
-                    <a href="{{ route('client.hosting-accounts.files.index', [$account, 'root' => $outsideDomain->domain]) }}"
-                       class="btn {{ $root === $outsideDomain->domain ? 'btn-primary' : 'btn-outline-secondary' }}">{{ $outsideDomain->domain }}</a>
-                @endforeach
+    <div class="file-toolbar-path d-flex align-items-center gap-2 mb-3 flex-wrap">
+        @if ($outsideDomains->isNotEmpty())
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-globe2"></i> {{ $root ?? $account->primary_domain }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item {{ $root === null ? 'active' : '' }}" href="{{ route('client.hosting-accounts.files.index', $account) }}">
+                            {{ $account->primary_domain }} <span class="text-secondary small">(public_html)</span>
+                        </a>
+                    </li>
+                    @foreach ($outsideDomains as $outsideDomain)
+                        <li>
+                            <a class="dropdown-item {{ $root === $outsideDomain->domain ? 'active' : '' }}"
+                               href="{{ route('client.hosting-accounts.files.index', [$account, 'root' => $outsideDomain->domain]) }}">
+                                {{ $outsideDomain->domain }}
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
             </div>
-        </div>
-    @endif
+            <div class="vr"></div>
+        @endif
 
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{{ route('client.hosting-accounts.files.index', [$account, 'root' => $root]) }}">{{ $root ?? 'public_html' }}</a>
-            </li>
-            @php $accumulated = ''; @endphp
-            @foreach (array_filter(explode('/', $path)) as $segment)
-                @php $accumulated = trim($accumulated.'/'.$segment, '/'); @endphp
-                <li class="breadcrumb-item">
-                    <a href="{{ route('client.hosting-accounts.files.index', [$account, 'path' => $accumulated, 'root' => $root]) }}">{{ $segment }}</a>
+        <nav aria-label="breadcrumb" class="flex-grow-1">
+            <ol class="breadcrumb file-breadcrumb">
+                <li class="breadcrumb-item {{ $path === '' ? 'active' : '' }}">
+                    @if ($path === '')
+                        <i class="bi bi-house-door-fill"></i>
+                    @else
+                        <a href="{{ route('client.hosting-accounts.files.index', [$account, 'root' => $root]) }}"><i class="bi bi-house-door"></i></a>
+                    @endif
                 </li>
-            @endforeach
-        </ol>
-    </nav>
+                @php $accumulated = ''; @endphp
+                @foreach (array_filter(explode('/', $path)) as $segment)
+                    @php $accumulated = trim($accumulated.'/'.$segment, '/'); @endphp
+                    <li class="breadcrumb-item {{ $accumulated === $path ? 'active' : '' }}">
+                        @if ($accumulated === $path)
+                            {{ $segment }}
+                        @else
+                            <a href="{{ route('client.hosting-accounts.files.index', [$account, 'path' => $accumulated, 'root' => $root]) }}">{{ $segment }}</a>
+                        @endif
+                    </li>
+                @endforeach
+            </ol>
+        </nav>
+    </div>
 
     <div id="file-manager"
          data-upload-url="{{ route('client.hosting-accounts.files.upload', $account) }}"
-         data-rename-url="{{ route('client.hosting-accounts.files.rename', $account) }}"
          data-destroy-url="{{ route('client.hosting-accounts.files.destroy', $account) }}"
          data-compress-url="{{ route('client.hosting-accounts.files.compress', $account) }}"
          data-extract-url="{{ route('client.hosting-accounts.files.extract', $account) }}"
@@ -58,42 +77,35 @@
          data-root="{{ $root }}"
          data-csrf="{{ csrf_token() }}">
 
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="row g-2 mb-3">
-                    <div class="col-auto">
-                        <form method="POST" action="{{ route('client.hosting-accounts.files.directories.store', $account) }}" class="d-flex gap-1">
-                            @csrf
-                            <input type="hidden" name="current_path" value="{{ $path }}">
-                            <input type="hidden" name="root" value="{{ $root }}">
-                            <input type="text" name="name" class="form-control form-control-sm" placeholder="{{ __('Nova pasta') }}" required>
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Criar') }}</button>
-                        </form>
-                    </div>
-                    <div class="col-auto">
-                        <form method="POST" action="{{ route('client.hosting-accounts.files.store', $account) }}" class="d-flex gap-1">
-                            @csrf
-                            <input type="hidden" name="current_path" value="{{ $path }}">
-                            <input type="hidden" name="root" value="{{ $root }}">
-                            <input type="text" name="name" class="form-control form-control-sm" placeholder="{{ __('Novo arquivo') }}" required>
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Criar') }}</button>
-                        </form>
-                    </div>
-                    <div class="col-auto ms-auto">
-                        <button type="button" id="btn-compress-selected" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-zip"></i> {{ __('Compactar selecionados') }}
-                        </button>
-                    </div>
-                </div>
-
-                <div id="file-dropzone" class="file-dropzone">
-                    <input type="file" id="file-upload-input" class="d-none" multiple>
-                    <i class="bi bi-cloud-arrow-up"></i>
-                    {{ __('Arraste arquivos aqui pra enviar, ou') }}
-                    <button type="button" id="file-upload-browse" class="btn btn-sm btn-link p-0 align-baseline">{{ __('escolha do computador') }}</button>
-                    <div id="upload-status" class="small mt-1 d-none"></div>
-                </div>
+        <div class="d-flex gap-2 mb-3">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-primary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-plus-lg"></i> {{ __('Criar novo') }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#new-folder-modal">
+                            <i class="bi bi-folder-plus me-2"></i>{{ __('Pasta') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#new-file-modal">
+                            <i class="bi bi-file-earmark-plus me-2"></i>{{ __('Arquivo') }}
+                        </a>
+                    </li>
+                </ul>
             </div>
+
+            <button type="button" id="btn-import" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                <i class="bi bi-upload"></i> {{ __('Importar') }}
+            </button>
+            <input type="file" id="file-upload-input" class="d-none" multiple>
+
+            <button type="button" id="btn-compress-selected" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                <i class="bi bi-file-earmark-zip"></i> {{ __('Compactar selecionados') }}
+            </button>
+
+            <div id="upload-status" class="small align-self-center d-none"></div>
         </div>
 
         <div class="card">
@@ -140,6 +152,14 @@
         </div>
     </div>
 
+    {{-- Overlay de "solte pra enviar" — só some do d-none durante um arrasto real (ver file-manager.js) --}}
+    <div id="file-dropzone-overlay" class="file-dropzone-overlay d-none">
+        <div class="file-dropzone-overlay-box">
+            <i class="bi bi-cloud-arrow-up d-block mb-2" style="font-size: 2.5rem;"></i>
+            {{ __('Solte aqui pra enviar') }}
+        </div>
+    </div>
+
     {{-- Menu de contexto (botão direito) --}}
     <ul id="file-context-menu" class="dropdown-menu file-context-menu shadow">
         <li><a class="dropdown-item" href="#" data-ctx="open"><i class="bi bi-box-arrow-up-right me-2"></i>{{ __('Abrir') }}</a></li>
@@ -149,6 +169,48 @@
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item text-danger" href="#" data-ctx="delete"><i class="bi bi-trash me-2"></i>{{ __('Remover') }}</a></li>
     </ul>
+
+    {{-- Modal: nova pasta --}}
+    <x-modal name="new-folder-modal" maxWidth="sm">
+        <form method="POST" action="{{ route('client.hosting-accounts.files.directories.store', $account) }}">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">{{ __('Nova pasta') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="current_path" value="{{ $path }}">
+                <input type="hidden" name="root" value="{{ $root }}">
+                <x-input-label for="new-folder-name" value="{{ __('Nome da pasta') }}" class="small mb-1" />
+                <input type="text" id="new-folder-name" name="name" class="form-control" required autofocus>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('Criar') }}</button>
+            </div>
+        </form>
+    </x-modal>
+
+    {{-- Modal: novo arquivo --}}
+    <x-modal name="new-file-modal" maxWidth="sm">
+        <form method="POST" action="{{ route('client.hosting-accounts.files.store', $account) }}">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">{{ __('Novo arquivo') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="current_path" value="{{ $path }}">
+                <input type="hidden" name="root" value="{{ $root }}">
+                <x-input-label for="new-file-name" value="{{ __('Nome do arquivo') }}" class="small mb-1" />
+                <input type="text" id="new-file-name" name="name" class="form-control" placeholder="index.php" required autofocus>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('Criar') }}</button>
+            </div>
+        </form>
+    </x-modal>
 
     {{-- Modal: renomear --}}
     <x-modal name="rename-modal" maxWidth="sm">
@@ -184,7 +246,7 @@
                 <input type="hidden" name="current_path" id="compress-current-path">
                 <input type="hidden" name="root" id="compress-root">
                 <x-input-label for="compress-output" value="{{ __('Nome do arquivo .zip') }}" class="small mb-1" />
-                <input type="text" id="compress-output" name="output" class="form-control" placeholder="arquivos.zip" required>
+                <input type="text" id="compress-output" name="output" class="form-control" placeholder="arquivos.zip" required autofocus>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>

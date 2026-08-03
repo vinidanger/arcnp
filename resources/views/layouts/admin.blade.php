@@ -57,7 +57,7 @@
 
             <div class="flex-grow-1 d-flex flex-column">
                 @isset($header)
-                    <header class="bg-white border-bottom">
+                    <header class="bg-body border-bottom">
                         <div class="container-fluid px-4 py-3">
                             {{ $header }}
                         </div>

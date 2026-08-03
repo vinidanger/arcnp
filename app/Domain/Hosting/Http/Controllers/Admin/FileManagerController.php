@@ -122,18 +122,37 @@ class FileManagerController extends Controller
         $this->authorize('update', $hosting_account);
 
         $data = $request->validate([
-            'path' => ['required', 'string'],
+            'paths' => ['required', 'array', 'min:1'],
+            'paths.*' => ['string'],
+            'current_path' => ['nullable', 'string'],
             'root' => ['nullable', 'string'],
         ]);
 
-        try {
-            $files->delete($hosting_account, $data['path'], $data['root'] ?? null);
+        $removed = 0;
+        $errors = [];
 
-            return redirect()->route('admin.hosting-accounts.files.index', [$hosting_account, 'path' => self::parentOf($data['path']), 'root' => $data['root'] ?? null])
-                ->with('status', 'Removido.');
-        } catch (Throwable $e) {
-            return back()->with('error', 'Falha ao remover: '.$e->getMessage());
+        foreach ($data['paths'] as $path) {
+            try {
+                $files->delete($hosting_account, $path, $data['root'] ?? null);
+                $removed++;
+            } catch (Throwable $e) {
+                $errors[] = "{$path}: {$e->getMessage()}";
+            }
         }
+
+        $redirect = redirect()->route('admin.hosting-accounts.files.index', [
+            $hosting_account, 'path' => $data['current_path'] ?? '', 'root' => $data['root'] ?? null,
+        ]);
+
+        if ($removed > 0) {
+            $redirect->with('status', $removed > 1 ? "{$removed} itens removidos." : 'Removido.');
+        }
+
+        if ($errors) {
+            $redirect->with('error', 'Falha ao remover: '.implode(' | ', $errors));
+        }
+
+        return $redirect;
     }
 
     public function rename(Request $request, HostingAccount $hosting_account, FileManagerService $files)

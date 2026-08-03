@@ -191,6 +191,13 @@ body {
 
 html.sidebar-collapsed .app-sidebar {
     width: 4.25rem;
+    // Item flex por padrão não encolhe além da largura "natural" do
+    // próprio conteúdo (min-width: auto implícito) — sem isso, ícone +
+    // padding que não coubessem nos 4.25rem forçavam a aside inteira a
+    // ficar mais larga que o combinado, estourando rolagem horizontal
+    // na página inteira.
+    overflow: hidden;
+    min-width: 4.25rem;
 }
 
 html.sidebar-collapsed .sidebar-label {
@@ -199,15 +206,20 @@ html.sidebar-collapsed .sidebar-label {
 
 html.sidebar-collapsed .app-sidebar .nav-link {
     justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 html.sidebar-collapsed .app-sidebar .nav-link i {
     width: auto;
 }
 
-html.sidebar-collapsed #sidebar-toggle {
+html.sidebar-collapsed #sidebar-toggle,
+html.sidebar-collapsed #theme-toggle {
     justify-content: center;
     width: 100%;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 html.sidebar-collapsed #sidebar-toggle i {
@@ -216,6 +228,8 @@ html.sidebar-collapsed #sidebar-toggle i {
 
 html.sidebar-collapsed .app-sidebar-footer .dropdown-toggle > div {
     justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 // ---------------------------------------------------------------------
@@ -288,22 +302,33 @@ html.sidebar-collapsed .app-sidebar-footer .dropdown-toggle > div {
 }
 
 // ---------------------------------------------------------------------
-// Gerenciador de arquivos — dropzone de upload + menu de contexto
+// Gerenciador de arquivos — overlay de upload, menu de contexto,
+// barra de domínio/caminho atual
 // ---------------------------------------------------------------------
 
-.file-dropzone {
-    border: 2px dashed var(--bs-border-color);
-    border-radius: $border-radius;
-    padding: 0.75rem 1rem;
-    text-align: center;
-    color: var(--bs-secondary-color);
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+// Só aparece enquanto um arrasto de arquivo está em cima da página
+// (ver file-manager.js) — nada fixo ocupando espaço o tempo todo.
+.file-dropzone-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1090;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(79, 70, 229, 0.08);
+    backdrop-filter: blur(1px);
+    pointer-events: none;
 }
 
-.file-dropzone.is-dragover {
-    border-color: $primary;
-    background-color: rgba($primary, 0.05);
+.file-dropzone-overlay-box {
+    border: 3px dashed $primary;
+    border-radius: $border-radius-lg;
+    padding: 3rem 4rem;
+    background: var(--bs-body-bg);
     color: $primary;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-align: center;
 }
 
 .file-context-menu {
@@ -311,6 +336,25 @@ html.sidebar-collapsed .app-sidebar-footer .dropdown-toggle > div {
     position: absolute;
     z-index: 1080;
     min-width: 12rem;
+}
+
+.file-toolbar-path {
+    background: var(--bs-tertiary-bg);
+    border-radius: $border-radius;
+    padding: 0.5rem 0.9rem;
+}
+
+.file-breadcrumb {
+    --bs-breadcrumb-divider: "/";
+    margin-bottom: 0;
+}
+
+.file-breadcrumb .breadcrumb-item a {
+    text-decoration: none;
+}
+
+.file-breadcrumb .breadcrumb-item.active {
+    font-weight: 600;
 }
 
 .file-row {
