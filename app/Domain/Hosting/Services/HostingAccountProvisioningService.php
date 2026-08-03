@@ -297,6 +297,20 @@ class HostingAccountProvisioningService
         return $backup;
     }
 
+    public function deleteBackup(HostingAccount $account, HostingBackup $backup): void
+    {
+        $filenames = collect($backup->files)->pluck('filename')->filter()->values()->all();
+
+        if ($filenames !== []) {
+            $this->runStep($account->server, 'backup.delete', [
+                'username' => $account->linux_username,
+                'files' => $filenames,
+            ]);
+        }
+
+        $backup->delete();
+    }
+
     public function suspend(HostingAccount $account): void
     {
         $this->runStep($account->server, 'hosting.suspend', [

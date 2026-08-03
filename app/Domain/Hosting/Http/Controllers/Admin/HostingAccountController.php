@@ -269,6 +269,57 @@ class HostingAccountController extends Controller
         return $client->streamDownload($hosting_account->server, $path, $filename);
     }
 
+    public function downloadBackupBundle(HostingAccount $hosting_account, HostingBackup $backup, string $group, AgentHttpClient $client)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($backup->hosting_account_id === $hosting_account->id, 404);
+        abort_unless($backup->status === 'completed', 404);
+        abort_unless(in_array($group, ['files', 'databases', 'all'], true), 404);
+
+        $filenames = collect($backup->files)->pluck('filename')->filter(fn ($filename) => match ($group) {
+            'files' => str_starts_with($filename, 'files-'),
+            'databases' => str_starts_with($filename, 'db-'),
+            default => true,
+        })->values();
+
+        abort_if($filenames->isEmpty(), 404);
+
+        // Um único arquivo já comprimido (tar.gz/sql.gz) não precisa de
+        // outra camada de zip por cima — só monta o pacote quando há
+        // mais de um.
+        if ($filenames->count() === 1) {
+            $filename = $filenames->first();
+
+            return $client->streamDownload($hosting_account->server, "api/backups/{$hosting_account->linux_username}/{$filename}", $filename);
+        }
+
+        $token = rawurlencode(json_encode(['files' => $filenames->all()]));
+        $path = "api/backups/{$hosting_account->linux_username}/bundle/{$token}";
+        $zipName = match ($group) {
+            'files' => 'arquivos.zip',
+            'databases' => 'bancos-de-dados.zip',
+            default => 'backup-completo.zip',
+        };
+
+        return $client->streamDownload($hosting_account->server, $path, $zipName);
+    }
+
+    public function destroyBackup(HostingAccount $hosting_account, HostingBackup $backup, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($backup->hosting_account_id === $hosting_account->id, 404);
+
+        try {
+            $provisioning->deleteBackup($hosting_account, $backup);
+
+            return back()->with('status', 'Backup removido.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao remover backup: '.$e->getMessage());
+        }
+    }
+
     public function storeDomain(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);

@@ -27,6 +27,10 @@ Route::post('hosting-accounts/{hosting_account}/backup-frequency', [HostingAccou
     ->name('hosting-accounts.backup-frequency.update');
 Route::post('hosting-accounts/{hosting_account}/backups', [HostingAccountController::class, 'createBackup'])
     ->name('hosting-accounts.backups.store');
+Route::delete('hosting-accounts/{hosting_account}/backups/{backup}', [HostingAccountController::class, 'destroyBackup'])
+    ->name('hosting-accounts.backups.destroy');
+Route::get('hosting-accounts/{hosting_account}/backups/{backup}/bundle/{group}', [HostingAccountController::class, 'downloadBackupBundle'])
+    ->name('hosting-accounts.backups.bundle');
 Route::get('hosting-accounts/{hosting_account}/backups/{backup}/{filename}', [HostingAccountController::class, 'downloadBackup'])
     ->name('hosting-accounts.backups.download');
 

@@ -165,8 +165,12 @@ body {
 // clicável extra ao lado dele. Seletor restrito a <div> pra não afetar
 // os dropdowns nativos (<button class="btn dropdown-toggle">) espalhados
 // pelo app, que dependem do caret como único indicador visual.
+// !important necessário pro caso dropup (perfil no rodapé do menu): o
+// próprio Bootstrap define ".dropup .dropdown-toggle::after" com maior
+// especificidade (duas classes) do que esse seletor, então sem isso o
+// triângulo do dropup continua vencendo e aparecendo por cima do layout.
 div.dropdown-toggle::after {
-    display: none;
+    display: none !important;
 }
 
 .app-sidebar-footer .dropdown-toggle:hover {
