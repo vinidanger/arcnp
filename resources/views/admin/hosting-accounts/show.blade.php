@@ -1,16 +1,23 @@
 <x-admin-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
-            <h1 class="h4 mb-0">{{ $account->primary_domain }}</h1>
-            <div class="d-flex gap-2">
-                @if ($account->status === 'active')
-                    <a href="{{ route('admin.hosting-accounts.files.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Arquivos') }}</a>
-                    <a href="{{ route('admin.hosting-accounts.cron.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Cron') }}</a>
-                    <a href="{{ route('admin.hosting-accounts.ssh.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('SSH') }}</a>
-                    <a href="{{ route('admin.hosting-accounts.dns.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('DNS') }}</a>
-                    <a href="{{ route('admin.hosting-accounts.mail.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('E-mail') }}</a>
-                @endif
+            <div>
+                <h1 class="h4 mb-1">{{ $account->primary_domain }}</h1>
+                <div class="d-flex align-items-center gap-2">
+                    @php
+                        $badge = match ($account->status) {
+                            'active' => 'success',
+                            'suspended' => 'warning',
+                            'error' => 'danger',
+                            default => 'secondary',
+                        };
+                    @endphp
+                    <span class="badge text-bg-{{ $badge }}">{{ $account->status }}</span>
+                    <span class="text-secondary small">{{ $account->client->name }} · {{ $account->plan->name }}</span>
+                </div>
+            </div>
 
+            <div class="d-flex gap-2 align-items-center">
                 @if ($account->status === 'error')
                     <form method="POST" action="{{ route('admin.hosting-accounts.retry', $account) }}">
                         @csrf
@@ -18,32 +25,51 @@
                     </form>
                 @endif
 
-                @if ($account->status === 'active')
-                    <form method="POST" action="{{ route('admin.hosting-accounts.suspend', $account) }}"
-                          onsubmit="return confirm('{{ __('Isso desativa o site e o e-mail do cliente até reativar. Continuar?') }}')">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Suspender') }}</button>
-                    </form>
-                @elseif ($account->status === 'suspended')
-                    <form method="POST" action="{{ route('admin.hosting-accounts.reactivate', $account) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-success">{{ __('Reativar') }}</button>
-                    </form>
-                @endif
+                <x-dropdown align="end">
+                    <x-slot name="trigger">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-three-dots"></i> {{ __('Ações') }}
+                        </button>
+                    </x-slot>
+                    <x-slot name="content">
+                        @if ($account->status === 'active' && $account->ssl_status !== 'active')
+                            <li>
+                                <form method="POST" action="{{ route('admin.hosting-accounts.ssl.store', $account) }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item"><i class="bi bi-shield-check me-1"></i> {{ __('Emitir SSL') }}</button>
+                                </form>
+                            </li>
+                        @endif
 
-                @if ($account->status === 'active' && $account->ssl_status !== 'active')
-                    <form method="POST" action="{{ route('admin.hosting-accounts.ssl.store', $account) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Emitir SSL') }}</button>
-                    </form>
-                @endif
+                        @if ($account->status === 'active')
+                            <li>
+                                <form method="POST" action="{{ route('admin.hosting-accounts.suspend', $account) }}"
+                                      onsubmit="return confirm('{{ __('Isso desativa o site e o e-mail do cliente até reativar. Continuar?') }}')">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item"><i class="bi bi-pause-circle me-1"></i> {{ __('Suspender') }}</button>
+                                </form>
+                            </li>
+                        @elseif ($account->status === 'suspended')
+                            <li>
+                                <form method="POST" action="{{ route('admin.hosting-accounts.reactivate', $account) }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item"><i class="bi bi-play-circle me-1"></i> {{ __('Reativar') }}</button>
+                                </form>
+                            </li>
+                        @endif
 
-                <form method="POST" action="{{ route('admin.hosting-accounts.destroy', $account) }}"
-                      onsubmit="return confirm('{{ __('Isso remove o usuário Linux, vhost, pool PHP-FPM e banco de dados do servidor. Continuar?') }}')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Excluir') }}</button>
-                </form>
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+                            <form method="POST" action="{{ route('admin.hosting-accounts.destroy', $account) }}"
+                                  onsubmit="return confirm('{{ __('Isso remove o usuário Linux, vhost, pool PHP-FPM e banco de dados do servidor. Continuar?') }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-1"></i> {{ __('Excluir') }}</button>
+                            </form>
+                        </li>
+                    </x-slot>
+                </x-dropdown>
             </div>
         </div>
     </x-slot>
@@ -71,67 +97,138 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         </div>
     @endif
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <h2 class="h6">{{ __('Uso do plano') }} — {{ $account->plan->name }}</h2>
-            @php
-                $diskUsed = $account->disk_usage_mb ?? 0;
-                $diskQuota = max($account->plan->disk_quota_mb, 1);
-                $diskPercent = min(100, (int) round(($diskUsed / $diskQuota) * 100));
-                $diskBar = $diskPercent >= 90 ? 'bg-danger' : ($diskPercent >= 70 ? 'bg-warning' : 'bg-success');
-                $dbCount = $account->databases->count();
-                $domainCount = $account->domains->count();
-                $cronCount = $account->cronJobs->count();
-            @endphp
-            <div class="row g-3 small">
-                <div class="col-md-6">
-                    <div class="d-flex justify-content-between">
-                        <span>{{ __('Disco') }}</span>
-                        <span>{{ $diskUsed }} / {{ $diskQuota }} MB</span>
+    @php
+        $diskUsed = $account->disk_usage_mb ?? 0;
+        $diskQuota = max($account->plan->disk_quota_mb, 1);
+        $diskPercent = min(100, (int) round(($diskUsed / $diskQuota) * 100));
+        $dbCount = $account->databases->count();
+        $domainCount = $account->domains->count();
+        $cronCount = $account->cronJobs->count();
+    @endphp
+
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">
+                <i class="bi bi-grid-1x2 me-1"></i> {{ __('Visão geral') }}
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-domains" type="button">
+                {{ __('Domínios') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $domainCount }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-databases" type="button">
+                {{ __('Bancos de dados') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $dbCount }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-backups" type="button">
+                {{ __('Backups') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $account->backups->count() }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        {{-- ============================== VISÃO GERAL ============================== --}}
+        <div class="tab-pane fade show active" id="tab-overview">
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-lg-3">
+                    <div class="stat-tile">
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span class="text-secondary">{{ __('Disco') }}</span>
+                            <span>{{ $diskUsed }} / {{ $diskQuota }} MB</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar {{ $diskPercent >= 90 ? 'bg-danger' : ($diskPercent >= 70 ? 'bg-warning' : 'bg-success') }}" style="width: {{ $diskPercent }}%"></div>
+                        </div>
                     </div>
-                    <div class="progress" style="height: 6px;">
-                        <div class="progress-bar {{ $diskBar }}" style="width: {{ $diskPercent }}%"></div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="stat-tile d-flex align-items-center gap-3">
+                        <div class="stat-tile-icon bg-primary-subtle text-primary"><i class="bi bi-database"></i></div>
+                        <div>
+                            <div class="stat-tile-value">{{ $dbCount }}<span class="fs-6 text-body-tertiary"> / {{ $account->plan->max_databases }}</span></div>
+                            <div class="small text-secondary">{{ __('Bancos de dados') }}</div>
+                        </div>
                     </div>
-                    @if (! $account->disk_usage_checked_at)
-                        <div class="text-secondary mt-1">{{ __('Ainda não calculado.') }}</div>
-                    @else
-                        <div class="text-secondary mt-1">{{ __('Atualizado em') }} {{ $account->disk_usage_checked_at->format('d/m/Y H:i') }}</div>
-                    @endif
                 </div>
-                <div class="col-md-2">
-                    {{ __('Bancos') }}: <strong>{{ $dbCount }} / {{ $account->plan->max_databases }}</strong>
+                <div class="col-6 col-lg-3">
+                    <div class="stat-tile d-flex align-items-center gap-3">
+                        <div class="stat-tile-icon bg-info-subtle text-info"><i class="bi bi-globe2"></i></div>
+                        <div>
+                            <div class="stat-tile-value">{{ $domainCount }}<span class="fs-6 text-body-tertiary"> / {{ $account->plan->max_addon_domains }}</span></div>
+                            <div class="small text-secondary">{{ __('Domínios adicionais') }}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    {{ __('Domínios') }}: <strong>{{ $domainCount }} / {{ $account->plan->max_addon_domains }}</strong>
-                </div>
-                <div class="col-md-2">
-                    {{ __('Cron') }}: <strong>{{ $cronCount }} / {{ $account->plan->max_cron_jobs }}</strong>
+                <div class="col-6 col-lg-3">
+                    <div class="stat-tile d-flex align-items-center gap-3">
+                        <div class="stat-tile-icon bg-warning-subtle text-warning"><i class="bi bi-clock-history"></i></div>
+                        <div>
+                            <div class="stat-tile-value">{{ $cronCount }}<span class="fs-6 text-body-tertiary"> / {{ $account->plan->max_cron_jobs }}</span></div>
+                            <div class="small text-secondary">{{ __('Tarefas cron') }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="row g-3">
-        <div class="col-md-6">
-            <div class="card h-100">
+            @if ($account->status === 'active')
+                <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Acesso rápido') }}</div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <a href="{{ route('admin.hosting-accounts.files.index', $account) }}" class="quick-link-card">
+                            <span class="quick-link-icon"><i class="bi bi-folder2-open"></i></span>
+                            <div class="fw-semibold small">{{ __('Arquivos') }}</div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <a href="{{ route('admin.hosting-accounts.mail.index', $account) }}" class="quick-link-card">
+                            <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
+                            <div class="fw-semibold small">{{ __('E-mail') }}</div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <a href="{{ route('admin.hosting-accounts.dns.index', $account) }}" class="quick-link-card">
+                            <span class="quick-link-icon"><i class="bi bi-globe2"></i></span>
+                            <div class="fw-semibold small">{{ __('DNS') }}</div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <a href="{{ route('admin.hosting-accounts.cron.index', $account) }}" class="quick-link-card">
+                            <span class="quick-link-icon"><i class="bi bi-clock-history"></i></span>
+                            <div class="fw-semibold small">{{ __('Cron') }}</div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <a href="{{ route('admin.hosting-accounts.ssh.index', $account) }}" class="quick-link-card">
+                            <span class="quick-link-icon"><i class="bi bi-terminal"></i></span>
+                            <div class="fw-semibold small">{{ __('SSH') }}</div>
+                        </a>
+                    </div>
+                </div>
+            @endif
+
+            <div class="card">
                 <div class="card-body">
+                    <h2 class="h6">{{ __('Detalhes da conta') }}</h2>
                     <dl class="row mb-0 small">
-                        <dt class="col-4">{{ __('Cliente') }}</dt>
-                        <dd class="col-8">{{ $account->client->name }} ({{ $account->client->email }})</dd>
+                        <dt class="col-sm-3">{{ __('Cliente') }}</dt>
+                        <dd class="col-sm-9">{{ $account->client->name }} ({{ $account->client->email }})</dd>
 
-                        <dt class="col-4">{{ __('Servidor') }}</dt>
-                        <dd class="col-8">
+                        <dt class="col-sm-3">{{ __('Servidor') }}</dt>
+                        <dd class="col-sm-9">
                             <a href="{{ route('admin.servers.show', $account->server) }}">{{ $account->server->name }}</a>
                         </dd>
 
-                        <dt class="col-4">{{ __('Plano') }}</dt>
-                        <dd class="col-8">{{ $account->plan->name }}</dd>
+                        <dt class="col-sm-3">{{ __('Plano') }}</dt>
+                        <dd class="col-sm-9">{{ $account->plan->name }}</dd>
 
-                        <dt class="col-4">{{ __('Username Linux') }}</dt>
-                        <dd class="col-8"><code>{{ $account->linux_username }}</code></dd>
+                        <dt class="col-sm-3">{{ __('Username Linux') }}</dt>
+                        <dd class="col-sm-9"><code>{{ $account->linux_username }}</code></dd>
 
-                        <dt class="col-4">{{ __('Versão PHP') }}</dt>
-                        <dd class="col-8">
+                        <dt class="col-sm-3">{{ __('Versão PHP') }}</dt>
+                        <dd class="col-sm-9">
                             @if ($account->status === 'active')
                                 <form method="POST" action="{{ route('admin.hosting-accounts.php-version.update', $account) }}" class="d-flex gap-2">
                                     @csrf
@@ -147,21 +244,8 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                             @endif
                         </dd>
 
-                        <dt class="col-4">{{ __('Status') }}</dt>
-                        <dd class="col-8">
-                            @php
-                                $badge = match ($account->status) {
-                                    'active' => 'success',
-                                    'suspended' => 'warning',
-                                    'error' => 'danger',
-                                    default => 'secondary',
-                                };
-                            @endphp
-                            <span class="badge text-bg-{{ $badge }}">{{ $account->status }}</span>
-                        </dd>
-
-                        <dt class="col-4">{{ __('SSL') }}</dt>
-                        <dd class="col-8">
+                        <dt class="col-sm-3">{{ __('SSL') }}</dt>
+                        <dd class="col-sm-9">
                             @php
                                 $sslBadge = match ($account->ssl_status) {
                                     'active' => 'success',
@@ -180,8 +264,111 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card h-100">
+        {{-- ============================== DOMÍNIOS ============================== --}}
+        <div class="tab-pane fade" id="tab-domains">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h6">{{ __('Domínios adicionais / subdomínios') }}</h2>
+
+                    @if ($account->domains->isNotEmpty())
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('Domínio') }}</th>
+                                        <th>{{ __('Tipo') }}</th>
+                                        <th>{{ __('Document root') }}</th>
+                                        <th>{{ __('Status') }}</th>
+                                        <th>{{ __('SSL') }}</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($account->domains as $domain)
+                                        <tr>
+                                            <td>{{ $domain->domain }}</td>
+                                            <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
+                                            <td>
+                                                @if ($domain->isOutsidePublicHtml())
+                                                    <code>domains/{{ $domain->domain }}/public_html</code>
+                                                @else
+                                                    <code>public_html/{{ $domain->subdirectory }}</code>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $domainBadge = match ($domain->status) {
+                                                        'active' => 'success',
+                                                        'error' => 'danger',
+                                                        default => 'secondary',
+                                                    };
+                                                @endphp
+                                                <span class="badge text-bg-{{ $domainBadge }}">{{ $domain->status }}</span>
+                                                @if ($domain->status === 'error' && $domain->last_error)
+                                                    <div class="small text-danger">{{ $domain->last_error }}</div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $domainSslBadge = match ($domain->ssl_status) {
+                                                        'active' => 'success',
+                                                        'pending' => 'info',
+                                                        'failed' => 'danger',
+                                                        default => 'secondary',
+                                                    };
+                                                @endphp
+                                                <span class="badge text-bg-{{ $domainSslBadge }}">{{ $domain->ssl_status }}</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <form method="POST" action="{{ route('admin.hosting-accounts.domains.destroy', [$account, $domain]) }}"
+                                                      onsubmit="return confirm('{{ __('Remove o vhost e o diretório desse domínio. Continuar?') }}')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+
+                    @if ($account->status === 'active')
+                        <form method="POST" action="{{ route('admin.hosting-accounts.domains.store', $account) }}" class="row g-2 align-items-end">
+                            @csrf
+                            <div class="col-auto">
+                                <x-input-label for="domain" value="{{ __('Domínio') }}" class="visually-hidden" />
+                                <x-text-input id="domain" name="domain" type="text" placeholder="blog.{{ $account->primary_domain }}" required />
+                            </div>
+                            <div class="col-auto">
+                                <select name="type" class="form-select">
+                                    <option value="subdomain">{{ __('Subdomínio') }}</option>
+                                    <option value="addon">{{ __('Domínio adicional') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <select name="location" class="form-select">
+                                    <option value="inside_public_html">{{ __('Dentro de public_html') }}</option>
+                                    <option value="outside_public_html">{{ __('Fora de public_html (domains/)') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-outline-primary">{{ __('Adicionar') }}</button>
+                            </div>
+                        </form>
+                        <x-input-error :messages="$errors->get('domain')" class="mt-2" />
+                        <x-input-error :messages="$errors->get('location')" class="mt-2" />
+                    @else
+                        <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- ============================== BANCOS DE DADOS ============================== --}}
+        <div class="tab-pane fade" id="tab-databases">
+            <div class="card">
                 <div class="card-body">
                     <h2 class="h6">{{ __('Bancos de dados') }}</h2>
 
@@ -252,172 +439,76 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="card mt-3">
-        <div class="card-body">
-            <h2 class="h6">{{ __('Domínios adicionais / subdomínios') }}</h2>
-
-            @if ($account->domains->isNotEmpty())
-                <div class="table-responsive mb-3">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>{{ __('Domínio') }}</th>
-                                <th>{{ __('Tipo') }}</th>
-                                <th>{{ __('Document root') }}</th>
-                                <th>{{ __('Status') }}</th>
-                                <th>{{ __('SSL') }}</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($account->domains as $domain)
-                                <tr>
-                                    <td>{{ $domain->domain }}</td>
-                                    <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
-                                    <td>
-                                        @if ($domain->isOutsidePublicHtml())
-                                            <code>domains/{{ $domain->domain }}/public_html</code>
-                                        @else
-                                            <code>public_html/{{ $domain->subdirectory }}</code>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @php
-                                            $domainBadge = match ($domain->status) {
-                                                'active' => 'success',
-                                                'error' => 'danger',
-                                                default => 'secondary',
-                                            };
-                                        @endphp
-                                        <span class="badge text-bg-{{ $domainBadge }}">{{ $domain->status }}</span>
-                                        @if ($domain->status === 'error' && $domain->last_error)
-                                            <div class="small text-danger">{{ $domain->last_error }}</div>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @php
-                                            $domainSslBadge = match ($domain->ssl_status) {
-                                                'active' => 'success',
-                                                'pending' => 'info',
-                                                'failed' => 'danger',
-                                                default => 'secondary',
-                                            };
-                                        @endphp
-                                        <span class="badge text-bg-{{ $domainSslBadge }}">{{ $domain->ssl_status }}</span>
-                                    </td>
-                                    <td class="text-end">
-                                        <form method="POST" action="{{ route('admin.hosting-accounts.domains.destroy', [$account, $domain]) }}"
-                                              onsubmit="return confirm('{{ __('Remove o vhost e o diretório desse domínio. Continuar?') }}')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-
-            @if ($account->status === 'active')
-                <form method="POST" action="{{ route('admin.hosting-accounts.domains.store', $account) }}" class="row g-2 align-items-end">
-                    @csrf
-                    <div class="col-auto">
-                        <x-input-label for="domain" value="{{ __('Domínio') }}" class="visually-hidden" />
-                        <x-text-input id="domain" name="domain" type="text" placeholder="blog.{{ $account->primary_domain }}" required />
-                    </div>
-                    <div class="col-auto">
-                        <select name="type" class="form-select">
-                            <option value="subdomain">{{ __('Subdomínio') }}</option>
-                            <option value="addon">{{ __('Domínio adicional') }}</option>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <select name="location" class="form-select">
-                            <option value="inside_public_html">{{ __('Dentro de public_html') }}</option>
-                            <option value="outside_public_html">{{ __('Fora de public_html (domains/)') }}</option>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-outline-primary">{{ __('Adicionar') }}</button>
-                    </div>
-                </form>
-                <x-input-error :messages="$errors->get('domain')" class="mt-2" />
-                <x-input-error :messages="$errors->get('location')" class="mt-2" />
-            @else
-                <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
-            @endif
-        </div>
-    </div>
-
-    <div class="card mt-3">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h2 class="h6 mb-0">{{ __('Backups') }}</h2>
-                @if ($account->status === 'active')
-                    <div class="d-flex gap-2">
-                        <form method="POST" action="{{ route('admin.hosting-accounts.backup-frequency.update', $account) }}" class="d-flex gap-1">
-                            @csrf
-                            <select name="backup_frequency" class="form-select form-select-sm" onchange="this.form.submit()">
-                                @foreach (config('hosting.backup_frequencies') as $frequency)
-                                    <option value="{{ $frequency }}" @selected($account->backup_frequency === $frequency)>
-                                        {{ match ($frequency) { 'daily' => __('Automático diário'), 'weekly' => __('Automático semanal'), default => __('Desativado') } }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                        <form method="POST" action="{{ route('admin.hosting-accounts.backups.store', $account) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar backup agora') }}</button>
-                        </form>
-                    </div>
-                @endif
-            </div>
-
-            @if ($account->backups->isNotEmpty())
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>{{ __('Data') }}</th>
-                                <th>{{ __('Status') }}</th>
-                                <th>{{ __('Arquivos') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($account->backups as $backup)
-                                <tr>
-                                    <td>{{ $backup->created_at->format('d/m/Y H:i') }}</td>
-                                    <td>
-                                        @php
-                                            $backupBadge = match ($backup->status) {
-                                                'completed' => 'success',
-                                                'failed' => 'danger',
-                                                default => 'info',
-                                            };
-                                        @endphp
-                                        <span class="badge text-bg-{{ $backupBadge }}">{{ $backup->status }}</span>
-                                        @if ($backup->status === 'failed' && $backup->error)
-                                            <div class="small text-danger">{{ $backup->error }}</div>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @foreach ($backup->files ?? [] as $file)
-                                            <a href="{{ route('admin.hosting-accounts.backups.download', [$account, $backup, $file['filename']]) }}"
-                                               class="d-block small">{{ $file['filename'] }} ({{ number_format($file['size'] / 1048576, 1) }} MB)</a>
+        {{-- ============================== BACKUPS ============================== --}}
+        <div class="tab-pane fade" id="tab-backups">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="h6 mb-0">{{ __('Backups') }}</h2>
+                        @if ($account->status === 'active')
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="{{ route('admin.hosting-accounts.backup-frequency.update', $account) }}" class="d-flex gap-1">
+                                    @csrf
+                                    <select name="backup_frequency" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        @foreach (config('hosting.backup_frequencies') as $frequency)
+                                            <option value="{{ $frequency }}" @selected($account->backup_frequency === $frequency)>
+                                                {{ match ($frequency) { 'daily' => __('Automático diário'), 'weekly' => __('Automático semanal'), default => __('Desativado') } }}
+                                            </option>
                                         @endforeach
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                                    </select>
+                                </form>
+                                <form method="POST" action="{{ route('admin.hosting-accounts.backups.store', $account) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Criar backup agora') }}</button>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+
+                    @if ($account->backups->isNotEmpty())
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('Data') }}</th>
+                                        <th>{{ __('Status') }}</th>
+                                        <th>{{ __('Arquivos') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($account->backups as $backup)
+                                        <tr>
+                                            <td>{{ $backup->created_at->format('d/m/Y H:i') }}</td>
+                                            <td>
+                                                @php
+                                                    $backupBadge = match ($backup->status) {
+                                                        'completed' => 'success',
+                                                        'failed' => 'danger',
+                                                        default => 'info',
+                                                    };
+                                                @endphp
+                                                <span class="badge text-bg-{{ $backupBadge }}">{{ $backup->status }}</span>
+                                                @if ($backup->status === 'failed' && $backup->error)
+                                                    <div class="small text-danger">{{ $backup->error }}</div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @foreach ($backup->files ?? [] as $file)
+                                                    <a href="{{ route('admin.hosting-accounts.backups.download', [$account, $backup, $file['filename']]) }}"
+                                                       class="d-block small">{{ $file['filename'] }} ({{ number_format($file['size'] / 1048576, 1) }} MB)</a>
+                                                @endforeach
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p class="small text-secondary mb-0">{{ __('Nenhum backup ainda.') }}</p>
+                    @endif
                 </div>
-            @else
-                <p class="small text-secondary mb-0">{{ __('Nenhum backup ainda.') }}</p>
-            @endif
+            </div>
         </div>
     </div>
 </x-admin-layout>

@@ -1,6 +1,6 @@
-@props(['align' => 'end', 'contentClasses' => ''])
+@props(['align' => 'end', 'contentClasses' => '', 'dropup' => false])
 
-<div class="dropdown">
+<div class="dropdown {{ $dropup ? 'dropup' : '' }}">
     <div class="dropdown-toggle" style="cursor: pointer;" data-bs-toggle="dropdown" aria-expanded="false">
         {{ $trigger }}
     </div>

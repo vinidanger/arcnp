@@ -7,6 +7,7 @@ use App\Domain\Servers\Models\Server;
 use App\Support\RequestSigner;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -131,5 +132,49 @@ class AgentHttpClient
             'Content-Type' => 'application/octet-stream',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
+    }
+
+    /**
+     * Mesmo motivo do streamDownload: conteúdo binário arbitrário não
+     * cabe bem em um campo string de JSON (custo de base64 + risco de
+     * bytes inválidos) — vai pro corpo bruto de uma rota própria no
+     * Agent (ver routes/api.php dele), assinada com o mesmo esquema
+     * HMAC. Caminho/raiz vão em cabeçalho (com urlencode, por segurança
+     * contra caractere fora do padrão HTTP em nome de arquivo).
+     */
+    public function uploadFile(Server $server, string $username, string $relativePath, string $content, ?string $root = null): array
+    {
+        $credential = $server->currentCredential;
+
+        abort_if(! $credential, 422, 'Servidor sem credencial de pareamento ativa.');
+
+        $path = "api/files/{$username}/upload";
+        $timestamp = (string) time();
+        $nonce = (string) Str::uuid();
+        $signature = RequestSigner::signature('POST', $path, $timestamp, $nonce, $content, $credential->shared_secret);
+
+        try {
+            $response = Http::withHeaders([
+                'X-Agent-Timestamp' => $timestamp,
+                'X-Agent-Nonce' => $nonce,
+                'X-Agent-Signature' => $signature,
+                'X-Upload-Path' => rawurlencode($relativePath),
+                'X-Upload-Root' => $root !== null ? rawurlencode($root) : '',
+            ])
+                ->timeout(120)
+                ->withOptions(['verify' => false])
+                ->withBody($content, 'application/octet-stream')
+                ->post("{$server->agentBaseUrl()}/{$path}");
+        } catch (\Throwable $e) {
+            throw new RuntimeException('Falha de conexão com o Agent: '.$e->getMessage());
+        }
+
+        $data = $response->json() ?? [];
+
+        if (! $response->successful() || ($data['status'] ?? null) !== 'completed') {
+            throw new RuntimeException($data['error'] ?? $data['message'] ?? "Agent respondeu HTTP {$response->status()}");
+        }
+
+        return $data;
     }
 }

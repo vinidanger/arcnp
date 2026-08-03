@@ -76,6 +76,39 @@ class FileManagerService
         $this->run($account, 'files.rename', ['from' => $from, 'to' => $to], $root);
     }
 
+    /**
+     * Upload não passa pelo dispatch() de ação JSON (ver
+     * AgentHttpClient::uploadFile) — o conteúdo é binário, direto do
+     * corpo da requisição HTTP.
+     */
+    public function upload(HostingAccount $account, string $path, string $content, ?string $root = null): void
+    {
+        $this->assertUnderQuota($account);
+
+        if ($root !== null) {
+            $this->assertRootBelongsToAccount($account, $root);
+        }
+
+        $data = $this->client->uploadFile($account->server, $account->linux_username, $path, $content, $root);
+
+        if (($data['status'] ?? null) !== 'completed') {
+            throw new RuntimeException($data['error'] ?? 'Falha ao enviar arquivo.');
+        }
+    }
+
+    /** @param list<string> $paths */
+    public function compress(HostingAccount $account, array $paths, string $output, ?string $root = null): void
+    {
+        $this->assertUnderQuota($account);
+        $this->run($account, 'files.compress', ['paths' => $paths, 'output' => $output], $root);
+    }
+
+    public function extract(HostingAccount $account, string $path, string $dest, ?string $root = null): void
+    {
+        $this->assertUnderQuota($account);
+        $this->run($account, 'files.extract', ['path' => $path, 'dest' => $dest], $root);
+    }
+
     private function run(HostingAccount $account, string $action, array $payload, ?string $root = null): array
     {
         if ($root !== null) {

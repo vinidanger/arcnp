@@ -158,6 +158,79 @@ class FileManagerController extends Controller
         }
     }
 
+    public function upload(Request $request, HostingAccount $hosting_account, FileManagerService $files)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $data = $request->validate([
+            'current_path' => ['nullable', 'string'],
+            'root' => ['nullable', 'string'],
+            'files' => ['required', 'array', 'min:1'],
+            'files.*' => ['file', 'max:102400'],
+        ]);
+
+        $root = $data['root'] ?? null;
+        $currentPath = $data['current_path'] ?? '';
+        $uploaded = 0;
+        $errors = [];
+
+        foreach ($request->file('files') as $uploadedFile) {
+            $name = $uploadedFile->getClientOriginalName();
+            $path = trim($currentPath.'/'.$name, '/');
+
+            try {
+                $files->upload($hosting_account, $path, file_get_contents($uploadedFile->getRealPath()), $root);
+                $uploaded++;
+            } catch (Throwable $e) {
+                $errors[] = "{$name}: {$e->getMessage()}";
+            }
+        }
+
+        return response()->json(['uploaded' => $uploaded, 'errors' => $errors]);
+    }
+
+    public function compress(Request $request, HostingAccount $hosting_account, FileManagerService $files)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $data = $request->validate([
+            'current_path' => ['nullable', 'string'],
+            'root' => ['nullable', 'string'],
+            'paths' => ['required', 'array', 'min:1'],
+            'paths.*' => ['string'],
+            'output' => ['required', 'string', 'regex:/^[^\/\\\\]+$/'],
+        ]);
+
+        $output = preg_replace('/\.zip$/i', '', $data['output']).'.zip';
+        $outputPath = trim(($data['current_path'] ?? '').'/'.$output, '/');
+
+        try {
+            $files->compress($hosting_account, $data['paths'], $outputPath, $data['root'] ?? null);
+
+            return back()->with('status', "Compactado em {$output}.");
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao compactar: '.$e->getMessage());
+        }
+    }
+
+    public function extract(Request $request, HostingAccount $hosting_account, FileManagerService $files)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $data = $request->validate([
+            'path' => ['required', 'string'],
+            'root' => ['nullable', 'string'],
+        ]);
+
+        try {
+            $files->extract($hosting_account, $data['path'], self::parentOf($data['path']), $data['root'] ?? null);
+
+            return back()->with('status', 'Extraído.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao extrair: '.$e->getMessage());
+        }
+    }
+
     private function rootFrom(Request $request): ?string
     {
         $root = $request->query('root');

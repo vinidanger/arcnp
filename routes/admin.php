@@ -67,6 +67,12 @@ Route::delete('hosting-accounts/{hosting_account}/files', [FileManagerController
     ->name('hosting-accounts.files.destroy');
 Route::post('hosting-accounts/{hosting_account}/files/rename', [FileManagerController::class, 'rename'])
     ->name('hosting-accounts.files.rename');
+Route::post('hosting-accounts/{hosting_account}/files/upload', [FileManagerController::class, 'upload'])
+    ->name('hosting-accounts.files.upload');
+Route::post('hosting-accounts/{hosting_account}/files/compress', [FileManagerController::class, 'compress'])
+    ->name('hosting-accounts.files.compress');
+Route::post('hosting-accounts/{hosting_account}/files/extract', [FileManagerController::class, 'extract'])
+    ->name('hosting-accounts.files.extract');
 
 Route::get('hosting-accounts/{hosting_account}/cron', [CronJobController::class, 'index'])
     ->name('hosting-accounts.cron.index');
