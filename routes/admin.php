@@ -46,6 +46,8 @@ Route::post('hosting-accounts/{hosting_account}/ssl', [HostingAccountController:
     ->name('hosting-accounts.ssl.store');
 Route::post('hosting-accounts/{hosting_account}/php-version', [HostingAccountController::class, 'changePhpVersion'])
     ->name('hosting-accounts.php-version.update');
+Route::post('hosting-accounts/{hosting_account}/php-fpm-settings', [HostingAccountController::class, 'updatePhpFpmSettings'])
+    ->name('hosting-accounts.php-fpm-settings.update');
 Route::post('hosting-accounts/{hosting_account}/domains', [HostingAccountController::class, 'storeDomain'])
     ->name('hosting-accounts.domains.store');
 Route::delete('hosting-accounts/{hosting_account}/domains/{domain}', [HostingAccountController::class, 'destroyDomain'])

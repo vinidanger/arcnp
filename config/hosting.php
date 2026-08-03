@@ -30,4 +30,17 @@ return [
     // do PHP-FPM, tanto do Painel quanto do Agent (ver deploy/README.md
     // do Agent, seção 26) — subir só aqui não basta se a infra estiver menor.
     'max_upload_mb' => 100,
+
+    // Espelha config('provisioning.default_pool_settings') do Agent
+    // (em MB/segundos aqui, não "128M"/"30" — a formatação pro Agent
+    // acontece em HostingAccountProvisioningService::formatPoolSettings).
+    // Usado como valor mostrado no formulário de "Configurações de PHP"
+    // de uma conta antes dela ter algo salvo em php_fpm_settings.
+    'default_pool_settings' => [
+        'memory_limit' => 128,
+        'upload_max_filesize' => 64,
+        'post_max_size' => 64,
+        'max_execution_time' => 30,
+        'short_open_tag' => false,
+    ],
 ];

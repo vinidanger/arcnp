@@ -225,11 +225,15 @@ class HostingAccountProvisioningService
         $server = $account->server;
         $username = $account->linux_username;
 
-        $this->runStep($server, 'php.switch_version', [
+        // Repassa os pool settings customizados da conta (se tiver
+        // algum salvo) — sem isso, a troca de versão silenciosamente
+        // resetaria memory_limit/upload_max_filesize/etc pro padrão
+        // global (ver PhpFpmPoolSettings::variables no Agent).
+        $this->runStep($server, 'php.switch_version', array_merge([
             'username' => $username,
             'old_php_version' => $oldVersion,
             'new_php_version' => $newVersion,
-        ]);
+        ], $account->php_fpm_settings ? $this->formatPoolSettings($account->php_fpm_settings) : []));
 
         $this->runStep($server, 'web.update_vhost_php_version', [
             'username' => $username,
@@ -250,6 +254,34 @@ class HostingAccountProvisioningService
         }
 
         $account->update(['php_version' => $newVersion]);
+    }
+
+    /**
+     * @param  array{memory_limit: int, upload_max_filesize: int, post_max_size: int, max_execution_time: int, short_open_tag: bool}  $settings
+     */
+    public function updatePhpFpmSettings(HostingAccount $account, array $settings): void
+    {
+        $this->runStep($account->server, 'php.update_pool_settings', array_merge([
+            'username' => $account->linux_username,
+            'php_version' => $account->php_version,
+        ], $this->formatPoolSettings($settings)));
+
+        $account->update(['php_fpm_settings' => $settings]);
+    }
+
+    /**
+     * @param  array{memory_limit: int, upload_max_filesize: int, post_max_size: int, max_execution_time: int, short_open_tag?: bool}  $settings
+     * @return array<string, string>
+     */
+    private function formatPoolSettings(array $settings): array
+    {
+        return [
+            'memory_limit' => $settings['memory_limit'].'M',
+            'upload_max_filesize' => $settings['upload_max_filesize'].'M',
+            'post_max_size' => $settings['post_max_size'].'M',
+            'max_execution_time' => (string) $settings['max_execution_time'],
+            'short_open_tag' => ($settings['short_open_tag'] ?? false) ? 'On' : 'Off',
+        ];
     }
 
     public function refreshDiskUsage(HostingAccount $account): void

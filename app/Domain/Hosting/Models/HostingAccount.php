@@ -18,6 +18,7 @@ class HostingAccount extends Model
         'linux_username',
         'primary_domain',
         'php_version',
+        'php_fpm_settings',
         'status',
         'last_provision_error',
         'ssl_status',
@@ -35,6 +36,7 @@ class HostingAccount extends Model
     protected function casts(): array
     {
         return [
+            'php_fpm_settings' => 'array',
             'ssl_issued_at' => 'datetime',
             'last_backup_at' => 'datetime',
             'disk_usage_checked_at' => 'datetime',
