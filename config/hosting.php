@@ -22,4 +22,12 @@ return [
     // "disabled" primeiro é o valor padrão (opt-in, não gera backup
     // sem o admin/cliente pedir).
     'backup_frequencies' => ['disabled', 'daily', 'weekly'],
+
+    // Fallback usado só antes do admin salvar algo em "Configurações"
+    // (tabela settings, chave "max_upload_mb") — dali em diante o valor
+    // salvo no banco manda. Lembrar que o efetivo também depende do
+    // client_max_body_size do nginx e do upload_max_filesize/post_max_size
+    // do PHP-FPM, tanto do Painel quanto do Agent (ver deploy/README.md
+    // do Agent, seção 26) — subir só aqui não basta se a infra estiver menor.
+    'max_upload_mb' => 100,
 ];

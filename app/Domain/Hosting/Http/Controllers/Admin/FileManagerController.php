@@ -5,6 +5,7 @@ namespace App\Domain\Hosting\Http\Controllers\Admin;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Services\FileManagerService;
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Throwable;
@@ -181,11 +182,13 @@ class FileManagerController extends Controller
     {
         $this->authorize('update', $hosting_account);
 
+        $maxUploadMb = (int) Setting::get('max_upload_mb', (string) config('hosting.max_upload_mb'));
+
         $data = $request->validate([
             'current_path' => ['nullable', 'string'],
             'root' => ['nullable', 'string'],
             'files' => ['required', 'array', 'min:1'],
-            'files.*' => ['file', 'max:102400'],
+            'files.*' => ['file', 'max:'.($maxUploadMb * 1024)],
         ]);
 
         $root = $data['root'] ?? null;

@@ -50,6 +50,9 @@
                     <a href="{{ route('admin.api-clients.index') }}" class="nav-link {{ request()->routeIs('admin.api-clients.*') ? 'active' : '' }}" title="{{ __('Integrações de API') }}">
                         <i class="bi bi-plug"></i> <span class="sidebar-label">{{ __('Integrações de API') }}</span>
                     </a>
+                    <a href="{{ route('admin.settings.edit') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" title="{{ __('Configurações') }}">
+                        <i class="bi bi-gear"></i> <span class="sidebar-label">{{ __('Configurações') }}</span>
+                    </a>
                 </nav>
 
                 @include('layouts.partials.sidebar-user')

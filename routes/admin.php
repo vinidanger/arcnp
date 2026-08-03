@@ -10,12 +10,16 @@ use App\Domain\Hosting\Http\Controllers\Admin\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\PlanController;
 use App\Domain\Hosting\Http\Controllers\Admin\SshAccessController;
 use App\Domain\Servers\Http\Controllers\Admin\ServerController;
+use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('clients', ClientController::class)->except(['show', 'destroy']);
 
 Route::resource('api-clients', ApiClientController::class)->only(['index', 'create', 'store', 'destroy']);
 Route::get('api-clients-docs', [ApiClientController::class, 'docs'])->name('api-clients.docs');
+
+Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
+Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
 
 Route::resource('servers', ServerController::class);
 Route::post('servers/{server}/regenerate-credential', [ServerController::class, 'regenerateCredential'])
