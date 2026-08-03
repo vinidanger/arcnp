@@ -161,7 +161,12 @@ class AgentHttpClient
                 'X-Upload-Path' => rawurlencode($relativePath),
                 'X-Upload-Root' => $root !== null ? rawurlencode($root) : '',
             ])
-                ->timeout(120)
+                // Maior que o teto de execução do Agent pra esse mesmo
+                // upload (200s, ver deploy/php-fpm/arcnp-agent.conf no
+                // repo do Agent) — senão o Painel desiste da chamada
+                // antes do Agent terminar de gravar um arquivo grande,
+                // mesmo quando a gravação em si tem sucesso.
+                ->timeout(240)
                 ->withOptions(['verify' => false])
                 ->withBody($content, 'application/octet-stream')
                 ->post("{$server->agentBaseUrl()}/{$path}");
