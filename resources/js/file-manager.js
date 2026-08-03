@@ -68,6 +68,26 @@ function submitHiddenForm(url, fields, method = 'POST', csrfToken) {
     form.submit();
 }
 
+function formatBytes(bytesPerSecondOrTotal) {
+    if (bytesPerSecondOrTotal < 1024) {
+        return `${Math.round(bytesPerSecondOrTotal)} B`;
+    }
+    if (bytesPerSecondOrTotal < 1024 * 1024) {
+        return `${(bytesPerSecondOrTotal / 1024).toFixed(1)} KB`;
+    }
+    return `${(bytesPerSecondOrTotal / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatDuration(seconds) {
+    if (! isFinite(seconds) || seconds < 0) {
+        return '';
+    }
+    if (seconds < 60) {
+        return `${Math.ceil(seconds)}s`;
+    }
+    return `${Math.floor(seconds / 60)}m ${Math.ceil(seconds % 60)}s`;
+}
+
 function getSelectedPaths() {
     return Array.from(document.querySelectorAll('.file-select:checked')).map((cb) => cb.value);
 }
@@ -96,11 +116,20 @@ function setupDropzone(config) {
     const fileInput = document.getElementById('file-upload-input');
     const importBtn = document.getElementById('btn-import');
     const statusEl = document.getElementById('upload-status');
+    const progressWrap = document.getElementById('upload-progress');
+    const progressLabel = document.getElementById('upload-progress-label');
+    const progressStats = document.getElementById('upload-progress-stats');
+    const progressBar = document.getElementById('upload-progress-bar');
 
     // Upload em si não depende da faixa de arrastar existir — botão
     // "Importar" tem que funcionar mesmo se o overlay falhar por
     // algum motivo (eram a mesma função antes, um dependia do outro
     // sem necessidade).
+    //
+    // XMLHttpRequest em vez de fetch: fetch só expõe progresso de
+    // DOWNLOAD (response body), não de upload (request body) — o
+    // evento xhr.upload.progress é a única API do navegador pra medir
+    // bytes enviados em tempo real.
     const uploadFiles = (fileList) => {
         if (! fileList || ! fileList.length) {
             return;
@@ -113,28 +142,106 @@ function setupDropzone(config) {
         formData.append('_token', config.csrfToken);
 
         if (statusEl) {
-            statusEl.textContent = `Enviando ${fileList.length} arquivo(s)...`;
-            statusEl.classList.remove('d-none', 'text-danger');
+            statusEl.classList.add('d-none');
         }
 
-        fetch(config.uploadUrl, { method: 'POST', body: formData, headers: { Accept: 'application/json' } })
-            .then((r) => r.json())
-            .then((data) => {
-                if (statusEl && data.errors && data.errors.length) {
-                    statusEl.textContent = `Falha em ${data.errors.length} arquivo(s): ${data.errors.join(' | ')}`;
-                    statusEl.classList.add('text-danger');
-                }
+        let lastLoaded = 0;
+        let lastTime = performance.now();
+        let speed = 0;
 
-                if (data.uploaded > 0) {
-                    window.location.reload();
-                }
-            })
-            .catch(() => {
+        if (progressWrap) {
+            progressWrap.classList.remove('d-none');
+            progressBar.style.width = '0%';
+            progressBar.classList.remove('bg-success');
+            progressLabel.textContent = `Enviando ${fileList.length} arquivo(s)...`;
+            progressStats.textContent = '';
+        }
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', (e) => {
+            if (! e.lengthComputable || ! progressWrap) {
+                return;
+            }
+
+            const now = performance.now();
+            const elapsed = (now - lastTime) / 1000;
+
+            // Só recalcula a velocidade a cada ~300ms — em cada tick de
+            // progresso puro (às vezes poucos ms de diferença) a
+            // divisão por um "elapsed" minúsculo faz o número oscilar
+            // sem sentido.
+            if (elapsed > 0.3 || e.loaded === e.total) {
+                speed = (e.loaded - lastLoaded) / elapsed;
+                lastLoaded = e.loaded;
+                lastTime = now;
+            }
+
+            const percent = Math.round((e.loaded / e.total) * 100);
+            const remaining = speed > 0 ? (e.total - e.loaded) / speed : null;
+
+            progressBar.style.width = `${percent}%`;
+            progressBar.setAttribute('aria-valuenow', String(percent));
+
+            if (e.loaded >= e.total) {
+                progressLabel.textContent = 'Processando...';
+                progressStats.textContent = formatBytes(e.total);
+                return;
+            }
+
+            progressStats.textContent = [
+                `${percent}%`,
+                speed > 0 ? `${formatBytes(speed)}/s` : null,
+                remaining !== null ? `${formatDuration(remaining)} restantes` : null,
+            ].filter(Boolean).join(' · ');
+        });
+
+        xhr.addEventListener('load', () => {
+            let data = {};
+            try {
+                data = JSON.parse(xhr.responseText);
+            } catch (parseError) {
+                data = {};
+            }
+
+            if (progressWrap) {
+                progressWrap.classList.add('d-none');
+            }
+
+            if (xhr.status < 200 || xhr.status >= 300) {
                 if (statusEl) {
-                    statusEl.textContent = 'Falha ao enviar arquivos.';
+                    statusEl.textContent = data.message || 'Falha ao enviar arquivos.';
+                    statusEl.classList.remove('d-none');
                     statusEl.classList.add('text-danger');
                 }
-            });
+                return;
+            }
+
+            if (statusEl && data.errors && data.errors.length) {
+                statusEl.textContent = `Falha em ${data.errors.length} arquivo(s): ${data.errors.join(' | ')}`;
+                statusEl.classList.remove('d-none');
+                statusEl.classList.add('text-danger');
+            }
+
+            if (data.uploaded > 0) {
+                window.location.reload();
+            }
+        });
+
+        xhr.addEventListener('error', () => {
+            if (progressWrap) {
+                progressWrap.classList.add('d-none');
+            }
+            if (statusEl) {
+                statusEl.textContent = 'Falha ao enviar arquivos.';
+                statusEl.classList.remove('d-none');
+                statusEl.classList.add('text-danger');
+            }
+        });
+
+        xhr.open('POST', config.uploadUrl);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.send(formData);
     };
 
     if (importBtn && fileInput) {

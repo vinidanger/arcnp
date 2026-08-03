@@ -1,4 +1,9 @@
-<x-app-layout>
+{{-- /profile é compartilhado entre admin e cliente — usa o mesmo layout
+     (sidebar, tema, etc.) de onde o usuário logado realmente navega, em
+     vez do layout antigo do scaffold Breeze (layouts.app), que nunca
+     recebeu o redesign visual do resto do painel. --}}
+@php $layout = auth()->user()->isAdmin() ? 'admin-layout' : 'client-layout'; @endphp
+<x-dynamic-component :component="$layout">
     <x-slot name="header">
         <h1 class="h4 mb-0">{{ __('Profile') }}</h1>
     </x-slot>
@@ -28,4 +33,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-dynamic-component>

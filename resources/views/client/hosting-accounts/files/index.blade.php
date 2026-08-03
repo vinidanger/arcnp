@@ -86,39 +86,51 @@
          data-root="{{ $root }}"
          data-csrf="{{ csrf_token() }}">
 
-        <div class="d-flex gap-2 mb-3 flex-wrap">
-            <div class="dropdown">
-                <button class="btn btn-sm btn-primary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-plus-lg"></i> {{ __('Criar novo') }}
+        <div class="mb-3">
+            <div class="d-flex gap-2 flex-wrap">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-primary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-plus-lg"></i> {{ __('Criar novo') }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#new-folder-modal">
+                                <i class="bi bi-folder-plus me-2"></i>{{ __('Pasta') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#new-file-modal">
+                                <i class="bi bi-file-earmark-plus me-2"></i>{{ __('Arquivo') }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <button type="button" id="btn-import" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                    <i class="bi bi-upload"></i> {{ __('Importar') }}
                 </button>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#new-folder-modal">
-                            <i class="bi bi-folder-plus me-2"></i>{{ __('Pasta') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#new-file-modal">
-                            <i class="bi bi-file-earmark-plus me-2"></i>{{ __('Arquivo') }}
-                        </a>
-                    </li>
-                </ul>
+                <input type="file" id="file-upload-input" class="d-none" multiple>
+
+                <button type="button" id="btn-compress-selected" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                    <i class="bi bi-file-earmark-zip"></i> {{ __('Compactar') }}
+                </button>
+
+                <button type="button" id="btn-delete-selected" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1">
+                    <i class="bi bi-trash"></i> {{ __('Excluir selecionados') }}
+                </button>
             </div>
 
-            <button type="button" id="btn-import" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
-                <i class="bi bi-upload"></i> {{ __('Importar') }}
-            </button>
-            <input type="file" id="file-upload-input" class="d-none" multiple>
+            <div id="upload-progress" class="mt-2 d-none">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span id="upload-progress-label"></span>
+                    <span id="upload-progress-stats" class="text-secondary"></span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div id="upload-progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
 
-            <button type="button" id="btn-compress-selected" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
-                <i class="bi bi-file-earmark-zip"></i> {{ __('Compactar') }}
-            </button>
-
-            <button type="button" id="btn-delete-selected" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1">
-                <i class="bi bi-trash"></i> {{ __('Excluir selecionados') }}
-            </button>
-
-            <div id="upload-status" class="small align-self-center d-none"></div>
+            <div id="upload-status" class="small mt-2 d-none"></div>
         </div>
 
         <div class="card">
