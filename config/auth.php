@@ -42,6 +42,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Usado pela API pública (routes/api-v1.php) — resolve o
+        // "tokenable" do token Sanctum direto (ApiClient), não passa
+        // pelo provider "users" abaixo.
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => null,
+        ],
     ],
 
     /*

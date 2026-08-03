@@ -43,6 +43,11 @@
                             {{ __('Planos') }}
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.api-clients.index') }}" class="nav-link text-white {{ request()->routeIs('admin.api-clients.*') ? 'active' : '' }}">
+                            {{ __('Integrações de API') }}
+                        </a>
+                    </li>
                 </ul>
             </aside>
 

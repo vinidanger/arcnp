@@ -8,7 +8,10 @@ use App\Domain\Hosting\Models\HostingBackup;
 use App\Domain\Servers\Models\AgentCredential;
 use App\Domain\Servers\Models\AgentJob;
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Notifications\AgentTaskFailedNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class AgentWebhookController extends Controller
 {
@@ -55,7 +58,36 @@ class AgentWebhookController extends Controller
             $this->applyBackupResult($job);
         }
 
+        if ($job->status === 'failed' && in_array($job->action, ['ssl.renew_all', 'backup.create'], true)) {
+            $this->notifyAdminsOfFailure($job);
+        }
+
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Só pras tarefas que rodam sozinhas em background (renovação de
+     * SSL, backup agendado) — ninguém está olhando a tela quando
+     * falham, diferente de uma ação que o admin/cliente acabou de
+     * clicar (essa já mostra erro na hora, não precisa de e-mail).
+     */
+    private function notifyAdminsOfFailure(AgentJob $job): void
+    {
+        $label = match ($job->action) {
+            'ssl.renew_all' => "Renovação de SSL ({$job->server->name})",
+            'backup.create' => 'Backup agendado',
+            default => $job->action,
+        };
+
+        $context = match ($job->action) {
+            'ssl.renew_all' => "Servidor: {$job->server->name}",
+            'backup.create' => 'Conta: '.(HostingBackup::find($job->payload['backup_id'] ?? null)?->hostingAccount?->primary_domain ?? 'desconhecida'),
+            default => '',
+        };
+
+        $admins = User::where('type', 'admin')->get();
+
+        Notification::send($admins, new AgentTaskFailedNotification($label, $context, $job->error ?? 'Erro desconhecido.'));
     }
 
     /**

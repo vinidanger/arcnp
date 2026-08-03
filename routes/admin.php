@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Api\Http\Controllers\Admin\ApiClientController;
 use App\Domain\Clients\Http\Controllers\Admin\ClientController;
 use App\Domain\Hosting\Http\Controllers\Admin\CronJobController;
 use App\Domain\Hosting\Http\Controllers\Admin\DnsZoneController;
@@ -12,6 +13,9 @@ use App\Domain\Servers\Http\Controllers\Admin\ServerController;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('clients', ClientController::class)->except(['show', 'destroy']);
+
+Route::resource('api-clients', ApiClientController::class)->only(['index', 'create', 'store', 'destroy']);
+Route::get('api-clients-docs', [ApiClientController::class, 'docs'])->name('api-clients.docs');
 
 Route::resource('servers', ServerController::class);
 Route::post('servers/{server}/regenerate-credential', [ServerController::class, 'regenerateCredential'])

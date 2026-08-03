@@ -27,6 +27,7 @@ class HostingAccount extends Model
         'last_backup_at',
         'disk_usage_mb',
         'disk_usage_checked_at',
+        'disk_alert_sent_at',
         'ssh_enabled',
         'ssh_password',
     ];
@@ -37,6 +38,7 @@ class HostingAccount extends Model
             'ssl_issued_at' => 'datetime',
             'last_backup_at' => 'datetime',
             'disk_usage_checked_at' => 'datetime',
+            'disk_alert_sent_at' => 'datetime',
             'ssh_enabled' => 'boolean',
             'ssh_password' => 'encrypted',
         ];
