@@ -34,6 +34,9 @@
                     <a href="{{ route('client.hosting-accounts.index') }}" class="nav-link {{ request()->routeIs('client.hosting-accounts.*') ? 'active' : '' }}" title="{{ __('Minhas hospedagens') }}">
                         <i class="bi bi-hdd-stack"></i> <span class="sidebar-label">{{ __('Minhas hospedagens') }}</span>
                     </a>
+                    <a href="{{ route('client.tickets.index') }}" class="nav-link {{ request()->routeIs('client.tickets.*') ? 'active' : '' }}" title="{{ __('Chamados') }}">
+                        <i class="bi bi-life-preserver"></i> <span class="sidebar-label">{{ __('Chamados') }}</span>
+                    </a>
                 </nav>
 
                 @include('layouts.partials.sidebar-user')

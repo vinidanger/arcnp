@@ -15,6 +15,7 @@ use App\Domain\Hosting\Http\Controllers\Client\MailLogController;
 use App\Domain\Hosting\Http\Controllers\Client\PhpSettingsController;
 use App\Domain\Hosting\Http\Controllers\Client\SiteRedirectController;
 use App\Domain\Hosting\Http\Controllers\Client\SshAccessController;
+use App\Domain\Support\Http\Controllers\Client\TicketController;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('hosting-accounts', HostingAccountController::class)->only(['index', 'show']);
@@ -185,3 +186,10 @@ Route::post('hosting-accounts/{hosting_account}/installer/generic-zip', [AppInst
     ->name('hosting-accounts.installer.generic-zip');
 Route::delete('hosting-accounts/{hosting_account}/installer/{installation}', [AppInstallerController::class, 'destroy'])
     ->name('hosting-accounts.installer.destroy');
+
+Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+Route::post('tickets', [TicketController::class, 'store'])->name('tickets.store');
+Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+Route::post('tickets/{ticket}/messages', [TicketController::class, 'storeMessage'])->name('tickets.messages.store');
+Route::post('tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');

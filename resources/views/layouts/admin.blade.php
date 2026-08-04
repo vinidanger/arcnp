@@ -37,6 +37,9 @@
                     <a href="{{ route('admin.hosting-accounts.index') }}" class="nav-link {{ request()->routeIs('admin.hosting-accounts.*') ? 'active' : '' }}" title="{{ __('Hospedagens') }}">
                         <i class="bi bi-hdd-stack"></i> <span class="sidebar-label">{{ __('Hospedagens') }}</span>
                     </a>
+                    <a href="{{ route('admin.tickets.index') }}" class="nav-link {{ request()->routeIs('admin.tickets.*') ? 'active' : '' }}" title="{{ __('Chamados') }}">
+                        <i class="bi bi-life-preserver"></i> <span class="sidebar-label">{{ __('Chamados') }}</span>
+                    </a>
                     <a href="{{ route('admin.plans.index') }}" class="nav-link {{ request()->routeIs('admin.plans.*') ? 'active' : '' }}" title="{{ __('Planos') }}">
                         <i class="bi bi-box-seam"></i> <span class="sidebar-label">{{ __('Planos') }}</span>
                     </a>

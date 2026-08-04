@@ -47,7 +47,19 @@
       "Bash(php -l app/Domain/Hosting/Services/AppInstallerService.php)",
       "Bash(php -l app/Domain/Hosting/Http/Controllers/Admin/AppInstallerController.php)",
       "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/AppInstallerController.php)",
-      "Bash(php -l resources/views/admin/hosting-accounts/installer/index.blade.php)"
+      "Bash(php -l resources/views/admin/hosting-accounts/installer/index.blade.php)",
+      "Bash(xargs -I{} echo {})",
+      "Bash(php -l database/migrations/2026_08_04_110000_create_tickets_table.php)",
+      "Bash(php -l database/migrations/2026_08_04_110001_create_ticket_messages_table.php)",
+      "Bash(php -l app/Domain/Support/Models/Ticket.php)",
+      "Bash(php -l app/Domain/Support/Models/TicketMessage.php)",
+      "Bash(php -l app/Models/User.php)",
+      "Bash(php -l app/Domain/Support/Policies/TicketPolicy.php)",
+      "Bash(php -l app/Providers/AppServiceProvider.php)",
+      "Bash(php -l app/Notifications/TicketReplyNotification.php)",
+      "Bash(php -l app/Domain/Support/Services/TicketService.php)",
+      "Bash(php -l app/Domain/Support/Http/Controllers/Admin/TicketController.php)",
+      "Bash(php -l app/Domain/Support/Http/Controllers/Client/TicketController.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

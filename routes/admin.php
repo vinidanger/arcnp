@@ -19,6 +19,7 @@ use App\Domain\Hosting\Http\Controllers\Admin\PlanController;
 use App\Domain\Hosting\Http\Controllers\Admin\SiteRedirectController;
 use App\Domain\Hosting\Http\Controllers\Admin\SshAccessController;
 use App\Domain\Servers\Http\Controllers\Admin\ServerController;
+use App\Domain\Support\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
@@ -215,3 +216,9 @@ Route::post('hosting-accounts/{hosting_account}/installer/generic-zip', [AppInst
     ->name('hosting-accounts.installer.generic-zip');
 Route::delete('hosting-accounts/{hosting_account}/installer/{installation}', [AppInstallerController::class, 'destroy'])
     ->name('hosting-accounts.installer.destroy');
+
+Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+Route::post('tickets/{ticket}/messages', [TicketController::class, 'storeMessage'])->name('tickets.messages.store');
+Route::post('tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
+Route::post('tickets/{ticket}/reopen', [TicketController::class, 'reopen'])->name('tickets.reopen');

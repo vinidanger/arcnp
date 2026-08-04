@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Domain\Hosting\Models\HostingAccount;
+use App\Domain\Support\Models\Ticket;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -64,5 +65,10 @@ class User extends Authenticatable
     public function hostingAccounts(): HasMany
     {
         return $this->hasMany(HostingAccount::class);
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class);
     }
 }
