@@ -21,11 +21,9 @@
     <div class="card mb-3">
         <div class="card-body">
             <p class="small text-secondary mb-0">
-                @if ($account->server->ftp_hostname)
-                    {{ __('Conecte no servidor') }} <code>{{ $account->server->ftp_hostname }}</code> {{ __('com FTPS (explícito), usando o usuário e senha de cada conta abaixo.') }}
-                @else
-                    {{ __('Esse servidor ainda não tem um hostname de FTP configurado — fale com o administrador.') }}
-                @endif
+                {{ __('Conecte no servidor') }}
+                <code>{{ $account->server->ftp_hostname ?: ($account->server->public_ip_address ?: $account->server->ip_address) }}</code>
+                {{ __('com FTPS (explícito), usando o usuário e senha de cada conta abaixo. O certificado é autoassinado — o cliente de FTP vai avisar na primeira conexão, é esperado; aceite/fixe o certificado e não pergunta de novo.') }}
             </p>
         </div>
     </div>

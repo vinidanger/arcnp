@@ -49,7 +49,7 @@
 <div class="mb-3">
     <x-input-label for="ftp_hostname" value="{{ __('Hostname de FTP') }}" />
     <x-text-input id="ftp_hostname" name="ftp_hostname" type="text" :value="old('ftp_hostname', $server?->ftp_hostname)" placeholder="ftp.seudominio.com" />
-    <div class="form-text">{{ __('Hostname que os clientes configuram no cliente FTP (FileZilla etc). Precisa ter certificado TLS válido emitido nesse servidor (ver deploy/README.md seção 33 do Agent). Só preencha se o vsftpd já estiver instalado.') }}</div>
+    <div class="form-text">{{ __('Opcional — por padrão os clientes conectam direto no IP do servidor, com certificado autoassinado (ver deploy/README.md seção 33 do Agent). Só preencha se quiser um hostname com certificado confiável emitido de verdade (Let\'s Encrypt), sem aviso no cliente FTP.') }}</div>
     <x-input-error :messages="$errors->get('ftp_hostname')" class="mt-2" />
 </div>
 
