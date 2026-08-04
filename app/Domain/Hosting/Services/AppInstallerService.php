@@ -32,7 +32,7 @@ class AppInstallerService
         string $adminPassword,
         string $adminEmail,
     ): AppInstallation {
-        [$location, $subdir] = $this->resolveLocation($account, $domain, $path);
+        [$location, $subdir, $sslActive] = $this->resolveLocation($account, $domain, $path);
         $catalog = config('app_catalog.wordpress');
 
         $database = $this->provisioning->provisionDatabase($account, 'wp');
@@ -51,6 +51,7 @@ class AppInstallerService
                 'domain' => $domain,
                 'location' => $location,
                 'subdir' => $subdir,
+                'ssl_active' => $sslActive,
                 'download_url' => $catalog['download_url'],
                 'db_name' => $database->db_name,
                 'db_username' => $database->db_username,
@@ -136,24 +137,24 @@ class AppInstallerService
     }
 
     /**
-     * @return array{0: ?string, 1: ?string} [location, subdir combinado]
+     * @return array{0: ?string, 1: ?string, 2: bool} [location, subdir combinado, ssl_active]
      */
     private function resolveLocation(HostingAccount $account, string $domain, string $installPath): array
     {
         $installPath = trim($installPath, '/');
 
         if ($domain === $account->primary_domain) {
-            return [null, $installPath !== '' ? $installPath : null];
+            return [null, $installPath !== '' ? $installPath : null, $account->ssl_status === 'active'];
         }
 
         $addon = $account->domains()->where('domain', $domain)->firstOrFail();
 
         if ($addon->isOutsidePublicHtml()) {
-            return ['outside', $installPath !== '' ? $installPath : null];
+            return ['outside', $installPath !== '' ? $installPath : null, $addon->ssl_status === 'active'];
         }
 
         $combined = trim(($addon->subdirectory ?: '').'/'.$installPath, '/');
 
-        return [null, $combined !== '' ? $combined : null];
+        return [null, $combined !== '' ? $combined : null, $addon->ssl_status === 'active'];
     }
 }

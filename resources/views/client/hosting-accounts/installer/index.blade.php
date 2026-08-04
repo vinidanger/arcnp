@@ -125,7 +125,7 @@
                             </td>
                             <td class="text-end">
                                 @if ($installation->status === 'active' && $installation->catalog_slug === 'wordpress')
-                                    <a href="http://{{ $installation->domain }}/{{ $installation->path ? $installation->path.'/' : '' }}wp-admin/" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">{{ __('Acessar admin') }}</a>
+                                    <a href="{{ $installation->siteUrl() }}/wp-admin/" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">{{ __('Acessar admin') }}</a>
                                 @endif
                                 <form method="POST" action="{{ route('client.hosting-accounts.installer.destroy', [$account, $installation]) }}"
                                       class="d-inline-block" onsubmit="return confirm('{{ __('Remove os arquivos (e o banco de dados, se tiver) desse app. Continuar?') }}')">

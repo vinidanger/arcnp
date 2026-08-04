@@ -40,4 +40,33 @@ class AppInstallation extends Model
     {
         return config('app_catalog.'.$this->catalog_slug, []);
     }
+
+    /**
+     * Sempre calculada ao vivo (nunca guardada) — o status de SSL do
+     * domínio pode mudar depois da instalação (ex.: emitido mais
+     * tarde), então uma URL congelada no banco ficaria errada. Precisa
+     * bater com o --url que foi passado pro wp-cli na instalação (ver
+     * InstallWordPressAction no Agent) — mudar de HTTP pra HTTPS depois
+     * exige atualizar siteurl/home no próprio WordPress, não é só um
+     * link diferente aqui.
+     */
+    public function siteUrl(): ?string
+    {
+        $account = $this->hostingAccount;
+
+        if (! $account) {
+            return null;
+        }
+
+        if ($this->domain === $account->primary_domain) {
+            $sslActive = $account->ssl_status === 'active';
+        } else {
+            $sslActive = $account->domains()->where('domain', $this->domain)->value('ssl_status') === 'active';
+        }
+
+        $scheme = $sslActive ? 'https' : 'http';
+        $path = $this->path ? '/'.$this->path : '';
+
+        return "{$scheme}://{$this->domain}{$path}";
+    }
 }
