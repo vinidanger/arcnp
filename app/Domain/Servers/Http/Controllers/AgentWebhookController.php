@@ -2,10 +2,12 @@
 
 namespace App\Domain\Servers\Http\Controllers;
 
+use App\Domain\Hosting\Models\AppInstallation;
 use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\HostingBackup;
 use App\Domain\Hosting\Services\FolderProtectionService;
+use App\Domain\Hosting\Services\HostingAccountProvisioningService;
 use App\Domain\Hosting\Services\HotlinkProtectionService;
 use App\Domain\Hosting\Services\SiteRedirectService;
 use App\Domain\Servers\Models\AgentCredential;
@@ -59,6 +61,10 @@ class AgentWebhookController extends Controller
 
         if ($job->action === 'backup.create') {
             $this->applyBackupResult($job);
+        }
+
+        if ($job->action === 'app.install_wordpress') {
+            $this->applyAppInstallResult($job);
         }
 
         if ($job->status === 'failed' && in_array($job->action, ['ssl.renew_all', 'backup.create'], true)) {
@@ -154,6 +160,43 @@ class AgentWebhookController extends Controller
             $backup->update(['status' => 'completed', 'files' => $job->result['files'] ?? []]);
         } elseif ($job->status === 'failed') {
             $backup->update(['status' => 'failed', 'error' => $job->error]);
+        }
+    }
+
+    /**
+     * Usa o id do AppInstallation embutido no payload original do
+     * dispatch (mesmo padrão de applyBackupResult()/backup_id). Em
+     * caso de falha, além de marcar o erro, apaga o banco de dados
+     * órfão recém-criado — um WordPress meio-instalado com um banco
+     * pra trás só vira lixo confuso pro cliente encontrar depois.
+     */
+    private function applyAppInstallResult(AgentJob $job): void
+    {
+        $installationId = $job->payload['app_installation_id'] ?? null;
+
+        if (! $installationId) {
+            return;
+        }
+
+        $installation = AppInstallation::find($installationId);
+
+        if (! $installation) {
+            return;
+        }
+
+        if ($job->status === 'completed') {
+            $installation->update([
+                'status' => 'active',
+                'admin_username' => $job->payload['admin_user'] ?? null,
+                'installed_at' => now(),
+            ]);
+        } elseif ($job->status === 'failed') {
+            $installation->update(['status' => 'failed', 'error' => $job->error]);
+
+            if ($installation->database_id) {
+                app(HostingAccountProvisioningService::class)->deleteDatabase($installation->database);
+                $installation->update(['database_id' => null]);
+            }
         }
     }
 

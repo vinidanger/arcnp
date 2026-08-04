@@ -7,6 +7,7 @@ use App\Domain\Hosting\Http\Controllers\Admin\DnsZoneController;
 use App\Domain\Hosting\Http\Controllers\Admin\DomainLogController;
 use App\Domain\Hosting\Http\Controllers\Admin\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Admin\FolderProtectionController;
+use App\Domain\Hosting\Http\Controllers\Admin\AppInstallerController;
 use App\Domain\Hosting\Http\Controllers\Admin\FtpAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostedAppController;
 use App\Domain\Hosting\Http\Controllers\Admin\HotlinkProtectionController;
@@ -205,3 +206,12 @@ Route::post('hosting-accounts/{hosting_account}/apps/{app}/restart', [HostedAppC
     ->name('hosting-accounts.apps.restart');
 Route::delete('hosting-accounts/{hosting_account}/apps/{app}', [HostedAppController::class, 'destroy'])
     ->name('hosting-accounts.apps.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/installer', [AppInstallerController::class, 'index'])
+    ->name('hosting-accounts.installer.index');
+Route::post('hosting-accounts/{hosting_account}/installer/wordpress', [AppInstallerController::class, 'storeWordPress'])
+    ->name('hosting-accounts.installer.wordpress');
+Route::post('hosting-accounts/{hosting_account}/installer/generic-zip', [AppInstallerController::class, 'storeGenericZip'])
+    ->name('hosting-accounts.installer.generic-zip');
+Route::delete('hosting-accounts/{hosting_account}/installer/{installation}', [AppInstallerController::class, 'destroy'])
+    ->name('hosting-accounts.installer.destroy');

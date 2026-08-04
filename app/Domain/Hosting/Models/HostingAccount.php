@@ -126,6 +126,11 @@ class HostingAccount extends Model
         return $this->hasMany(HostedApp::class);
     }
 
+    public function appInstallations(): HasMany
+    {
+        return $this->hasMany(AppInstallation::class);
+    }
+
     /**
      * Agrupado num where(function...) de propósito: sem isso, encadear
      * depois de uma relação já filtrada (ex.: hostingAccounts() do

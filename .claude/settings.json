@@ -39,7 +39,15 @@
       "Bash(php -l app/Http/Controllers/Admin/AnnouncementController.php)",
       "Bash(php -l database/migrations/2026_08_04_020000_create_announcements_table.php)",
       "Bash(xargs -n1 basename)",
-      "Bash(grep -n 'protected $fillable\\\\|php_version\\\\|primary_domain' C:/laragon/www/arcnp/app/Domain/Hosting/Models/HostingAccount.php)"
+      "Bash(grep -n 'protected $fillable\\\\|php_version\\\\|primary_domain' C:/laragon/www/arcnp/app/Domain/Hosting/Models/HostingAccount.php)",
+      "Bash(php -l /c/laragon/www/arcnp-agent/app/Support/WpConfigTemplate.php)",
+      "Bash(chmod +x scripts/install-wordpress.sh)",
+      "Bash(bash -n scripts/install-wordpress.sh)",
+      "Bash(php -l app/Actions/Installer/InstallWordPressAction.php)",
+      "Bash(php -l app/Domain/Hosting/Services/AppInstallerService.php)",
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Admin/AppInstallerController.php)",
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/AppInstallerController.php)",
+      "Bash(php -l resources/views/admin/hosting-accounts/installer/index.blade.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",
