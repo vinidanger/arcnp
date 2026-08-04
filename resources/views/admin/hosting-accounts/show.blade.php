@@ -288,6 +288,12 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 <div class="fw-semibold small">{{ __('Redirecionamentos') }}</div>
                             </a>
                         </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.hotlink-protection.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-link-45deg"></i></span>
+                                <div class="fw-semibold small">{{ __('Proteção Hotlink') }}</div>
+                            </a>
+                        </div>
                     </div>
                 </div>
 

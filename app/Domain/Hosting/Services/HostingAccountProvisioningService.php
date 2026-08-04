@@ -38,6 +38,7 @@ class HostingAccountProvisioningService
         private AgentHttpClient $client,
         private FolderProtectionService $folderProtections,
         private SiteRedirectService $siteRedirects,
+        private HotlinkProtectionService $hotlinkProtection,
     ) {
     }
 
@@ -257,6 +258,7 @@ class HostingAccountProvisioningService
         ]);
         $this->folderProtections->resyncIfNeeded($account, $account->primary_domain);
         $this->siteRedirects->resyncIfNeeded($account, $account->primary_domain);
+        $this->hotlinkProtection->resyncIfNeeded($account, $account->primary_domain);
 
         foreach ($account->domains as $domain) {
             $this->runStep($server, 'web.update_vhost_php_version', [
@@ -269,6 +271,7 @@ class HostingAccountProvisioningService
             ]);
             $this->folderProtections->resyncIfNeeded($account, $domain->domain);
             $this->siteRedirects->resyncIfNeeded($account, $domain->domain);
+            $this->hotlinkProtection->resyncIfNeeded($account, $domain->domain);
         }
 
         $account->update(['php_version' => $newVersion]);

@@ -5,6 +5,7 @@ use App\Domain\Hosting\Http\Controllers\Client\DnsZoneController;
 use App\Domain\Hosting\Http\Controllers\Client\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Client\FolderProtectionController;
 use App\Domain\Hosting\Http\Controllers\Client\HostingAccountController;
+use App\Domain\Hosting\Http\Controllers\Client\HotlinkProtectionController;
 use App\Domain\Hosting\Http\Controllers\Client\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Client\PhpSettingsController;
 use App\Domain\Hosting\Http\Controllers\Client\SiteRedirectController;
@@ -138,3 +139,8 @@ Route::post('hosting-accounts/{hosting_account}/redirects', [SiteRedirectControl
     ->name('hosting-accounts.redirects.store');
 Route::delete('hosting-accounts/{hosting_account}/redirects/{redirect}', [SiteRedirectController::class, 'destroy'])
     ->name('hosting-accounts.redirects.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/hotlink-protection', [HotlinkProtectionController::class, 'index'])
+    ->name('hosting-accounts.hotlink-protection.index');
+Route::put('hosting-accounts/{hosting_account}/hotlink-protection', [HotlinkProtectionController::class, 'update'])
+    ->name('hosting-accounts.hotlink-protection.update');
