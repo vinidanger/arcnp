@@ -124,6 +124,10 @@ Route::get('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mai
     ->name('hosting-accounts.mail.mailboxes.webmail');
 Route::put('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mailbox}/vacation', [MailDomainController::class, 'updateVacation'])
     ->name('hosting-accounts.mail.mailboxes.vacation.update');
+Route::post('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mailbox}/filters', [MailDomainController::class, 'storeFilter'])
+    ->name('hosting-accounts.mail.mailboxes.filters.store');
+Route::delete('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mailbox}/filters/{filter}', [MailDomainController::class, 'destroyFilter'])
+    ->name('hosting-accounts.mail.mailboxes.filters.destroy');
 Route::post('hosting-accounts/{hosting_account}/mail/{mail_domain}/forwarders', [MailDomainController::class, 'storeForwarder'])
     ->name('hosting-accounts.mail.forwarders.store');
 Route::delete('hosting-accounts/{hosting_account}/mail/{mail_domain}/forwarders/{forwarder}', [MailDomainController::class, 'destroyForwarder'])

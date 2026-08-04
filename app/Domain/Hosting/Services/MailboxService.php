@@ -5,8 +5,8 @@ namespace App\Domain\Hosting\Services;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\MailDomain;
 use App\Domain\Hosting\Models\Mailbox;
+use App\Domain\Hosting\Models\MailFilter;
 use App\Domain\Hosting\Models\MailForwarder;
-use App\Domain\Hosting\Models\MailVacation;
 use App\Domain\Servers\Models\Server;
 use App\Domain\Servers\Services\AgentHttpClient;
 use App\Support\MailboxSsoToken;
@@ -148,6 +148,34 @@ class MailboxService
         }
     }
 
+    public function createFilter(Mailbox $mailbox, string $field, string $value, string $action, ?string $folder): MailFilter
+    {
+        $filter = $mailbox->filters()->create([
+            'enabled' => true,
+            'field' => $field,
+            'value' => $value,
+            'action' => $action,
+            'folder' => $action === 'move_to_folder' ? $folder : null,
+        ]);
+
+        try {
+            $this->syncState($mailbox->mailDomain->hostingAccount->server);
+        } catch (RuntimeException $e) {
+            $filter->delete();
+            throw $e;
+        }
+
+        return $filter;
+    }
+
+    public function deleteFilter(MailFilter $filter): void
+    {
+        $server = $filter->mailbox->mailDomain->hostingAccount->server;
+        $filter->delete();
+
+        $this->syncState($server);
+    }
+
     public function createForwarder(MailDomain $mailDomain, string $localPart, string $destination): MailForwarder
     {
         // Endereço não pode estar nos dois mapas do Postfix ao mesmo
@@ -219,16 +247,34 @@ class MailboxService
             ])
             ->all();
 
-        $vacations = Mailbox::whereHas('mailDomain.hostingAccount', fn ($q) => $q->where('server_id', $server->id))
-            ->whereHas('vacation', fn ($q) => $q->where('enabled', true))
-            ->with(['mailDomain.hostingAccount', 'vacation'])
+        // Um script Sieve só por caixa combina filtro(s) + aviso de
+        // férias (ver App\Support\MailboxSieveScript no Agent) — só
+        // entra aqui quem tem pelo menos um dos dois habilitado.
+        $sieveMailboxes = Mailbox::whereHas('mailDomain.hostingAccount', fn ($q) => $q->where('server_id', $server->id))
+            ->where(function ($q) {
+                $q->whereHas('vacation', fn ($q2) => $q2->where('enabled', true))
+                    ->orWhereHas('filters', fn ($q2) => $q2->where('enabled', true));
+            })
+            ->with([
+                'mailDomain.hostingAccount',
+                'vacation',
+                'filters' => fn ($q) => $q->where('enabled', true),
+            ])
             ->get()
             ->map(fn (Mailbox $mailbox) => [
                 'username' => $mailbox->mailDomain->hostingAccount->linux_username,
                 'domain' => $mailbox->mailDomain->domain,
                 'local_part' => $mailbox->local_part,
-                'subject' => $mailbox->vacation->subject,
-                'message' => $mailbox->vacation->message,
+                'vacation' => ($mailbox->vacation && $mailbox->vacation->enabled) ? [
+                    'subject' => $mailbox->vacation->subject,
+                    'message' => $mailbox->vacation->message,
+                ] : null,
+                'filters' => $mailbox->filters->map(fn (MailFilter $filter) => [
+                    'field' => $filter->field,
+                    'value' => $filter->value,
+                    'action' => $filter->action,
+                    'folder' => $filter->folder,
+                ])->all(),
             ])
             ->all();
 
@@ -236,7 +282,7 @@ class MailboxService
             'domains' => $domains,
             'mailboxes' => $mailboxes,
             'forwarders' => $forwarders,
-            'vacations' => $vacations,
+            'sieve_mailboxes' => $sieveMailboxes,
         ]);
 
         if ($job->status !== 'completed') {

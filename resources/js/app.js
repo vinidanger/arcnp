@@ -101,3 +101,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// Formulário de filtro de e-mail: campo "pasta" só faz sentido pra
+// ação "mover pra pasta" — escondido pro resto, alternado via
+// data-target (aponta pro wrapper do campo) em vez de id fixo, porque
+// cada caixa de e-mail tem seu próprio par select/campo na página.
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.filter-action-select').forEach((select) => {
+        const wrap = document.querySelector(select.dataset.target);
+
+        if (! wrap) {
+            return;
+        }
+
+        const toggle = () => {
+            wrap.style.display = select.value === 'move_to_folder' ? '' : 'none';
+        };
+
+        select.addEventListener('change', toggle);
+        toggle();
+    });
+});

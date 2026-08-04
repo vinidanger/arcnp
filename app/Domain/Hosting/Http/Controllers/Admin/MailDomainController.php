@@ -6,6 +6,7 @@ use App\Domain\Hosting\Models\DnsZone;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\MailDomain;
 use App\Domain\Hosting\Models\Mailbox;
+use App\Domain\Hosting\Models\MailFilter;
 use App\Domain\Hosting\Models\MailForwarder;
 use App\Domain\Hosting\Services\DnsZoneService;
 use App\Domain\Hosting\Services\MailboxService;
@@ -53,7 +54,7 @@ class MailDomainController extends Controller
 
         abort_unless($mail_domain->hosting_account_id === $hosting_account->id, 404);
 
-        $mail_domain->load('mailboxes.vacation', 'forwarders');
+        $mail_domain->load('mailboxes.vacation', 'mailboxes.filters', 'forwarders');
 
         $dnsZone = DnsZone::where('domain', $mail_domain->domain)->with('records')->first();
 
@@ -189,6 +190,46 @@ class MailDomainController extends Controller
             return back()->with('status', 'Aviso de férias atualizado.');
         } catch (Throwable $e) {
             return back()->with('error', 'Falha ao atualizar aviso de férias: '.$e->getMessage());
+        }
+    }
+
+    public function storeFilter(Request $request, HostingAccount $hosting_account, MailDomain $mail_domain, Mailbox $mailbox, MailboxService $mail)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($mail_domain->hosting_account_id === $hosting_account->id, 404);
+        abort_unless($mailbox->mail_domain_id === $mail_domain->id, 404);
+
+        $data = $request->validate([
+            'field' => ['required', 'string', 'in:from,subject,to'],
+            'value' => ['required', 'string', 'max:255'],
+            'action' => ['required', 'string', 'in:discard,move_to_folder'],
+            'folder' => ['required_if:action,move_to_folder', 'nullable', 'string', 'max:255'],
+        ]);
+
+        try {
+            $mail->createFilter($mailbox, $data['field'], $data['value'], $data['action'], $data['folder'] ?? null);
+
+            return back()->with('status', 'Filtro criado.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao criar filtro: '.$e->getMessage());
+        }
+    }
+
+    public function destroyFilter(HostingAccount $hosting_account, MailDomain $mail_domain, Mailbox $mailbox, MailFilter $filter, MailboxService $mail)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($mail_domain->hosting_account_id === $hosting_account->id, 404);
+        abort_unless($mailbox->mail_domain_id === $mail_domain->id, 404);
+        abort_unless($filter->mailbox_id === $mailbox->id, 404);
+
+        try {
+            $mail->deleteFilter($filter);
+
+            return back()->with('status', 'Filtro removido.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao remover filtro: '.$e->getMessage());
         }
     }
 

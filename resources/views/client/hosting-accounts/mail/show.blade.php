@@ -172,6 +172,7 @@
                                 <a href="{{ route('client.hosting-accounts.mail.mailboxes.webmail', [$account, $mailDomain, $mailbox]) }}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{{ __('Abrir webmail') }}</a>
                                 <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#password-modal-{{ $mailbox->id }}">{{ __('Trocar senha') }}</button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#vacation-modal-{{ $mailbox->id }}">{{ __('Aviso de férias') }}</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filters-modal-{{ $mailbox->id }}">{{ __('Filtros') }}</button>
                                 <form method="POST" action="{{ route('client.hosting-accounts.mail.mailboxes.destroy', [$account, $mailDomain, $mailbox]) }}"
                                       class="d-inline-block" onsubmit="return confirm('{{ __('Remove essa caixa. Continuar?') }}')">
                                     @csrf
@@ -247,6 +248,94 @@
                     <button type="submit" class="btn btn-primary">{{ __('Salvar') }}</button>
                 </div>
             </form>
+        </x-modal>
+
+        <x-modal name="filters-modal-{{ $mailbox->id }}">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ __('Filtros') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-secondary text-truncate mb-3">{{ $mailbox->email() }}</p>
+
+                <table class="table table-sm align-middle mb-3">
+                    <thead>
+                        <tr>
+                            <th>{{ __('Se') }}</th>
+                            <th>{{ __('Então') }}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($mailbox->filters as $filter)
+                            <tr>
+                                <td class="small">
+                                    {{ match ($filter->field) { 'from' => __('De'), 'subject' => __('Assunto'), 'to' => __('Para') } }}
+                                    {{ __('contém') }} "<code>{{ $filter->value }}</code>"
+                                </td>
+                                <td class="small">
+                                    @if ($filter->action === 'discard')
+                                        {{ __('Descartar') }}
+                                    @else
+                                        {{ __('Mover pra') }} "<code>{{ $filter->folder }}</code>"
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    <form method="POST" action="{{ route('client.hosting-accounts.mail.mailboxes.filters.destroy', [$account, $mailDomain, $mailbox, $filter]) }}"
+                                          onsubmit="return confirm('{{ __('Remove esse filtro. Continuar?') }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="text-center text-secondary small py-2">{{ __('Nenhum filtro cadastrado.') }}</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <form method="POST" action="{{ route('client.hosting-accounts.mail.mailboxes.filters.store', [$account, $mailDomain, $mailbox]) }}">
+                    @csrf
+                    <div class="row g-2 align-items-end">
+                        <div class="col-4">
+                            <x-input-label for="field-{{ $mailbox->id }}" value="{{ __('Campo') }}" class="small mb-1" />
+                            <select id="field-{{ $mailbox->id }}" name="field" class="form-select form-select-sm">
+                                <option value="from">{{ __('De') }}</option>
+                                <option value="subject">{{ __('Assunto') }}</option>
+                                <option value="to">{{ __('Para') }}</option>
+                            </select>
+                        </div>
+                        <div class="col-8">
+                            <x-input-label for="value-{{ $mailbox->id }}" value="{{ __('Contém') }}" class="small mb-1" />
+                            <input type="text" id="value-{{ $mailbox->id }}" name="value" class="form-control form-control-sm" required>
+                        </div>
+                    </div>
+                    <div class="row g-2 align-items-end mt-1">
+                        <div class="col-5">
+                            <x-input-label for="action-{{ $mailbox->id }}" value="{{ __('Ação') }}" class="small mb-1" />
+                            <select id="action-{{ $mailbox->id }}" name="action" class="form-select form-select-sm filter-action-select" data-target="#folder-wrap-{{ $mailbox->id }}">
+                                <option value="discard">{{ __('Descartar') }}</option>
+                                <option value="move_to_folder">{{ __('Mover pra pasta') }}</option>
+                            </select>
+                        </div>
+                        <div class="col-7" id="folder-wrap-{{ $mailbox->id }}">
+                            <x-input-label for="folder-{{ $mailbox->id }}" value="{{ __('Pasta') }}" class="small mb-1" />
+                            <input type="text" id="folder-{{ $mailbox->id }}" name="folder" class="form-control form-control-sm" placeholder="Spam">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary mt-2">{{ __('Adicionar filtro') }}</button>
+                </form>
+                <x-input-error :messages="$errors->get('value')" class="mt-2" />
+                <x-input-error :messages="$errors->get('folder')" class="mt-2" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Fechar') }}</button>
+            </div>
         </x-modal>
     @endforeach
 
