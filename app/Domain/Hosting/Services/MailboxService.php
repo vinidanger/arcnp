@@ -6,6 +6,7 @@ use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\MailDomain;
 use App\Domain\Hosting\Models\Mailbox;
 use App\Domain\Hosting\Models\MailForwarder;
+use App\Domain\Hosting\Models\MailVacation;
 use App\Domain\Servers\Models\Server;
 use App\Domain\Servers\Services\AgentHttpClient;
 use App\Support\MailboxSsoToken;
@@ -124,6 +125,29 @@ class MailboxService
         $this->syncState($server);
     }
 
+    public function updateVacation(Mailbox $mailbox, bool $enabled, string $subject, string $message): void
+    {
+        $original = $mailbox->vacation?->only(['enabled', 'subject', 'message']);
+
+        $mailbox->vacation()->updateOrCreate([], [
+            'enabled' => $enabled,
+            'subject' => $subject,
+            'message' => $message,
+        ]);
+
+        try {
+            $this->syncState($mailbox->mailDomain->hostingAccount->server);
+        } catch (RuntimeException $e) {
+            if ($original) {
+                $mailbox->vacation()->update($original);
+            } else {
+                $mailbox->vacation()->delete();
+            }
+
+            throw $e;
+        }
+    }
+
     public function createForwarder(MailDomain $mailDomain, string $localPart, string $destination): MailForwarder
     {
         // Endereço não pode estar nos dois mapas do Postfix ao mesmo
@@ -195,10 +219,24 @@ class MailboxService
             ])
             ->all();
 
+        $vacations = Mailbox::whereHas('mailDomain.hostingAccount', fn ($q) => $q->where('server_id', $server->id))
+            ->whereHas('vacation', fn ($q) => $q->where('enabled', true))
+            ->with(['mailDomain.hostingAccount', 'vacation'])
+            ->get()
+            ->map(fn (Mailbox $mailbox) => [
+                'username' => $mailbox->mailDomain->hostingAccount->linux_username,
+                'domain' => $mailbox->mailDomain->domain,
+                'local_part' => $mailbox->local_part,
+                'subject' => $mailbox->vacation->subject,
+                'message' => $mailbox->vacation->message,
+            ])
+            ->all();
+
         $job = $this->client->dispatch($server, 'mail.sync_state', [
             'domains' => $domains,
             'mailboxes' => $mailboxes,
             'forwarders' => $forwarders,
+            'vacations' => $vacations,
         ]);
 
         if ($job->status !== 'completed') {

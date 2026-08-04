@@ -24,7 +24,17 @@
       "Bash(node --check resources/js/app.js)",
       "Bash(php -l resources/views/client/dashboard.blade.php)",
       "Bash(php -r \"echo date\\('Y_m_d_His'\\);\")",
-      "Bash(bash -n C:/laragon/www/arcnp-agent/scripts/manage-mail.sh)"
+      "Bash(bash -n C:/laragon/www/arcnp-agent/scripts/manage-mail.sh)",
+      "Bash(chmod +x scripts/*.sh)",
+      "Bash(git update-index *)",
+      "Bash(php -l app/Support/SieveVacation.php)",
+      "Bash(php -l app/Support/MailStateBundle.php)",
+      "Bash(php -l app/Actions/Mail/SyncMailStateAction.php)",
+      "Bash(php -l app/Domain/Hosting/Models/MailVacation.php)",
+      "Bash(php -l app/Domain/Hosting/Models/Mailbox.php)",
+      "Bash(php -l app/Domain/Hosting/Services/MailboxService.php)",
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Admin/MailDomainController.php)",
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/MailDomainController.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

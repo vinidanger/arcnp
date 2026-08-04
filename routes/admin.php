@@ -143,6 +143,8 @@ Route::delete('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{
     ->name('hosting-accounts.mail.mailboxes.destroy');
 Route::get('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mailbox}/webmail', [MailDomainController::class, 'webmailSso'])
     ->name('hosting-accounts.mail.mailboxes.webmail');
+Route::put('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mailbox}/vacation', [MailDomainController::class, 'updateVacation'])
+    ->name('hosting-accounts.mail.mailboxes.vacation.update');
 Route::post('hosting-accounts/{hosting_account}/mail/{mail_domain}/forwarders', [MailDomainController::class, 'storeForwarder'])
     ->name('hosting-accounts.mail.forwarders.store');
 Route::delete('hosting-accounts/{hosting_account}/mail/{mail_domain}/forwarders/{forwarder}', [MailDomainController::class, 'destroyForwarder'])

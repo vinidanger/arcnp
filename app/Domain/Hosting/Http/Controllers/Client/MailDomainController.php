@@ -53,7 +53,7 @@ class MailDomainController extends Controller
 
         abort_unless($mail_domain->hosting_account_id === $hosting_account->id, 404);
 
-        $mail_domain->load('mailboxes', 'forwarders');
+        $mail_domain->load('mailboxes.vacation', 'forwarders');
 
         $dnsZone = DnsZone::where('domain', $mail_domain->domain)->first();
 
@@ -161,6 +161,33 @@ class MailDomainController extends Controller
             return back()->with('status', 'Caixa removida.');
         } catch (Throwable $e) {
             return back()->with('error', 'Falha ao remover caixa: '.$e->getMessage());
+        }
+    }
+
+    public function updateVacation(Request $request, HostingAccount $hosting_account, MailDomain $mail_domain, Mailbox $mailbox, MailboxService $mail)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($mail_domain->hosting_account_id === $hosting_account->id, 404);
+        abort_unless($mailbox->mail_domain_id === $mail_domain->id, 404);
+
+        $data = $request->validate([
+            'vacation_enabled' => ['nullable', 'boolean'],
+            'subject' => ['required_if:vacation_enabled,1', 'nullable', 'string', 'max:255'],
+            'message' => ['required_if:vacation_enabled,1', 'nullable', 'string', 'max:5000'],
+        ]);
+
+        try {
+            $mail->updateVacation(
+                $mailbox,
+                (bool) ($data['vacation_enabled'] ?? false),
+                $data['subject'] ?? '',
+                $data['message'] ?? ''
+            );
+
+            return back()->with('status', 'Aviso de férias atualizado.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao atualizar aviso de férias: '.$e->getMessage());
         }
     }
 

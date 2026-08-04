@@ -123,6 +123,26 @@
                                         </div>
                                     </form>
                                 </details>
+                                <details class="d-inline-block">
+                                    <summary class="btn btn-sm btn-outline-secondary">{{ __('Aviso de férias') }}</summary>
+                                    <form method="POST" action="{{ route('admin.hosting-accounts.mail.mailboxes.vacation.update', [$account, $mailDomain, $mailbox]) }}" class="row g-2 mt-2" style="min-width: 320px;">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="col-12 form-check">
+                                            <input type="checkbox" name="vacation_enabled" value="1" id="vacation_enabled_{{ $mailbox->id }}" class="form-check-input" @checked($mailbox->vacation?->enabled)>
+                                            <label class="form-check-label small" for="vacation_enabled_{{ $mailbox->id }}">{{ __('Ativado') }}</label>
+                                        </div>
+                                        <div class="col-12">
+                                            <input type="text" name="subject" class="form-control form-control-sm" placeholder="{{ __('Assunto') }}" value="{{ old('subject', $mailbox->vacation?->subject) }}">
+                                        </div>
+                                        <div class="col-12">
+                                            <textarea name="message" class="form-control form-control-sm" rows="3" placeholder="{{ __('Mensagem') }}">{{ old('message', $mailbox->vacation?->message) }}</textarea>
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-sm btn-primary">{{ __('Salvar') }}</button>
+                                        </div>
+                                    </form>
+                                </details>
                                 <form method="POST" action="{{ route('admin.hosting-accounts.mail.mailboxes.destroy', [$account, $mailDomain, $mailbox]) }}"
                                       class="d-inline-block" onsubmit="return confirm('{{ __('Remove essa caixa. Continuar?') }}')">
                                     @csrf

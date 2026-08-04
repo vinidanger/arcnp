@@ -4,6 +4,7 @@ namespace App\Domain\Hosting\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Mailbox extends Model
 {
@@ -32,6 +33,11 @@ class Mailbox extends Model
     public function mailDomain(): BelongsTo
     {
         return $this->belongsTo(MailDomain::class);
+    }
+
+    public function vacation(): HasOne
+    {
+        return $this->hasOne(MailVacation::class);
     }
 
     public function email(): string
