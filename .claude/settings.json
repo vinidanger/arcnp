@@ -34,7 +34,10 @@
       "Bash(php -l app/Domain/Hosting/Models/Mailbox.php)",
       "Bash(php -l app/Domain/Hosting/Services/MailboxService.php)",
       "Bash(php -l app/Domain/Hosting/Http/Controllers/Admin/MailDomainController.php)",
-      "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/MailDomainController.php)"
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/MailDomainController.php)",
+      "Bash(php -l app/Models/Announcement.php)",
+      "Bash(php -l app/Http/Controllers/Admin/AnnouncementController.php)",
+      "Bash(php -l database/migrations/2026_08_04_020000_create_announcements_table.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

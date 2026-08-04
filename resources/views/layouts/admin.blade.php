@@ -47,6 +47,9 @@
                     </a>
 
                     <div class="app-sidebar-section sidebar-label">{{ __('Sistema') }}</div>
+                    <a href="{{ route('admin.announcements.index') }}" class="nav-link {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}" title="{{ __('Mensagens do sistema') }}">
+                        <i class="bi bi-megaphone"></i> <span class="sidebar-label">{{ __('Mensagens do sistema') }}</span>
+                    </a>
                     <a href="{{ route('admin.api-clients.index') }}" class="nav-link {{ request()->routeIs('admin.api-clients.*') ? 'active' : '' }}" title="{{ __('Integrações de API') }}">
                         <i class="bi bi-plug"></i> <span class="sidebar-label">{{ __('Integrações de API') }}</span>
                     </a>
@@ -75,6 +78,8 @@
                 </header>
 
                 <main class="flex-grow-1 container-fluid px-4 py-4">
+                    @include('layouts.partials.announcements')
+
                     {{ $slot }}
                 </main>
             </div>

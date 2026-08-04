@@ -56,6 +56,8 @@
                 </header>
 
                 <main class="flex-grow-1 container-fluid px-4 py-4">
+                    @include('layouts.partials.announcements')
+
                     {{ $slot }}
                 </main>
             </div>

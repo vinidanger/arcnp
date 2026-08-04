@@ -55,12 +55,13 @@ class MailDomainController extends Controller
 
         $mail_domain->load('mailboxes.vacation', 'forwarders');
 
-        $dnsZone = DnsZone::where('domain', $mail_domain->domain)->first();
+        $dnsZone = DnsZone::where('domain', $mail_domain->domain)->with('records')->first();
 
         return view('admin.hosting-accounts.mail.show', [
             'account' => $hosting_account,
             'mailDomain' => $mail_domain,
             'hasDnsZone' => $dnsZone !== null,
+            'dnsZone' => $dnsZone,
         ]);
     }
 
