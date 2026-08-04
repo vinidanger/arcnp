@@ -28,6 +28,14 @@
         <div class="card">
             <div class="card-body">
                 <div style="max-width: 32rem;">
+                    @include('profile.partials.two-factor-form')
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div style="max-width: 32rem;">
                     @include('profile.partials.delete-user-form')
                 </div>
             </div>

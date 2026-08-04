@@ -7,7 +7,7 @@
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
 
-    <div class="card" style="max-width: 32rem;">
+    <div class="card mb-3" style="max-width: 32rem;">
         <div class="card-body">
             <h2 class="h6">{{ __('Gerenciador de arquivos') }}</h2>
 
@@ -26,6 +26,33 @@
                     {{ __('O PHP-FPM deste servidor (Painel) permite até') }} <strong>{{ $phpUploadLimitMb }} MB</strong>
                     ({{ __('upload_max_filesize/post_max_size') }}) — {{ __('um valor maior aqui não terá efeito sem ajustar isso também. O Agent de cada servidor de hospedagem também tem seu próprio limite (nginx + PHP-FPM, 300 MB por padrão no deploy), independente deste.') }}
                 </p>
+
+                <div class="mb-2 mt-4">
+                    <h2 class="h6">{{ __('Google reCAPTCHA v3 (login)') }}</h2>
+                    <p class="small text-secondary">
+                        {{ __('Protege a tela de login contra bots. Deixe desativado (ou as chaves em branco) pra não pedir captcha nenhum. Gere as chaves em') }}
+                        <a href="https://www.google.com/recaptcha/admin" target="_blank" rel="noopener">google.com/recaptcha/admin</a>.
+                    </p>
+                </div>
+
+                <div class="form-check mb-2">
+                    <input type="checkbox" id="recaptcha_enabled" name="recaptcha_enabled" value="1" class="form-check-input" @checked(old('recaptcha_enabled', $recaptchaEnabled))>
+                    <label for="recaptcha_enabled" class="form-check-label">{{ __('Ativar reCAPTCHA no login') }}</label>
+                </div>
+
+                <div class="mb-2">
+                    <x-input-label for="recaptcha_site_key" value="{{ __('Site key') }}" />
+                    <x-text-input id="recaptcha_site_key" name="recaptcha_site_key" type="text"
+                                  :value="old('recaptcha_site_key', $recaptchaSiteKey)" />
+                    <x-input-error :messages="$errors->get('recaptcha_site_key')" class="mt-2" />
+                </div>
+
+                <div class="mb-2">
+                    <x-input-label for="recaptcha_secret_key" value="{{ __('Secret key') }}" />
+                    <x-text-input id="recaptcha_secret_key" name="recaptcha_secret_key" type="text"
+                                  :value="old('recaptcha_secret_key', $recaptchaSecretKey)" />
+                    <x-input-error :messages="$errors->get('recaptcha_secret_key')" class="mt-2" />
+                </div>
 
                 <x-primary-button>{{ __('Salvar') }}</x-primary-button>
             </form>

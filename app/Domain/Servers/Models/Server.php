@@ -29,18 +29,28 @@ class Server extends Model
         'cpu_cores',
         'memory_mb',
         'disk_gb',
+        'mysql_service_name',
         'agent_status',
         'last_heartbeat_at',
         'load_avg',
         'disk_percent',
         'mem_percent',
+        'server_info',
+        'server_info_collected_at',
     ];
 
     protected function casts(): array
     {
         return [
             'last_heartbeat_at' => 'datetime',
+            'server_info' => 'array',
+            'server_info_collected_at' => 'datetime',
         ];
+    }
+
+    public function metricSnapshots(): HasMany
+    {
+        return $this->hasMany(ServerMetricSnapshot::class);
     }
 
     public function agentCredentials(): HasMany

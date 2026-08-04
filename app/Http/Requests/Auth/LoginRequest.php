@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\Setting;
+use App\Rules\Recaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -27,10 +29,18 @@ class LoginRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ];
+
+        // Só exige o captcha se o admin realmente configurou as duas
+        // chaves — nunca quebra o login de quem não mexeu nisso ainda.
+        if (Setting::get('recaptcha_enabled') && Setting::get('recaptcha_site_key') && Setting::get('recaptcha_secret_key')) {
+            $rules['recaptcha_token'] = ['required', new Recaptcha];
+        }
+
+        return $rules;
     }
 
     /**

@@ -10,6 +10,7 @@ use App\Domain\Hosting\Http\Controllers\Client\FtpAccountController;
 use App\Domain\Hosting\Http\Controllers\Client\HostedAppController;
 use App\Domain\Hosting\Http\Controllers\Client\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Client\HotlinkProtectionController;
+use App\Domain\Hosting\Http\Controllers\Client\MimeTypeController;
 use App\Domain\Hosting\Http\Controllers\Client\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Client\MailLogController;
 use App\Domain\Hosting\Http\Controllers\Client\PhpSettingsController;
@@ -193,3 +194,10 @@ Route::post('tickets', [TicketController::class, 'store'])->name('tickets.store'
 Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
 Route::post('tickets/{ticket}/messages', [TicketController::class, 'storeMessage'])->name('tickets.messages.store');
 Route::post('tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
+
+Route::get('hosting-accounts/{hosting_account}/mime-types', [MimeTypeController::class, 'index'])
+    ->name('hosting-accounts.mime-types.index');
+Route::post('hosting-accounts/{hosting_account}/mime-types', [MimeTypeController::class, 'store'])
+    ->name('hosting-accounts.mime-types.store');
+Route::delete('hosting-accounts/{hosting_account}/mime-types/{mime_type_rule}', [MimeTypeController::class, 'destroy'])
+    ->name('hosting-accounts.mime-types.destroy');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,12 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        $recaptchaEnabled = (bool) Setting::get('recaptcha_enabled') && Setting::get('recaptcha_site_key');
+
+        return view('auth.login', [
+            'recaptchaEnabled' => $recaptchaEnabled,
+            'recaptchaSiteKey' => $recaptchaEnabled ? Setting::get('recaptcha_site_key') : null,
+        ]);
     }
 
     /**
@@ -25,6 +31,22 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        $user = Auth::user();
+
+        // Senha certa não basta se 2FA estiver ativado — desloga de
+        // novo (authenticate() já criou a sessão via Auth::attempt) e
+        // manda pro desafio, guardando só o id pendente (não o guard
+        // autenticado) até o código ser confirmado.
+        if ($user->hasTwoFactorEnabled()) {
+            Auth::logout();
+
+            $request->session()->regenerate();
+            $request->session()->put('login.2fa_user_id', $user->id);
+            $request->session()->put('login.remember', $request->boolean('remember'));
+
+            return redirect()->route('two-factor.challenge');
+        }
 
         $request->session()->regenerate();
 

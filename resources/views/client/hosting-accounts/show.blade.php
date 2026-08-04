@@ -182,18 +182,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
 
                         <dt class="col-sm-3">{{ __('SSL') }}</dt>
                         <dd class="col-sm-9">
-                            @php
-                                $sslBadge = match ($account->ssl_status) {
-                                    'active' => 'success',
-                                    'pending' => 'info',
-                                    'failed' => 'danger',
-                                    default => 'secondary',
-                                };
-                            @endphp
-                            <span class="badge text-bg-{{ $sslBadge }}">{{ $account->ssl_status }}</span>
-                            @if ($account->ssl_status === 'failed' && $account->ssl_error)
-                                <div class="small text-danger mt-1">{{ $account->ssl_error }}</div>
-                            @endif
+                            <x-ssl-info :model="$account" />
                         </dd>
                     </dl>
                 </div>
@@ -251,6 +240,12 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                             <a href="{{ route('client.hosting-accounts.installer.index', $account) }}" class="quick-link-card">
                                 <span class="quick-link-icon"><i class="bi bi-box-seam"></i></span>
                                 <div class="fw-semibold small">{{ __('Instalador') }}</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('client.hosting-accounts.mime-types.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-file-earmark-code"></i></span>
+                                <div class="fw-semibold small">{{ __('MIME Types') }}</div>
                             </a>
                         </div>
                     </div>
@@ -371,15 +366,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                                 @endif
                                             </td>
                                             <td>
-                                                @php
-                                                    $domainSslBadge = match ($domain->ssl_status) {
-                                                        'active' => 'success',
-                                                        'pending' => 'info',
-                                                        'failed' => 'danger',
-                                                        default => 'secondary',
-                                                    };
-                                                @endphp
-                                                <span class="badge text-bg-{{ $domainSslBadge }}">{{ $domain->ssl_status }}</span>
+                                                <x-ssl-info :model="$domain" />
                                             </td>
                                             <td class="text-end">
                                                 <form method="POST" action="{{ route('client.hosting-accounts.domains.destroy', [$account, $domain]) }}"

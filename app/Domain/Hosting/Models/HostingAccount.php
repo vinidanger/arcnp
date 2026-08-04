@@ -24,6 +24,7 @@ class HostingAccount extends Model
         'ssl_status',
         'ssl_error',
         'ssl_issued_at',
+        'ssl_expires_at',
         'backup_frequency',
         'last_backup_at',
         'disk_usage_mb',
@@ -38,6 +39,7 @@ class HostingAccount extends Model
         return [
             'php_fpm_settings' => 'array',
             'ssl_issued_at' => 'datetime',
+            'ssl_expires_at' => 'datetime',
             'last_backup_at' => 'datetime',
             'disk_usage_checked_at' => 'datetime',
             'disk_alert_sent_at' => 'datetime',
@@ -109,6 +111,11 @@ class HostingAccount extends Model
     public function siteRedirects(): HasMany
     {
         return $this->hasMany(SiteRedirect::class);
+    }
+
+    public function mimeTypeRules(): HasMany
+    {
+        return $this->hasMany(MimeTypeRule::class);
     }
 
     public function hotlinkProtections(): HasMany

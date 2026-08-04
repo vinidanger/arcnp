@@ -165,6 +165,48 @@
                         <div class="fw-semibold small">{{ __('PHP') }}</div>
                     </a>
                 </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.protected-folders.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-shield-lock"></i></span>
+                        <div class="fw-semibold small">{{ __('Proteção de pasta') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.redirects.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-signpost-split"></i></span>
+                        <div class="fw-semibold small">{{ __('Redirecionamentos') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.hotlink-protection.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-link-45deg"></i></span>
+                        <div class="fw-semibold small">{{ __('Proteção Hotlink') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.logs.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-file-text"></i></span>
+                        <div class="fw-semibold small">{{ __('Logs') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.apps.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-cpu"></i></span>
+                        <div class="fw-semibold small">{{ __('Apps') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.installer.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-box-seam"></i></span>
+                        <div class="fw-semibold small">{{ __('Instalador') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.mime-types.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-file-earmark-code"></i></span>
+                        <div class="fw-semibold small">{{ __('MIME Types') }}</div>
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -181,6 +223,12 @@
                     <a href="{{ route('client.hosting-accounts.mail.index', $primary) }}" class="quick-link-card">
                         <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
                         <div class="fw-semibold small">{{ __('E-mail') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.mail-log.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-envelope-paper"></i></span>
+                        <div class="fw-semibold small">{{ __('Rastrear e-mails') }}</div>
                     </a>
                 </div>
             </div>
@@ -200,6 +248,25 @@
                         <span class="quick-link-icon"><i class="bi bi-clock-history"></i></span>
                         <div class="fw-semibold small">{{ __('Cron') }}</div>
                     </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="{{ route('client.hosting-accounts.ftp.index', $primary) }}" class="quick-link-card">
+                        <span class="quick-link-icon"><i class="bi bi-hdd-network"></i></span>
+                        <div class="fw-semibold small">{{ __('FTP') }}</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    @if ($primary->ssh_enabled)
+                        <a href="{{ $primary->server->terminalBaseUrl() }}" target="_blank" rel="noopener" class="quick-link-card" title="{{ __('No terminal, use o usuário: ').$primary->linux_username }}">
+                            <span class="quick-link-icon"><i class="bi bi-terminal-fill"></i></span>
+                            <div class="fw-semibold small">{{ __('Terminal') }}</div>
+                        </a>
+                    @else
+                        <div class="quick-link-card text-secondary" style="opacity: .5;" title="{{ __('Ative o acesso SSH primeiro.') }}">
+                            <span class="quick-link-icon"><i class="bi bi-terminal-fill"></i></span>
+                            <div class="fw-semibold small">{{ __('Terminal') }}</div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

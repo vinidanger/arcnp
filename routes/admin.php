@@ -11,6 +11,7 @@ use App\Domain\Hosting\Http\Controllers\Admin\AppInstallerController;
 use App\Domain\Hosting\Http\Controllers\Admin\FtpAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostedAppController;
 use App\Domain\Hosting\Http\Controllers\Admin\HotlinkProtectionController;
+use App\Domain\Hosting\Http\Controllers\Admin\MimeTypeController;
 use App\Domain\Hosting\Http\Controllers\Admin\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Admin\MailLogController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostingAccountController;
@@ -39,6 +40,8 @@ Route::post('servers/{server}/regenerate-credential', [ServerController::class, 
     ->name('servers.regenerate-credential');
 Route::post('servers/{server}/test-connection', [ServerController::class, 'testConnection'])
     ->name('servers.test-connection');
+Route::post('servers/{server}/collect-info', [ServerController::class, 'collectInfo'])
+    ->name('servers.collect-info');
 
 Route::resource('plans', PlanController::class)->except(['show']);
 
@@ -222,3 +225,10 @@ Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets
 Route::post('tickets/{ticket}/messages', [TicketController::class, 'storeMessage'])->name('tickets.messages.store');
 Route::post('tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
 Route::post('tickets/{ticket}/reopen', [TicketController::class, 'reopen'])->name('tickets.reopen');
+
+Route::get('hosting-accounts/{hosting_account}/mime-types', [MimeTypeController::class, 'index'])
+    ->name('hosting-accounts.mime-types.index');
+Route::post('hosting-accounts/{hosting_account}/mime-types', [MimeTypeController::class, 'store'])
+    ->name('hosting-accounts.mime-types.store');
+Route::delete('hosting-accounts/{hosting_account}/mime-types/{mime_type_rule}', [MimeTypeController::class, 'destroy'])
+    ->name('hosting-accounts.mime-types.destroy');

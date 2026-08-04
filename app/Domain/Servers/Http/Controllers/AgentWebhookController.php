@@ -9,6 +9,7 @@ use App\Domain\Hosting\Models\HostingBackup;
 use App\Domain\Hosting\Services\FolderProtectionService;
 use App\Domain\Hosting\Services\HostingAccountProvisioningService;
 use App\Domain\Hosting\Services\HotlinkProtectionService;
+use App\Domain\Hosting\Services\MimeTypeService;
 use App\Domain\Hosting\Services\SiteRedirectService;
 use App\Domain\Servers\Models\AgentCredential;
 use App\Domain\Servers\Models\AgentJob;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Notifications\AgentTaskFailedNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 
 class AgentWebhookController extends Controller
@@ -65,6 +67,10 @@ class AgentWebhookController extends Controller
 
         if ($job->action === 'app.install_wordpress') {
             $this->applyAppInstallResult($job);
+        }
+
+        if ($job->action === 'ssl.renew_all' && $job->status === 'completed') {
+            $this->applySslRenewResult($job);
         }
 
         if ($job->status === 'failed' && in_array($job->action, ['ssl.renew_all', 'backup.create'], true)) {
@@ -121,7 +127,14 @@ class AgentWebhookController extends Controller
         }
 
         if ($job->status === 'completed') {
-            $target->update(['ssl_status' => 'active', 'ssl_error' => null, 'ssl_issued_at' => now()]);
+            $expiresAt = $job->result['expires_at'] ?? null;
+
+            $target->update([
+                'ssl_status' => 'active',
+                'ssl_error' => null,
+                'ssl_issued_at' => now(),
+                'ssl_expires_at' => $expiresAt ? Carbon::parse($expiresAt) : null,
+            ]);
 
             // SSL reescreve o vhost inteiro a partir do stub (ver
             // IssueSslCertificateAction) — sem isso, uma pasta com
@@ -131,8 +144,34 @@ class AgentWebhookController extends Controller
             app(FolderProtectionService::class)->resyncIfNeeded($account, $domainName);
             app(SiteRedirectService::class)->resyncIfNeeded($account, $domainName);
             app(HotlinkProtectionService::class)->resyncIfNeeded($account, $domainName);
+            app(MimeTypeService::class)->resyncIfNeeded($account, $domainName);
         } elseif ($job->status === 'failed') {
             $target->update(['ssl_status' => 'failed', 'ssl_error' => $job->error]);
+        }
+    }
+
+    /**
+     * `ssl.renew_all` roda uma vez por dia pra TODO servidor (ver
+     * comando agendado `ssl:renew`) e o Agent devolve a expiração de
+     * cada certificado que existe nele — atualiza `ssl_expires_at` de
+     * cada domínio/conta encontrado, mesma lógica de correlação por
+     * nome de domínio que applySslResult() já usa (domínio adicional
+     * primeiro, cai pro domínio principal da conta).
+     */
+    private function applySslRenewResult(AgentJob $job): void
+    {
+        foreach ($job->result['certificates'] ?? [] as $cert) {
+            $domainName = $cert['domain'] ?? null;
+            $expiresAt = $cert['expires_at'] ?? null;
+
+            if (! $domainName || ! $expiresAt) {
+                continue;
+            }
+
+            $target = Domain::where('domain', $domainName)->first()
+                ?? HostingAccount::where('primary_domain', $domainName)->first();
+
+            $target?->update(['ssl_expires_at' => Carbon::parse($expiresAt)]);
         }
     }
 
@@ -221,6 +260,17 @@ class AgentWebhookController extends Controller
             'load_avg' => $data['load_avg'] ?? null,
             'disk_percent' => $data['disk_percent'] ?? null,
             'mem_percent' => $data['mem_percent'] ?? null,
+        ]);
+
+        // Histórico pros gráficos (item F) — o campo na própria Server
+        // continua sendo só o snapshot mais recente (usado em todo
+        // lugar que só precisa do "agora"); essa tabela à parte é só
+        // pra série temporal, podada por server-metrics:prune.
+        $credential->server->metricSnapshots()->create([
+            'load_avg' => $data['load_avg'] ?? null,
+            'disk_percent' => $data['disk_percent'] ?? null,
+            'mem_percent' => $data['mem_percent'] ?? null,
+            'recorded_at' => now(),
         ]);
 
         return response()->json(['ok' => true]);

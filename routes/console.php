@@ -12,3 +12,4 @@ Schedule::command('servers:mark-stale-offline')->everyMinute();
 Schedule::command('backups:run-scheduled')->hourly();
 Schedule::command('disk-usage:refresh')->hourly();
 Schedule::command('ssl:renew')->daily();
+Schedule::command('server-metrics:prune')->daily();

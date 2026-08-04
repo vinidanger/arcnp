@@ -57,12 +57,15 @@ class PhpSettingsController extends Controller
             'max_file_uploads' => ['required', 'integer', 'min:1', 'max:100'],
             'session_gc_maxlifetime' => ['required', 'integer', 'min:60', 'max:86400'],
             'error_reporting' => ['required', Rule::in(array_keys(config('hosting.error_reporting_presets')))],
+            'disable_functions' => ['nullable', 'array'],
+            'disable_functions.*' => [Rule::in(config('hosting.disablable_php_functions'))],
         ]);
 
         $data['display_errors'] = $request->boolean('display_errors');
         $data['log_errors'] = $request->boolean('log_errors');
         $data['file_uploads'] = $request->boolean('file_uploads');
         $data['short_open_tag'] = $request->boolean('short_open_tag');
+        $data['disable_functions'] = $data['disable_functions'] ?? [];
 
         try {
             $provisioning->updatePhpFpmSettings($hosting_account, $data);

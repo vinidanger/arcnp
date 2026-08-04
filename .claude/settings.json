@@ -59,7 +59,20 @@
       "Bash(php -l app/Notifications/TicketReplyNotification.php)",
       "Bash(php -l app/Domain/Support/Services/TicketService.php)",
       "Bash(php -l app/Domain/Support/Http/Controllers/Admin/TicketController.php)",
-      "Bash(php -l app/Domain/Support/Http/Controllers/Client/TicketController.php)"
+      "Bash(php -l app/Domain/Support/Http/Controllers/Client/TicketController.php)",
+      "Bash(php -l app/Actions/Web/SyncMimeTypesAction.php)",
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Admin/MimeTypeController.php)",
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/MimeTypeController.php)",
+      "Bash(bash -n scripts/issue-ssl-certificate.sh)",
+      "Bash(bash -n scripts/renew-ssl-certificates.sh)",
+      "Bash(php -l app/Rules/Recaptcha.php)",
+      "Bash(php -l app/Http/Requests/Auth/LoginRequest.php)",
+      "Bash(php -l app/Http/Controllers/Admin/SettingController.php)",
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Admin/PhpSettingsController.php)",
+      "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/PhpSettingsController.php)",
+      "Bash(php -l app/Support/PhpFpmPoolSettings.php)",
+      "Bash(grep -n '\\\\$user' /c/laragon/www/arcnp/resources/views/profile/partials/update-profile-information-form.blade.php)",
+      "Bash(php -l app/Actions/Server/CollectServerInfoAction.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

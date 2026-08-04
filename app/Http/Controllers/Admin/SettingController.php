@@ -21,7 +21,13 @@ class SettingController extends Controller
             self::iniSizeToMb(ini_get('post_max_size')),
         ));
 
-        return view('admin.settings.edit', compact('maxUploadMb', 'phpUploadLimitMb'));
+        $recaptchaEnabled = (bool) Setting::get('recaptcha_enabled');
+        $recaptchaSiteKey = Setting::get('recaptcha_site_key', '');
+        $recaptchaSecretKey = Setting::get('recaptcha_secret_key', '');
+
+        return view('admin.settings.edit', compact(
+            'maxUploadMb', 'phpUploadLimitMb', 'recaptchaEnabled', 'recaptchaSiteKey', 'recaptchaSecretKey',
+        ));
     }
 
     private static function iniSizeToMb(string $value): float
@@ -42,9 +48,15 @@ class SettingController extends Controller
     {
         $data = $request->validate([
             'max_upload_mb' => ['required', 'integer', 'min:1', 'max:2048'],
+            'recaptcha_enabled' => ['nullable', 'boolean'],
+            'recaptcha_site_key' => ['nullable', 'string', 'max:255'],
+            'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
         ]);
 
         Setting::set('max_upload_mb', (string) $data['max_upload_mb']);
+        Setting::set('recaptcha_enabled', $request->boolean('recaptcha_enabled') ? '1' : '0');
+        Setting::set('recaptcha_site_key', $data['recaptcha_site_key'] ?? '');
+        Setting::set('recaptcha_secret_key', $data['recaptcha_secret_key'] ?? '');
 
         return back()->with('status', 'Configurações salvas.');
     }

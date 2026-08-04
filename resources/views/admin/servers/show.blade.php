@@ -7,6 +7,10 @@
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Testar conexão') }}</button>
                 </form>
+                <form method="POST" action="{{ route('admin.servers.collect-info', $server) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Coletar agora') }}</button>
+                </form>
                 <a href="{{ route('admin.servers.edit', $server) }}" class="btn btn-sm btn-outline-secondary">{{ __('Editar') }}</a>
             </div>
         </div>
@@ -94,6 +98,128 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
+
+    @php $info = $server->server_info ?? []; @endphp
+
+    <div class="row g-3 mt-0">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h2 class="h6">{{ __('Hardware / SO') }}</h2>
+                        @if ($server->server_info_collected_at)
+                            <span class="small text-secondary">{{ __('Coletado') }} {{ $server->server_info_collected_at->diffForHumans() }}</span>
+                        @endif
+                    </div>
+
+                    @if (empty($info))
+                        <p class="small text-secondary mb-0">{{ __('Nada coletado ainda — clique em "Coletar agora" no topo da página.') }}</p>
+                    @else
+                        @php $system = $info['system'] ?? []; @endphp
+                        <dl class="row mb-0 small">
+                            <dt class="col-5">{{ __('SO') }}</dt>
+                            <dd class="col-7">{{ $system['os'] ?? '—' }}</dd>
+                            <dt class="col-5">{{ __('Kernel') }}</dt>
+                            <dd class="col-7">{{ $system['kernel'] ?? '—' }}</dd>
+                            <dt class="col-5">{{ __('Arquitetura') }}</dt>
+                            <dd class="col-7">{{ $system['architecture'] ?? '—' }}</dd>
+                            <dt class="col-5">{{ __('CPU') }}</dt>
+                            <dd class="col-7">{{ $system['cpu_model'] ?? '—' }} ({{ $system['cpu_cores'] ?? '—' }} {{ __('núcleos') }})</dd>
+                            <dt class="col-5">{{ __('RAM total') }}</dt>
+                            <dd class="col-7">{{ isset($system['memory_mb']) ? number_format($system['memory_mb'] / 1024, 1) . ' GB' : '—' }}</dd>
+                            <dt class="col-5">{{ __('Uptime') }}</dt>
+                            <dd class="col-7">
+                                @if (isset($system['uptime_seconds']))
+                                    {{ (int) floor($system['uptime_seconds'] / 86400) }} {{ __('dias') }}
+                                @else
+                                    —
+                                @endif
+                            </dd>
+                            <dt class="col-5">{{ __('IPs') }}</dt>
+                            <dd class="col-7">{{ ! empty($system['ip_addresses']) ? implode(', ', $system['ip_addresses']) : '—' }}</dd>
+                        </dl>
+
+                        @if (! empty($system['disks']))
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm mb-0 small">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ __('Montagem') }}</th>
+                                            <th>{{ __('Tamanho') }}</th>
+                                            <th>{{ __('Usado') }}</th>
+                                            <th>{{ __('Livre') }}</th>
+                                            <th>{{ __('%') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($system['disks'] as $disk)
+                                            <tr>
+                                                <td>{{ $disk['mount'] }}</td>
+                                                <td>{{ $disk['size'] }}</td>
+                                                <td>{{ $disk['used'] }}</td>
+                                                <td>{{ $disk['available'] }}</td>
+                                                <td>{{ $disk['percent'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6">{{ __('Serviços') }}</h2>
+
+                    @if (empty($info['services'] ?? []))
+                        <p class="small text-secondary mb-0">{{ __('Nada coletado ainda — clique em "Coletar agora" no topo da página.') }}</p>
+                    @else
+                        <div class="row g-2">
+                            @foreach ($info['services'] as $service => $status)
+                                @php
+                                    $serviceBadge = match ($status) {
+                                        'active' => 'success',
+                                        'inactive' => 'secondary',
+                                        default => 'danger',
+                                    };
+                                @endphp
+                                <div class="col-6">
+                                    <div class="d-flex justify-content-between align-items-center border rounded-3 p-2 small">
+                                        <code>{{ $service }}</code>
+                                        <span class="badge text-bg-{{ $serviceBadge }}">{{ $status }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h2 class="h6">{{ __('Uso ao longo do tempo (últimas 24h)') }}</h2>
+
+            @if ($metricSnapshots->isEmpty())
+                <p class="small text-secondary mb-0">{{ __('Ainda não há snapshots suficientes — volte daqui a algumas horas.') }}</p>
+            @else
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <canvas id="server-metrics-percent-chart" data-snapshots="{{ $metricSnapshots->toJson() }}" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="server-metrics-load-chart" data-snapshots="{{ $metricSnapshots->toJson() }}" height="200"></canvas>
+                    </div>
+                </div>
+                @vite('resources/js/server-metrics.js')
+            @endif
         </div>
     </div>
 

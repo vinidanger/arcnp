@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -27,6 +28,10 @@ Route::middleware('guest')->group(function () {
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
+
+    Route::get('two-factor-challenge', [TwoFactorChallengeController::class, 'create'])
+        ->name('two-factor.challenge');
+    Route::post('two-factor-challenge', [TwoFactorChallengeController::class, 'store']);
 });
 
 Route::middleware('auth')->group(function () {

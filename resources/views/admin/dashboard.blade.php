@@ -145,6 +145,15 @@
                 </div>
             </a>
         </div>
+        <div class="col-md-4">
+            <a href="{{ route('admin.tickets.index') }}" class="quick-link-card">
+                <span class="quick-link-icon"><i class="bi bi-life-preserver"></i></span>
+                <div>
+                    <div class="fw-semibold">{{ __('Chamados') }}</div>
+                    <div class="small text-secondary">{{ __('Suporte aos clientes') }}</div>
+                </div>
+            </a>
+        </div>
     </div>
 
     <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Infraestrutura') }}</div>
@@ -163,11 +172,29 @@
     <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Sistema') }}</div>
     <div class="row g-3">
         <div class="col-md-4">
+            <a href="{{ route('admin.announcements.index') }}" class="quick-link-card">
+                <span class="quick-link-icon"><i class="bi bi-megaphone"></i></span>
+                <div>
+                    <div class="fw-semibold">{{ __('Mensagens do sistema') }}</div>
+                    <div class="small text-secondary">{{ __('Avisos pros clientes') }}</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
             <a href="{{ route('admin.api-clients.index') }}" class="quick-link-card">
                 <span class="quick-link-icon"><i class="bi bi-plug"></i></span>
                 <div>
                     <div class="fw-semibold">{{ __('Integrações de API') }}</div>
                     <div class="small text-secondary">{{ __('Tokens e documentação') }}</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ route('admin.settings.edit') }}" class="quick-link-card">
+                <span class="quick-link-icon"><i class="bi bi-gear"></i></span>
+                <div>
+                    <div class="fw-semibold">{{ __('Configurações') }}</div>
+                    <div class="small text-secondary">{{ __('Ajustes gerais do painel') }}</div>
                 </div>
             </a>
         </div>

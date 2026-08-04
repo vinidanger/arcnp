@@ -1,8 +1,12 @@
 <x-guest-layout>
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}">
+    <form method="POST" action="{{ route('login') }}" id="login-form">
         @csrf
+
+        @if ($recaptchaEnabled)
+            <input type="hidden" name="recaptcha_token" id="recaptcha_token">
+        @endif
 
         <div class="mb-3">
             <x-input-label for="email" :value="__('Email')" />
@@ -35,4 +39,24 @@
             </x-primary-button>
         </div>
     </form>
+
+    @if ($recaptchaEnabled)
+        <script src="https://www.google.com/recaptcha/api.js?render={{ $recaptchaSiteKey }}"></script>
+        <script>
+            document.getElementById('login-form').addEventListener('submit', function (event) {
+                if (document.getElementById('recaptcha_token').value) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                grecaptcha.ready(function () {
+                    grecaptcha.execute('{{ $recaptchaSiteKey }}', { action: 'login' }).then(function (token) {
+                        document.getElementById('recaptcha_token').value = token;
+                        document.getElementById('login-form').submit();
+                    });
+                });
+            });
+        </script>
+    @endif
 </x-guest-layout>

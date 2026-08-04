@@ -54,7 +54,12 @@ class ServerController extends Controller
         $server->load('currentCredential');
         $recentJobs = $server->agentJobs()->latest()->limit(10)->get();
 
-        return view('admin.servers.show', compact('server', 'recentJobs'));
+        $metricSnapshots = $server->metricSnapshots()
+            ->where('recorded_at', '>=', now()->subDay())
+            ->orderBy('recorded_at')
+            ->get(['load_avg', 'disk_percent', 'mem_percent', 'recorded_at']);
+
+        return view('admin.servers.show', compact('server', 'recentJobs', 'metricSnapshots'));
     }
 
     public function edit(Server $server)
@@ -111,5 +116,37 @@ class ServerController extends Controller
         }
 
         return back()->with('error', 'Falha ao conectar no Agent: '.($job->error ?? 'erro desconhecido'));
+    }
+
+    /**
+     * Síncrono, sob demanda — diferente do heartbeat (load/disco/RAM,
+     * a cada 60s via timer), isso é hardware/SO/status de serviço, que
+     * quase não muda; não vale a pena agendar, só coleta quando o
+     * admin pede. Também atualiza os campos estáticos os/cpu_cores/
+     * memory_mb, que antes só eram preenchidos manualmente no form.
+     */
+    public function collectInfo(Server $server, AgentHttpClient $client)
+    {
+        $this->authorize('update', $server);
+
+        $job = $client->dispatch($server, 'server.collect_info', [
+            'mysql_service_name' => $server->mysql_service_name,
+        ]);
+
+        if ($job->status !== 'completed') {
+            return back()->with('error', 'Falha ao coletar informações: '.($job->error ?? 'erro desconhecido'));
+        }
+
+        $system = $job->result['system'] ?? [];
+
+        $server->update([
+            'os' => $system['os'] ?? $server->os,
+            'cpu_cores' => $system['cpu_cores'] ?? $server->cpu_cores,
+            'memory_mb' => $system['memory_mb'] ?? $server->memory_mb,
+            'server_info' => $job->result,
+            'server_info_collected_at' => now(),
+        ]);
+
+        return back()->with('status', 'Informações do servidor atualizadas.');
     }
 }

@@ -68,6 +68,10 @@
     </div>
 </div>
 
+@if ($server)
+    <div class="form-text mb-2">{{ __('SO/vCPUs/RAM abaixo são preenchidos automaticamente pelo botão "Coletar agora" na tela do servidor — só edite aqui se quiser sobrescrever manualmente.') }}</div>
+@endif
+
 <div class="mb-3">
     <x-input-label for="os" value="{{ __('Sistema operacional') }}" />
     <x-text-input id="os" name="os" type="text" :value="old('os', $server?->os)" placeholder="AlmaLinux 9" />
@@ -86,4 +90,11 @@
         <x-input-label for="disk_gb" value="{{ __('Disco (GB)') }}" />
         <x-text-input id="disk_gb" name="disk_gb" type="number" :value="old('disk_gb', $server?->disk_gb)" />
     </div>
+</div>
+
+<div class="mb-3">
+    <x-input-label for="mysql_service_name" value="{{ __('Nome do serviço systemd do banco de dados') }}" />
+    <x-text-input id="mysql_service_name" name="mysql_service_name" type="text" :value="old('mysql_service_name', $server?->mysql_service_name ?? 'mysqld')" placeholder="mysqld" />
+    <div class="form-text">{{ __('mysqld (MySQL) ou mariadb (MariaDB), conforme o que foi instalado manualmente no servidor — usado só pra mostrar o status desse serviço na aba "Serviços".') }}</div>
+    <x-input-error :messages="$errors->get('mysql_service_name')" class="mt-2" />
 </div>

@@ -40,6 +40,7 @@ class HostingAccountProvisioningService
         private FolderProtectionService $folderProtections,
         private SiteRedirectService $siteRedirects,
         private HotlinkProtectionService $hotlinkProtection,
+        private MimeTypeService $mimeTypes,
     ) {
     }
 
@@ -268,6 +269,7 @@ class HostingAccountProvisioningService
             $this->folderProtections->resyncIfNeeded($account, $account->primary_domain);
             $this->siteRedirects->resyncIfNeeded($account, $account->primary_domain);
             $this->hotlinkProtection->resyncIfNeeded($account, $account->primary_domain);
+            $this->mimeTypes->resyncIfNeeded($account, $account->primary_domain);
         }
 
         foreach ($account->domains as $domain) {
@@ -286,6 +288,7 @@ class HostingAccountProvisioningService
             $this->folderProtections->resyncIfNeeded($account, $domain->domain);
             $this->siteRedirects->resyncIfNeeded($account, $domain->domain);
             $this->hotlinkProtection->resyncIfNeeded($account, $domain->domain);
+            $this->mimeTypes->resyncIfNeeded($account, $domain->domain);
         }
 
         $account->update(['php_version' => $newVersion]);
@@ -320,6 +323,7 @@ class HostingAccountProvisioningService
             'error_reporting' => self::ERROR_REPORTING_PRESETS[$settings['error_reporting'] ?? 'production'] ?? self::ERROR_REPORTING_PRESETS['production'],
             'file_uploads' => ($settings['file_uploads'] ?? true) ? 'On' : 'Off',
             'short_open_tag' => ($settings['short_open_tag'] ?? false) ? 'On' : 'Off',
+            'disable_functions' => implode(',', $settings['disable_functions'] ?? []),
         ];
     }
 

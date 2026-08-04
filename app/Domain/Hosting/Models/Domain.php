@@ -18,12 +18,14 @@ class Domain extends Model
         'ssl_status',
         'ssl_error',
         'ssl_issued_at',
+        'ssl_expires_at',
     ];
 
     protected function casts(): array
     {
         return [
             'ssl_issued_at' => 'datetime',
+            'ssl_expires_at' => 'datetime',
         ];
     }
 

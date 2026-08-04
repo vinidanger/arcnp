@@ -63,6 +63,7 @@ return [
         'error_reporting' => 'production',
         'file_uploads' => true,
         'short_open_tag' => false,
+        'disable_functions' => [],
     ],
 
     // Opções do select de error_reporting no formulário de PHP — chave
@@ -73,5 +74,12 @@ return [
         'production' => 'Produção (esconde avisos e notices)',
         'all' => 'Todos os erros (E_ALL)',
         'none' => 'Nenhum (silencioso)',
+    ],
+
+    // Precisa bater exatamente com App\Support\PhpFpmPoolSettings::DISABLABLE_FUNCTIONS
+    // no Agent — lá é revalidado de novo por defesa em profundidade,
+    // essa lista aqui só controla o que aparece como checkbox.
+    'disablable_php_functions' => [
+        'exec', 'shell_exec', 'system', 'passthru', 'proc_open', 'popen', 'show_source',
     ],
 ];
