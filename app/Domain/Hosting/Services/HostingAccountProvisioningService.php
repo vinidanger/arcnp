@@ -34,8 +34,11 @@ class HostingAccountProvisioningService
         'none' => '0',
     ];
 
-    public function __construct(private AgentHttpClient $client, private FolderProtectionService $folderProtections)
-    {
+    public function __construct(
+        private AgentHttpClient $client,
+        private FolderProtectionService $folderProtections,
+        private SiteRedirectService $siteRedirects,
+    ) {
     }
 
     public function provision(HostingAccount $account): void
@@ -253,6 +256,7 @@ class HostingAccountProvisioningService
             'ssl_active' => $account->ssl_status === 'active',
         ]);
         $this->folderProtections->resyncIfNeeded($account, $account->primary_domain);
+        $this->siteRedirects->resyncIfNeeded($account, $account->primary_domain);
 
         foreach ($account->domains as $domain) {
             $this->runStep($server, 'web.update_vhost_php_version', [
@@ -264,6 +268,7 @@ class HostingAccountProvisioningService
                 'ssl_active' => $domain->ssl_status === 'active',
             ]);
             $this->folderProtections->resyncIfNeeded($account, $domain->domain);
+            $this->siteRedirects->resyncIfNeeded($account, $domain->domain);
         }
 
         $account->update(['php_version' => $newVersion]);

@@ -6,6 +6,7 @@ use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\HostingBackup;
 use App\Domain\Hosting\Services\FolderProtectionService;
+use App\Domain\Hosting\Services\SiteRedirectService;
 use App\Domain\Servers\Models\AgentCredential;
 use App\Domain\Servers\Models\AgentJob;
 use App\Http\Controllers\Controller;
@@ -121,6 +122,7 @@ class AgentWebhookController extends Controller
             // silenciosamente assim que o certificado ficasse pronto.
             $account = $target instanceof HostingAccount ? $target : $target->hostingAccount;
             app(FolderProtectionService::class)->resyncIfNeeded($account, $domainName);
+            app(SiteRedirectService::class)->resyncIfNeeded($account, $domainName);
         } elseif ($job->status === 'failed') {
             $target->update(['ssl_status' => 'failed', 'ssl_error' => $job->error]);
         }

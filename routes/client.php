@@ -7,6 +7,7 @@ use App\Domain\Hosting\Http\Controllers\Client\FolderProtectionController;
 use App\Domain\Hosting\Http\Controllers\Client\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Client\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Client\PhpSettingsController;
+use App\Domain\Hosting\Http\Controllers\Client\SiteRedirectController;
 use App\Domain\Hosting\Http\Controllers\Client\SshAccessController;
 use Illuminate\Support\Facades\Route;
 
@@ -130,3 +131,10 @@ Route::post('hosting-accounts/{hosting_account}/protected-folders', [FolderProte
     ->name('hosting-accounts.protected-folders.store');
 Route::delete('hosting-accounts/{hosting_account}/protected-folders/{folder_protection}', [FolderProtectionController::class, 'destroy'])
     ->name('hosting-accounts.protected-folders.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/redirects', [SiteRedirectController::class, 'index'])
+    ->name('hosting-accounts.redirects.index');
+Route::post('hosting-accounts/{hosting_account}/redirects', [SiteRedirectController::class, 'store'])
+    ->name('hosting-accounts.redirects.store');
+Route::delete('hosting-accounts/{hosting_account}/redirects/{redirect}', [SiteRedirectController::class, 'destroy'])
+    ->name('hosting-accounts.redirects.destroy');

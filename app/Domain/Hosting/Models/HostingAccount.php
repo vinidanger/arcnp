@@ -106,6 +106,11 @@ class HostingAccount extends Model
         return $this->hasMany(FolderProtection::class);
     }
 
+    public function siteRedirects(): HasMany
+    {
+        return $this->hasMany(SiteRedirect::class);
+    }
+
     /**
      * Agrupado num where(function...) de propósito: sem isso, encadear
      * depois de uma relação já filtrada (ex.: hostingAccounts() do
