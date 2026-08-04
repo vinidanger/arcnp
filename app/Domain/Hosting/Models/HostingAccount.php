@@ -116,6 +116,11 @@ class HostingAccount extends Model
         return $this->hasMany(HotlinkProtection::class);
     }
 
+    public function ftpAccounts(): HasMany
+    {
+        return $this->hasMany(FtpAccount::class);
+    }
+
     /**
      * Agrupado num where(function...) de propósito: sem isso, encadear
      * depois de uma relação já filtrada (ex.: hostingAccounts() do

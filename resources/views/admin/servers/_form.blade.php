@@ -46,6 +46,13 @@
     <x-input-error :messages="$errors->get('mail_hostname')" class="mt-2" />
 </div>
 
+<div class="mb-3">
+    <x-input-label for="ftp_hostname" value="{{ __('Hostname de FTP') }}" />
+    <x-text-input id="ftp_hostname" name="ftp_hostname" type="text" :value="old('ftp_hostname', $server?->ftp_hostname)" placeholder="ftp.seudominio.com" />
+    <div class="form-text">{{ __('Hostname que os clientes configuram no cliente FTP (FileZilla etc). Precisa ter certificado TLS válido emitido nesse servidor (ver deploy/README.md seção 33 do Agent). Só preencha se o vsftpd já estiver instalado.') }}</div>
+    <x-input-error :messages="$errors->get('ftp_hostname')" class="mt-2" />
+</div>
+
 <div class="row">
     <div class="col-6 mb-3">
         <x-input-label for="agent_port" value="{{ __('Porta do Agent') }}" />

@@ -283,6 +283,12 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 <div class="fw-semibold small">{{ __('Cron') }}</div>
                             </a>
                         </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('client.hosting-accounts.ftp.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-hdd-network"></i></span>
+                                <div class="fw-semibold small">{{ __('FTP') }}</div>
+                            </a>
+                        </div>
                     </div>
                 </div>
             @endif

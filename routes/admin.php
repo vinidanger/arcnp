@@ -7,6 +7,7 @@ use App\Domain\Hosting\Http\Controllers\Admin\DnsZoneController;
 use App\Domain\Hosting\Http\Controllers\Admin\DomainLogController;
 use App\Domain\Hosting\Http\Controllers\Admin\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Admin\FolderProtectionController;
+use App\Domain\Hosting\Http\Controllers\Admin\FtpAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\HotlinkProtectionController;
 use App\Domain\Hosting\Http\Controllers\Admin\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Admin\MailLogController;
@@ -181,3 +182,12 @@ Route::get('hosting-accounts/{hosting_account}/logs', [DomainLogController::clas
     ->name('hosting-accounts.logs.index');
 Route::get('hosting-accounts/{hosting_account}/mail-log', [MailLogController::class, 'index'])
     ->name('hosting-accounts.mail-log.index');
+
+Route::get('hosting-accounts/{hosting_account}/ftp', [FtpAccountController::class, 'index'])
+    ->name('hosting-accounts.ftp.index');
+Route::post('hosting-accounts/{hosting_account}/ftp', [FtpAccountController::class, 'store'])
+    ->name('hosting-accounts.ftp.store');
+Route::put('hosting-accounts/{hosting_account}/ftp/{ftp_account}/password', [FtpAccountController::class, 'updatePassword'])
+    ->name('hosting-accounts.ftp.password.update');
+Route::delete('hosting-accounts/{hosting_account}/ftp/{ftp_account}', [FtpAccountController::class, 'destroy'])
+    ->name('hosting-accounts.ftp.destroy');

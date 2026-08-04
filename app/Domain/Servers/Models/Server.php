@@ -3,6 +3,7 @@
 namespace App\Domain\Servers\Models;
 
 use App\Domain\Hosting\Models\DnsZone;
+use App\Domain\Hosting\Models\FtpAccount;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\MailDomain;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,7 @@ class Server extends Model
         'dns_ns1',
         'dns_ns2',
         'mail_hostname',
+        'ftp_hostname',
         'agent_port',
         'use_tls',
         'os',
@@ -68,6 +70,11 @@ class Server extends Model
     public function mailDomains(): HasManyThrough
     {
         return $this->hasManyThrough(MailDomain::class, HostingAccount::class);
+    }
+
+    public function ftpAccounts(): HasMany
+    {
+        return $this->hasMany(FtpAccount::class);
     }
 
     /** @return list<string> */
