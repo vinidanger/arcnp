@@ -37,7 +37,9 @@
       "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/MailDomainController.php)",
       "Bash(php -l app/Models/Announcement.php)",
       "Bash(php -l app/Http/Controllers/Admin/AnnouncementController.php)",
-      "Bash(php -l database/migrations/2026_08_04_020000_create_announcements_table.php)"
+      "Bash(php -l database/migrations/2026_08_04_020000_create_announcements_table.php)",
+      "Bash(xargs -n1 basename)",
+      "Bash(grep -n 'protected $fillable\\\\|php_version\\\\|primary_domain' C:/laragon/www/arcnp/app/Domain/Hosting/Models/HostingAccount.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

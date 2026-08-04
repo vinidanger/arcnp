@@ -276,6 +276,12 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 <div class="fw-semibold small">{{ __('PHP') }}</div>
                             </a>
                         </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.protected-folders.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-shield-lock"></i></span>
+                                <div class="fw-semibold small">{{ __('Proteção de pasta') }}</div>
+                            </a>
+                        </div>
                     </div>
                 </div>
 

@@ -5,6 +5,7 @@ use App\Domain\Clients\Http\Controllers\Admin\ClientController;
 use App\Domain\Hosting\Http\Controllers\Admin\CronJobController;
 use App\Domain\Hosting\Http\Controllers\Admin\DnsZoneController;
 use App\Domain\Hosting\Http\Controllers\Admin\FileManagerController;
+use App\Domain\Hosting\Http\Controllers\Admin\FolderProtectionController;
 use App\Domain\Hosting\Http\Controllers\Admin\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\PhpSettingsController;
@@ -152,3 +153,10 @@ Route::post('hosting-accounts/{hosting_account}/mail/{mail_domain}/forwarders', 
     ->name('hosting-accounts.mail.forwarders.store');
 Route::delete('hosting-accounts/{hosting_account}/mail/{mail_domain}/forwarders/{forwarder}', [MailDomainController::class, 'destroyForwarder'])
     ->name('hosting-accounts.mail.forwarders.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/protected-folders', [FolderProtectionController::class, 'index'])
+    ->name('hosting-accounts.protected-folders.index');
+Route::post('hosting-accounts/{hosting_account}/protected-folders', [FolderProtectionController::class, 'store'])
+    ->name('hosting-accounts.protected-folders.store');
+Route::delete('hosting-accounts/{hosting_account}/protected-folders/{folder_protection}', [FolderProtectionController::class, 'destroy'])
+    ->name('hosting-accounts.protected-folders.destroy');

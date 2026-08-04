@@ -5,6 +5,7 @@ namespace App\Domain\Servers\Http\Controllers;
 use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\HostingBackup;
+use App\Domain\Hosting\Services\FolderProtectionService;
 use App\Domain\Servers\Models\AgentCredential;
 use App\Domain\Servers\Models\AgentJob;
 use App\Http\Controllers\Controller;
@@ -113,6 +114,13 @@ class AgentWebhookController extends Controller
 
         if ($job->status === 'completed') {
             $target->update(['ssl_status' => 'active', 'ssl_error' => null, 'ssl_issued_at' => now()]);
+
+            // SSL reescreve o vhost inteiro a partir do stub (ver
+            // IssueSslCertificateAction) — sem isso, uma pasta com
+            // senha configurada ANTES da emissão perderia a proteção
+            // silenciosamente assim que o certificado ficasse pronto.
+            $account = $target instanceof HostingAccount ? $target : $target->hostingAccount;
+            app(FolderProtectionService::class)->resyncIfNeeded($account, $domainName);
         } elseif ($job->status === 'failed') {
             $target->update(['ssl_status' => 'failed', 'ssl_error' => $job->error]);
         }
