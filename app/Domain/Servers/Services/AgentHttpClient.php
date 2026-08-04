@@ -33,11 +33,29 @@ class AgentHttpClient
         $path = 'api/commands';
         $timestamp = (string) time();
         $nonce = (string) Str::uuid();
+
+        // JSON_INVALID_UTF8_SUBSTITUTE porque payload pode carregar
+        // conteúdo de arquivo arbitrário (ex.: files.write) — sem essa
+        // flag, um byte inválido faz json_encode() devolver false
+        // silenciosamente, o corpo vira uma string vazia na prática, e o
+        // Agent recebe um payload vazio (sintoma enganoso: "path e
+        // content são obrigatórios", sem nenhuma pista de que o
+        // problema foi de codificação).
         $body = json_encode([
             'action' => $action,
             'payload' => $payload,
             'correlation_id' => $job->uuid,
-        ]);
+        ], JSON_INVALID_UTF8_SUBSTITUTE);
+
+        if ($body === false) {
+            $job->update([
+                'status' => 'failed',
+                'error' => 'Falha ao montar a requisição pro Agent: '.json_last_error_msg(),
+                'completed_at' => now(),
+            ]);
+
+            return $job;
+        }
 
         $signature = RequestSigner::signature('POST', $path, $timestamp, $nonce, $body, $credential->shared_secret);
 
