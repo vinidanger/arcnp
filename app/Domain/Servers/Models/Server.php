@@ -103,4 +103,11 @@ class Server extends Model
 
         return "https://{$host}:".config('hosting.webmail_port');
     }
+
+    public function terminalBaseUrl(): string
+    {
+        $host = $this->public_ip_address ?: $this->ip_address;
+
+        return "https://{$host}:".config('hosting.terminal_port');
+    }
 }

@@ -15,6 +15,14 @@ return [
     // (deploy/README.md seção 24) — pública, mesma lógica da 8444.
     'webmail_port' => 8445,
 
+    // Porta dedicada do ttyd (terminal web) no Agent (deploy/README.md
+    // seção 34) — um processo só pro servidor inteiro, não por conta
+    // (mesma ideia do phpMyAdmin/webmail): o "terminal" é só um
+    // xterm.js na aba do navegador que abre "ssh -t localhost", quem
+    // autentica de verdade é o sshd com a senha de Acesso SSH que a
+    // conta já tem configurada — nenhum sistema de credencial novo.
+    'terminal_port' => 8446,
+
     // Quantas cópias mais recentes de cada backup (arquivos + cada
     // banco) o Agent mantém antes de apagar as mais antigas.
     'backup_retention' => 5,

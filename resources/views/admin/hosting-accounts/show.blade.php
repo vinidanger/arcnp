@@ -348,6 +348,19 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 <div class="fw-semibold small">{{ __('FTP') }}</div>
                             </a>
                         </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            @if ($account->ssh_enabled)
+                                <a href="{{ $account->server->terminalBaseUrl() }}" target="_blank" rel="noopener" class="quick-link-card" title="{{ __('Vai pedir a senha HTTP do terminal desse servidor primeiro. No terminal, use o usuário: ').$account->linux_username }}">
+                                    <span class="quick-link-icon"><i class="bi bi-terminal-fill"></i></span>
+                                    <div class="fw-semibold small">{{ __('Terminal') }}</div>
+                                </a>
+                            @else
+                                <div class="quick-link-card text-secondary" style="opacity: .5;" title="{{ __('Ative o acesso SSH primeiro.') }}">
+                                    <span class="quick-link-icon"><i class="bi bi-terminal-fill"></i></span>
+                                    <div class="fw-semibold small">{{ __('Terminal') }}</div>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             @endif
