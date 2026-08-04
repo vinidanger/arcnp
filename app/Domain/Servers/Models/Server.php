@@ -4,6 +4,7 @@ namespace App\Domain\Servers\Models;
 
 use App\Domain\Hosting\Models\DnsZone;
 use App\Domain\Hosting\Models\FtpAccount;
+use App\Domain\Hosting\Models\HostedApp;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\MailDomain;
 use Illuminate\Database\Eloquent\Model;
@@ -75,6 +76,11 @@ class Server extends Model
     public function ftpAccounts(): HasMany
     {
         return $this->hasMany(FtpAccount::class);
+    }
+
+    public function hostedApps(): HasMany
+    {
+        return $this->hasMany(HostedApp::class);
     }
 
     /** @return list<string> */

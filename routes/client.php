@@ -6,6 +6,7 @@ use App\Domain\Hosting\Http\Controllers\Client\DomainLogController;
 use App\Domain\Hosting\Http\Controllers\Client\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Client\FolderProtectionController;
 use App\Domain\Hosting\Http\Controllers\Client\FtpAccountController;
+use App\Domain\Hosting\Http\Controllers\Client\HostedAppController;
 use App\Domain\Hosting\Http\Controllers\Client\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Client\HotlinkProtectionController;
 use App\Domain\Hosting\Http\Controllers\Client\MailDomainController;
@@ -165,3 +166,12 @@ Route::put('hosting-accounts/{hosting_account}/ftp/{ftp_account}/password', [Ftp
     ->name('hosting-accounts.ftp.password.update');
 Route::delete('hosting-accounts/{hosting_account}/ftp/{ftp_account}', [FtpAccountController::class, 'destroy'])
     ->name('hosting-accounts.ftp.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/apps', [HostedAppController::class, 'index'])
+    ->name('hosting-accounts.apps.index');
+Route::post('hosting-accounts/{hosting_account}/apps', [HostedAppController::class, 'store'])
+    ->name('hosting-accounts.apps.store');
+Route::post('hosting-accounts/{hosting_account}/apps/{app}/restart', [HostedAppController::class, 'restart'])
+    ->name('hosting-accounts.apps.restart');
+Route::delete('hosting-accounts/{hosting_account}/apps/{app}', [HostedAppController::class, 'destroy'])
+    ->name('hosting-accounts.apps.destroy');

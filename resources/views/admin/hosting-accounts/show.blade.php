@@ -300,6 +300,12 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 <div class="fw-semibold small">{{ __('Logs') }}</div>
                             </a>
                         </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.apps.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-cpu"></i></span>
+                                <div class="fw-semibold small">{{ __('Apps') }}</div>
+                            </a>
+                        </div>
                     </div>
                 </div>
 

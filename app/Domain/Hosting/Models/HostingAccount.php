@@ -121,6 +121,11 @@ class HostingAccount extends Model
         return $this->hasMany(FtpAccount::class);
     }
 
+    public function hostedApps(): HasMany
+    {
+        return $this->hasMany(HostedApp::class);
+    }
+
     /**
      * Agrupado num where(function...) de propósito: sem isso, encadear
      * depois de uma relação já filtrada (ex.: hostingAccounts() do

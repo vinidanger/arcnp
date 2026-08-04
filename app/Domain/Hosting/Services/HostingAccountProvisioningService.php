@@ -3,6 +3,7 @@
 namespace App\Domain\Hosting\Services;
 
 use App\Domain\Hosting\Models\Domain;
+use App\Domain\Hosting\Models\HostedApp;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\HostingBackup;
 use App\Domain\Hosting\Models\HostingDatabase;
@@ -250,17 +251,30 @@ class HostingAccountProvisioningService
             'new_php_version' => $newVersion,
         ], $account->php_fpm_settings ? $this->formatPoolSettings($account->php_fpm_settings) : []));
 
-        $this->runStep($server, 'web.update_vhost_php_version', [
-            'username' => $username,
-            'domain' => $account->primary_domain,
-            'php_version' => $newVersion,
-            'ssl_active' => $account->ssl_status === 'active',
-        ]);
-        $this->folderProtections->resyncIfNeeded($account, $account->primary_domain);
-        $this->siteRedirects->resyncIfNeeded($account, $account->primary_domain);
-        $this->hotlinkProtection->resyncIfNeeded($account, $account->primary_domain);
+        // Domínios em modo app (Node.js/Python) não usam PHP-FPM — o
+        // vhost deles é proxy_pass, não faz sentido regenerar pro socket
+        // da nova versão nem resincronizar proteção/redirect/hotlink
+        // (a pasta virou o alvo do proxy, não conteúdo servido por
+        // localização).
+        $appDomains = HostedApp::where('hosting_account_id', $account->id)->pluck('domain')->all();
+
+        if (! in_array($account->primary_domain, $appDomains, true)) {
+            $this->runStep($server, 'web.update_vhost_php_version', [
+                'username' => $username,
+                'domain' => $account->primary_domain,
+                'php_version' => $newVersion,
+                'ssl_active' => $account->ssl_status === 'active',
+            ]);
+            $this->folderProtections->resyncIfNeeded($account, $account->primary_domain);
+            $this->siteRedirects->resyncIfNeeded($account, $account->primary_domain);
+            $this->hotlinkProtection->resyncIfNeeded($account, $account->primary_domain);
+        }
 
         foreach ($account->domains as $domain) {
+            if (in_array($domain->domain, $appDomains, true)) {
+                continue;
+            }
+
             $this->runStep($server, 'web.update_vhost_php_version', [
                 'username' => $username,
                 'domain' => $domain->domain,
