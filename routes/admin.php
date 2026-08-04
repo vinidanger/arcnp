@@ -4,10 +4,12 @@ use App\Domain\Api\Http\Controllers\Admin\ApiClientController;
 use App\Domain\Clients\Http\Controllers\Admin\ClientController;
 use App\Domain\Hosting\Http\Controllers\Admin\CronJobController;
 use App\Domain\Hosting\Http\Controllers\Admin\DnsZoneController;
+use App\Domain\Hosting\Http\Controllers\Admin\DomainLogController;
 use App\Domain\Hosting\Http\Controllers\Admin\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Admin\FolderProtectionController;
 use App\Domain\Hosting\Http\Controllers\Admin\HotlinkProtectionController;
 use App\Domain\Hosting\Http\Controllers\Admin\MailDomainController;
+use App\Domain\Hosting\Http\Controllers\Admin\MailLogController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\PhpSettingsController;
 use App\Domain\Hosting\Http\Controllers\Admin\PlanController;
@@ -174,3 +176,8 @@ Route::get('hosting-accounts/{hosting_account}/hotlink-protection', [HotlinkProt
     ->name('hosting-accounts.hotlink-protection.index');
 Route::put('hosting-accounts/{hosting_account}/hotlink-protection', [HotlinkProtectionController::class, 'update'])
     ->name('hosting-accounts.hotlink-protection.update');
+
+Route::get('hosting-accounts/{hosting_account}/logs', [DomainLogController::class, 'index'])
+    ->name('hosting-accounts.logs.index');
+Route::get('hosting-accounts/{hosting_account}/mail-log', [MailLogController::class, 'index'])
+    ->name('hosting-accounts.mail-log.index');

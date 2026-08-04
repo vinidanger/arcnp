@@ -294,6 +294,12 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 <div class="fw-semibold small">{{ __('Proteção Hotlink') }}</div>
                             </a>
                         </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.logs.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-file-text"></i></span>
+                                <div class="fw-semibold small">{{ __('Logs') }}</div>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -310,6 +316,12 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                             <a href="{{ route('admin.hosting-accounts.mail.index', $account) }}" class="quick-link-card">
                                 <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
                                 <div class="fw-semibold small">{{ __('E-mail') }}</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.mail-log.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-envelope-paper"></i></span>
+                                <div class="fw-semibold small">{{ __('Rastrear e-mails') }}</div>
                             </a>
                         </div>
                     </div>
