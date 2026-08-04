@@ -107,48 +107,68 @@
                             <td>{{ $mailbox->email() }}</td>
                             <td class="text-end">
                                 <a href="{{ route('admin.hosting-accounts.mail.mailboxes.webmail', [$account, $mailDomain, $mailbox]) }}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{{ __('Abrir webmail') }}</a>
-                                <details class="d-inline-block">
-                                    <summary class="btn btn-sm btn-outline-secondary">{{ __('Trocar senha') }}</summary>
-                                    <form method="POST" action="{{ route('admin.hosting-accounts.mail.mailboxes.password.update', [$account, $mailDomain, $mailbox]) }}" class="row g-2 align-items-end mt-2">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="col-auto">
-                                            <input type="password" name="password" class="form-control form-control-sm" placeholder="{{ __('Nova senha') }}" minlength="8" required>
-                                        </div>
-                                        <div class="col-auto">
-                                            <input type="password" name="password_confirmation" class="form-control form-control-sm" placeholder="{{ __('Confirmar') }}" minlength="8" required>
-                                        </div>
-                                        <div class="col-auto">
-                                            <button type="submit" class="btn btn-sm btn-primary">{{ __('Salvar') }}</button>
-                                        </div>
-                                    </form>
-                                </details>
-                                <details class="d-inline-block">
-                                    <summary class="btn btn-sm btn-outline-secondary">{{ __('Aviso de férias') }}</summary>
-                                    <form method="POST" action="{{ route('admin.hosting-accounts.mail.mailboxes.vacation.update', [$account, $mailDomain, $mailbox]) }}" class="row g-2 mt-2" style="min-width: 320px;">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="col-12 form-check">
-                                            <input type="checkbox" name="vacation_enabled" value="1" id="vacation_enabled_{{ $mailbox->id }}" class="form-check-input" @checked($mailbox->vacation?->enabled)>
-                                            <label class="form-check-label small" for="vacation_enabled_{{ $mailbox->id }}">{{ __('Ativado') }}</label>
-                                        </div>
-                                        <div class="col-12">
-                                            <input type="text" name="subject" class="form-control form-control-sm" placeholder="{{ __('Assunto') }}" value="{{ old('subject', $mailbox->vacation?->subject) }}">
-                                        </div>
-                                        <div class="col-12">
-                                            <textarea name="message" class="form-control form-control-sm" rows="3" placeholder="{{ __('Mensagem') }}">{{ old('message', $mailbox->vacation?->message) }}</textarea>
-                                        </div>
-                                        <div class="col-12">
-                                            <button type="submit" class="btn btn-sm btn-primary">{{ __('Salvar') }}</button>
-                                        </div>
-                                    </form>
-                                </details>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#password-modal-{{ $mailbox->id }}">{{ __('Trocar senha') }}</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#vacation-modal-{{ $mailbox->id }}">{{ __('Aviso de férias') }}</button>
                                 <form method="POST" action="{{ route('admin.hosting-accounts.mail.mailboxes.destroy', [$account, $mailDomain, $mailbox]) }}"
                                       class="d-inline-block" onsubmit="return confirm('{{ __('Remove essa caixa. Continuar?') }}')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
                                 </form>
+
+                                <x-modal name="password-modal-{{ $mailbox->id }}" maxWidth="sm">
+                                    <form method="POST" action="{{ route('admin.hosting-accounts.mail.mailboxes.password.update', [$account, $mailDomain, $mailbox]) }}">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">{{ __('Trocar senha') }} — {{ $mailbox->email() }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <x-input-label for="password-{{ $mailbox->id }}" value="{{ __('Nova senha') }}" class="small mb-1" />
+                                                <input type="password" id="password-{{ $mailbox->id }}" name="password" class="form-control form-control-sm" minlength="8" required>
+                                            </div>
+                                            <div class="mb-0">
+                                                <x-input-label for="password-confirmation-{{ $mailbox->id }}" value="{{ __('Confirmar') }}" class="small mb-1" />
+                                                <input type="password" id="password-confirmation-{{ $mailbox->id }}" name="password_confirmation" class="form-control form-control-sm" minlength="8" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ __('Salvar') }}</button>
+                                        </div>
+                                    </form>
+                                </x-modal>
+
+                                <x-modal name="vacation-modal-{{ $mailbox->id }}" maxWidth="sm">
+                                    <form method="POST" action="{{ route('admin.hosting-accounts.mail.mailboxes.vacation.update', [$account, $mailDomain, $mailbox]) }}">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">{{ __('Aviso de férias') }} — {{ $mailbox->email() }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="form-check mb-3">
+                                                <input type="checkbox" name="vacation_enabled" value="1" id="vacation-enabled-{{ $mailbox->id }}" class="form-check-input" @checked($mailbox->vacation?->enabled)>
+                                                <label class="form-check-label" for="vacation-enabled-{{ $mailbox->id }}">{{ __('Ativado') }}</label>
+                                            </div>
+                                            <div class="mb-3">
+                                                <x-input-label for="subject-{{ $mailbox->id }}" value="{{ __('Assunto') }}" class="small mb-1" />
+                                                <input type="text" id="subject-{{ $mailbox->id }}" name="subject" class="form-control form-control-sm" value="{{ old('subject', $mailbox->vacation?->subject) }}">
+                                            </div>
+                                            <div class="mb-0">
+                                                <x-input-label for="message-{{ $mailbox->id }}" value="{{ __('Mensagem') }}" class="small mb-1" />
+                                                <textarea id="message-{{ $mailbox->id }}" name="message" class="form-control form-control-sm" rows="4">{{ old('message', $mailbox->vacation?->message) }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ __('Salvar') }}</button>
+                                        </div>
+                                    </form>
+                                </x-modal>
                             </td>
                         </tr>
                     @empty
