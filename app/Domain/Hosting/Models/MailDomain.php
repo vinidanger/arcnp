@@ -24,6 +24,11 @@ class MailDomain extends Model
         return $this->hasMany(Mailbox::class);
     }
 
+    public function forwarders(): HasMany
+    {
+        return $this->hasMany(MailForwarder::class);
+    }
+
     public function dkimSelector(): string
     {
         return 'mail';

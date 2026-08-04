@@ -141,13 +141,73 @@
         </div>
     </div>
 
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h6">{{ __('Novo encaminhamento') }}</h2>
+            <p class="small text-secondary mb-2">{{ __('Redireciona um endereço @'.$mailDomain->domain.' pra outro e-mail, sem criar caixa própria.') }}</p>
+            <form method="POST" action="{{ route('client.hosting-accounts.mail.forwarders.store', [$account, $mailDomain]) }}" class="row g-2 align-items-end">
+                @csrf
+                <div class="col-auto">
+                    <x-input-label for="forwarder_local_part" value="{{ __('De') }}" class="small mb-1" />
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="forwarder_local_part" name="local_part" value="{{ old('local_part') }}" class="form-control form-control-sm" placeholder="vendas" required>
+                        <span class="input-group-text">{{ '@'.$mailDomain->domain }}</span>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <x-input-label for="forwarder_destination" value="{{ __('Para') }}" class="small mb-1" />
+                    <input type="email" id="forwarder_destination" name="destination" value="{{ old('destination') }}" class="form-control form-control-sm" placeholder="alguem@outrodominio.com" required>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-primary">{{ __('Criar') }}</button>
+                </div>
+            </form>
+            <x-input-error :messages="$errors->get('local_part')" class="mt-2" />
+            <x-input-error :messages="$errors->get('destination')" class="mt-2" />
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>{{ __('De') }}</th>
+                        <th>{{ __('Para') }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($mailDomain->forwarders as $forwarder)
+                        <tr>
+                            <td>{{ $forwarder->source() }}</td>
+                            <td>{{ $forwarder->destination }}</td>
+                            <td class="text-end">
+                                <form method="POST" action="{{ route('client.hosting-accounts.mail.forwarders.destroy', [$account, $mailDomain, $forwarder]) }}"
+                                      onsubmit="return confirm('{{ __('Remove esse encaminhamento. Continuar?') }}')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="text-center text-secondary py-4">{{ __('Nenhum encaminhamento cadastrado.') }}</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="card border-danger">
         <div class="card-body d-flex justify-content-between align-items-center">
             <div>
                 <h2 class="h6 mb-1">{{ __('Desativar e-mail nesse domínio') }}</h2>
                 <p class="small text-secondary mb-0">
-                    @if ($mailDomain->mailboxes->isNotEmpty())
-                        {{ __('Remova todas as caixas antes de desativar.') }}
+                    @if ($mailDomain->mailboxes->isNotEmpty() || $mailDomain->forwarders->isNotEmpty())
+                        {{ __('Remova todas as caixas e encaminhamentos antes de desativar.') }}
                     @else
                         {{ __('Remove a assinatura DKIM e libera o domínio pra ativar de novo depois.') }}
                     @endif
@@ -157,7 +217,7 @@
                   onsubmit="return confirm('{{ __('Desativa o e-mail desse domínio. Continuar?') }}')">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-outline-danger" @disabled($mailDomain->mailboxes->isNotEmpty())>{{ __('Desativar') }}</button>
+                <button type="submit" class="btn btn-sm btn-outline-danger" @disabled($mailDomain->mailboxes->isNotEmpty() || $mailDomain->forwarders->isNotEmpty())>{{ __('Desativar') }}</button>
             </form>
         </div>
     </div>

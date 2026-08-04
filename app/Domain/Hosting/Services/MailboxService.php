@@ -5,6 +5,7 @@ namespace App\Domain\Hosting\Services;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\MailDomain;
 use App\Domain\Hosting\Models\Mailbox;
+use App\Domain\Hosting\Models\MailForwarder;
 use App\Domain\Servers\Models\Server;
 use App\Domain\Servers\Services\AgentHttpClient;
 use App\Support\MailboxSsoToken;
@@ -53,6 +54,10 @@ class MailboxService
     {
         if ($mailDomain->mailboxes()->exists()) {
             throw new RuntimeException('Apague as caixas de e-mail desse domínio antes de desativar.');
+        }
+
+        if ($mailDomain->forwarders()->exists()) {
+            throw new RuntimeException('Apague os encaminhamentos desse domínio antes de desativar.');
         }
 
         $server = $mailDomain->hostingAccount->server;
@@ -119,6 +124,41 @@ class MailboxService
         $this->syncState($server);
     }
 
+    public function createForwarder(MailDomain $mailDomain, string $localPart, string $destination): MailForwarder
+    {
+        // Endereço não pode estar nos dois mapas do Postfix ao mesmo
+        // tempo (virtual_mailbox_maps E virtual_alias_maps) — vira
+        // ambíguo pra ele. Só barra nesse sentido (caixa já existe →
+        // barra encaminhamento); criar caixa em cima de um
+        // encaminhamento existente já não acontece na prática porque
+        // esse é sempre o primeiro e-mail configurado num domínio novo.
+        if ($mailDomain->mailboxes()->where('local_part', $localPart)->exists()) {
+            throw new RuntimeException('Já existe uma caixa de e-mail com esse nome.');
+        }
+
+        $forwarder = $mailDomain->forwarders()->create([
+            'local_part' => $localPart,
+            'destination' => $destination,
+        ]);
+
+        try {
+            $this->syncState($mailDomain->hostingAccount->server);
+        } catch (RuntimeException $e) {
+            $forwarder->delete();
+            throw $e;
+        }
+
+        return $forwarder;
+    }
+
+    public function deleteForwarder(MailForwarder $forwarder): void
+    {
+        $server = $forwarder->mailDomain->hostingAccount->server;
+        $forwarder->delete();
+
+        $this->syncState($server);
+    }
+
     public function webmailSsoUrl(Mailbox $mailbox): string
     {
         $server = $mailbox->mailDomain->hostingAccount->server;
@@ -146,9 +186,19 @@ class MailboxService
             ])
             ->all();
 
+        $forwarders = MailForwarder::whereHas('mailDomain.hostingAccount', fn ($q) => $q->where('server_id', $server->id))
+            ->with('mailDomain')
+            ->get()
+            ->map(fn (MailForwarder $forwarder) => [
+                'source' => $forwarder->source(),
+                'destination' => $forwarder->destination,
+            ])
+            ->all();
+
         $job = $this->client->dispatch($server, 'mail.sync_state', [
             'domains' => $domains,
             'mailboxes' => $mailboxes,
+            'forwarders' => $forwarders,
         ]);
 
         if ($job->status !== 'completed') {

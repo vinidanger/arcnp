@@ -6,6 +6,7 @@ use App\Domain\Hosting\Models\DnsZone;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\MailDomain;
 use App\Domain\Hosting\Models\Mailbox;
+use App\Domain\Hosting\Models\MailForwarder;
 use App\Domain\Hosting\Services\DnsZoneService;
 use App\Domain\Hosting\Services\MailboxService;
 use App\Http\Controllers\Controller;
@@ -52,7 +53,7 @@ class MailDomainController extends Controller
 
         abort_unless($mail_domain->hosting_account_id === $hosting_account->id, 404);
 
-        $mail_domain->load('mailboxes');
+        $mail_domain->load('mailboxes', 'forwarders');
 
         $dnsZone = DnsZone::where('domain', $mail_domain->domain)->first();
 
@@ -160,6 +161,42 @@ class MailDomainController extends Controller
             return back()->with('status', 'Caixa removida.');
         } catch (Throwable $e) {
             return back()->with('error', 'Falha ao remover caixa: '.$e->getMessage());
+        }
+    }
+
+    public function storeForwarder(Request $request, HostingAccount $hosting_account, MailDomain $mail_domain, MailboxService $mail)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($mail_domain->hosting_account_id === $hosting_account->id, 404);
+
+        $data = $request->validate([
+            'local_part' => ['required', 'string', 'max:64', 'regex:/^[a-z0-9][a-z0-9._-]*$/i'],
+            'destination' => ['required', 'email', 'max:255'],
+        ]);
+
+        try {
+            $mail->createForwarder($mail_domain, $data['local_part'], $data['destination']);
+
+            return back()->with('status', 'Encaminhamento criado.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao criar encaminhamento: '.$e->getMessage());
+        }
+    }
+
+    public function destroyForwarder(HostingAccount $hosting_account, MailDomain $mail_domain, MailForwarder $forwarder, MailboxService $mail)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($mail_domain->hosting_account_id === $hosting_account->id, 404);
+        abort_unless($forwarder->mail_domain_id === $mail_domain->id, 404);
+
+        try {
+            $mail->deleteForwarder($forwarder);
+
+            return back()->with('status', 'Encaminhamento removido.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao remover encaminhamento: '.$e->getMessage());
         }
     }
 

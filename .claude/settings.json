@@ -22,7 +22,9 @@
       "Bash(bash -n scripts/manage-mail.sh)",
       "Bash(bash -n scripts/manage-mail-dkim.sh)",
       "Bash(node --check resources/js/app.js)",
-      "Bash(php -l resources/views/client/dashboard.blade.php)"
+      "Bash(php -l resources/views/client/dashboard.blade.php)",
+      "Bash(php -r \"echo date\\('Y_m_d_His'\\);\")",
+      "Bash(bash -n C:/laragon/www/arcnp-agent/scripts/manage-mail.sh)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",
