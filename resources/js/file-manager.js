@@ -361,7 +361,7 @@ function setupImagePreview() {
         }
         img.src = url;
         title.textContent = name;
-        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('image-preview-modal')).show();
+        window.arcnModal?.show('image-preview-modal');
     };
 
     document.querySelectorAll('.file-preview-image').forEach((link) => {
@@ -458,7 +458,7 @@ function setupContextMenu(config) {
         }
         document.getElementById('rename-from').value = singleRow.dataset.path;
         document.getElementById('rename-name').value = singleRow.dataset.name;
-        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('rename-modal')).show();
+        window.arcnModal?.show('rename-modal');
     });
 
     menu.querySelector('[data-ctx="compress"]').addEventListener('click', (e) => {
@@ -497,7 +497,7 @@ function setupContextMenu(config) {
         });
         document.getElementById('compress-current-path').value = config.currentPath;
         document.getElementById('compress-root').value = config.rootDomain;
-        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('compress-modal')).show();
+        window.arcnModal?.show('compress-modal');
     };
 }
 

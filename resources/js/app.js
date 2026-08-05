@@ -1,13 +1,11 @@
 import './bootstrap';
 
-import * as bootstrap from 'bootstrap/dist/js/bootstrap.bundle.min.js';
-
-window.bootstrap = bootstrap;
-
-// Retrair/expandir o menu lateral — estado persistido em localStorage
-// (puramente visual, por navegador, não precisa ir pro servidor). O
-// estado inicial já é aplicado por um script inline no <head> de cada
-// layout, antes do primeiro paint, pra não "piscar" expandido.
+// ---------------------------------------------------------------------
+// Menu lateral retrátil — estado persistido em localStorage (por
+// navegador, não vai pro servidor). Estado inicial já aplicado por um
+// script inline no <head> de cada layout (theme-init), antes do
+// primeiro paint, pra não "piscar" expandido.
+// ---------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
     const toggle = document.getElementById('sidebar-toggle');
 
@@ -21,9 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Tema claro/escuro — mesma lógica de persistência do menu lateral,
-// usando o suporte nativo de dark mode do Bootstrap 5.3
-// (data-bs-theme). Estado inicial já aplicado no <head> (theme-init).
+// ---------------------------------------------------------------------
+// Tema claro/escuro — mesma lógica de persistência do menu lateral.
+// Estado inicial já aplicado no <head> (theme-init).
+// ---------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
     const toggle = document.getElementById('theme-toggle');
 
@@ -32,24 +31,75 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     toggle.addEventListener('click', () => {
-        const next = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-bs-theme', next);
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('theme', next);
     });
 });
 
-// Dropdowns dentro de .table-responsive (ex.: "Baixar" na listagem de
-// backups) ficam cortados pelo overflow:auto da tabela — o Popper do
-// Bootstrap por padrão posiciona o menu como "absolute", contido no
-// ancestral com overflow mais próximo. strategy:"fixed" posiciona
-// relativo à viewport em vez disso, escapando desse corte. Não existe
-// atributo data-bs-strategy nativo no Bootstrap — precisa passar via
-// popperConfig na inicialização mesmo.
+// ---------------------------------------------------------------------
+// Dropdowns — substitui o comportamento data-bs-toggle="dropdown" do
+// Bootstrap. Um único listener de clique no documento (capture na
+// abertura, fecha o resto) em vez de um listener por dropdown —
+// mais simples de manter correto com vários dropdowns na mesma página
+// (ex.: várias linhas de tabela, cada uma com o próprio menu).
+// ---------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-bs-strategy="fixed"]').forEach((toggle) => {
-        bootstrap.Dropdown.getOrCreateInstance(toggle, {
-            popperConfig: (defaultConfig) => ({ ...defaultConfig, strategy: 'fixed' }),
+    function closeAllDropdowns(except) {
+        document.querySelectorAll('.dropdown-menu.show').forEach((menu) => {
+            if (menu !== except) {
+                menu.classList.remove('show');
+            }
         });
+    }
+
+    document.addEventListener('click', (event) => {
+        const toggleEl = event.target.closest('[data-bs-toggle="dropdown"]');
+
+        if (toggleEl) {
+            const wrapper = toggleEl.closest('.dropdown');
+            const menu = wrapper?.querySelector('.dropdown-menu');
+
+            if (! menu) {
+                return;
+            }
+
+            const wasOpen = menu.classList.contains('show');
+            closeAllDropdowns();
+
+            if (! wasOpen) {
+                menu.classList.add('show');
+
+                // data-bs-strategy="fixed": dropdown precisa escapar de
+                // um ancestral com overflow:auto/hidden (ex.: dentro de
+                // .table-responsive) — reposiciona via position:fixed
+                // com coordenadas calculadas na hora, em vez de
+                // position:absolute relativo ao ancestral mais próximo.
+                if (toggleEl.dataset.bsStrategy === 'fixed') {
+                    const rect = toggleEl.getBoundingClientRect();
+                    menu.style.position = 'fixed';
+                    menu.style.top = `${rect.bottom + 4}px`;
+                    menu.style.left = menu.classList.contains('dropdown-menu-end')
+                        ? ''
+                        : `${rect.left}px`;
+                    menu.style.right = menu.classList.contains('dropdown-menu-end')
+                        ? `${window.innerWidth - rect.right}px`
+                        : '';
+                }
+            }
+
+            return;
+        }
+
+        if (! event.target.closest('.dropdown-menu')) {
+            closeAllDropdowns();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeAllDropdowns();
+        }
     });
 });
 
@@ -57,18 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
  * Mantém a aba ativa (Visão geral/Domínios/Bancos/Backups) através de
  * reloads — sem isso, qualquer form dentro de uma aba (ex.: "Adicionar
  * domínio") volta pra primeira aba depois do redirect do Laravel
- * (back()), porque o estado de aba do Bootstrap é só classe CSS, não
- * sobrevive a um load novo da página.
+ * (back()), porque o estado de aba é só classe CSS, não sobrevive a um
+ * load novo da página.
  *
  * A URL guarda a aba atual em #tab-x. O truque: quando um form é
  * enviado, grudamos o #hash atual na própria action ANTES de submeter —
  * o back() do Laravel redireciona sem fragmento próprio, mas o
  * navegador propaga automaticamente o fragmento da requisição original
- * pra URL final quando o Location do redirect não define um (comportamento
- * padrão de fragmento em redirect, não precisa de nada server-side).
- * Funciona pra QUALQUER form da página (inclusive os de fora das abas,
- * tipo "Emitir SSL" no cabeçalho) sem precisar anotar cada form
- * individualmente no Blade.
+ * pra URL final quando o Location do redirect não define um.
  */
 document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"][data-bs-target^="#tab-"]');
@@ -77,15 +123,35 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    function activateTab(button) {
+        const targetSelector = button.dataset.bsTarget;
+        const target = document.querySelector(targetSelector);
+
+        if (! target) {
+            return;
+        }
+
+        const group = button.closest('.nav-tabs');
+        const paneGroup = target.parentElement;
+
+        group?.querySelectorAll('.nav-link').forEach((btn) => btn.classList.remove('active'));
+        paneGroup?.querySelectorAll(':scope > .tab-pane').forEach((pane) => pane.classList.remove('active', 'show'));
+
+        button.classList.add('active');
+        target.classList.add('active', 'show');
+    }
+
     if (location.hash) {
         const target = document.querySelector(`[data-bs-toggle="tab"][data-bs-target="${location.hash}"]`);
         if (target) {
-            bootstrap.Tab.getOrCreateInstance(target).show();
+            activateTab(target);
         }
     }
 
     tabButtons.forEach((button) => {
-        button.addEventListener('shown.bs.tab', () => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            activateTab(button);
             history.replaceState(null, '', button.dataset.bsTarget);
         });
     });
@@ -100,6 +166,76 @@ document.addEventListener('DOMContentLoaded', () => {
             form.action = url.toString();
         });
     });
+});
+
+// ---------------------------------------------------------------------
+// Modais — substitui bootstrap.Modal. Trigger: data-bs-toggle="modal"
+// data-bs-target="#id". A própria .modal escuta clique no backdrop e
+// Escape pra fechar; [data-bs-dismiss="modal"] fecha o ancestral mais
+// próximo (funciona pra qualquer botão "Cancelar"/"×" dentro dela).
+// ---------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    function openModal(modal) {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('click', (event) => {
+        const opener = event.target.closest('[data-bs-toggle="modal"]');
+
+        if (opener) {
+            const modal = document.querySelector(opener.dataset.bsTarget);
+            if (modal) {
+                openModal(modal);
+            }
+            return;
+        }
+
+        const dismisser = event.target.closest('[data-bs-dismiss="modal"], [data-bs-dismiss="alert"]');
+
+        if (dismisser) {
+            if (dismisser.dataset.bsDismiss === 'alert') {
+                dismisser.closest('.alert')?.remove();
+            } else {
+                dismisser.closest('.modal')?.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+            return;
+        }
+
+        // Clique no backdrop (fora de .modal-dialog) fecha.
+        if (event.target.classList.contains('modal') && event.target.classList.contains('show')) {
+            closeModal(event.target);
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            document.querySelectorAll('.modal.show').forEach(closeModal);
+        }
+    });
+
+    // API mínima usada pelo componente <x-modal :show="true"> (abre
+    // sozinho ao carregar a página, ex.: fluxo de configurar 2FA).
+    window.arcnModal = {
+        show(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                openModal(modal);
+            }
+        },
+        hide(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                closeModal(modal);
+            }
+        },
+    };
 });
 
 // Formulário de filtro de e-mail: campo "pasta" só faz sentido pra

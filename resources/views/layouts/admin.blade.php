@@ -9,22 +9,22 @@
 
         <title>{{ config('app.name', 'Arcn Panel') }} — Admin</title>
 
-        @vite(['resources/css/app.scss', 'resources/js/app.js', 'resources/js/file-manager.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/file-manager.js'])
     </head>
-    <body>
-        <div class="d-flex" style="min-height: 100vh;">
-            <aside class="app-sidebar p-3 d-flex flex-column">
-                <a class="app-sidebar-brand d-flex align-items-center gap-2 text-decoration-none mb-2" href="{{ route('admin.dashboard') }}">
-                    <x-application-logo style="width: 1.75rem; height: 1.75rem; fill: currentColor; flex-shrink: 0;" />
-                    <span class="fw-semibold sidebar-label">{{ config('app.name', 'Arcn Panel') }}</span>
+    <body class="min-h-screen">
+        <div class="flex min-h-screen">
+            <aside class="app-sidebar flex flex-col p-3">
+                <a class="flex items-center gap-2 px-1 mb-2 font-display font-semibold text-white no-underline" href="{{ route('admin.dashboard') }}">
+                    <x-application-logo class="w-7 h-7 shrink-0" style="fill: currentColor;" />
+                    <span class="sidebar-label">{{ config('app.name', 'Arcn Panel') }}</span>
                 </a>
 
-                <button type="button" id="sidebar-toggle" class="btn btn-sm btn-link text-white-50 d-flex align-items-center gap-2 px-0 mb-3 text-decoration-none" title="{{ __('Expandir/retrair menu') }}">
+                <button type="button" id="sidebar-toggle" class="flex items-center gap-2 px-1 mb-3 py-1 text-sm text-white/50 hover:text-white" title="{{ __('Expandir/retrair menu') }}">
                     <i class="bi bi-chevron-double-left"></i>
-                    <span class="sidebar-label small">{{ __('Retrair menu') }}</span>
+                    <span class="sidebar-label">{{ __('Retrair menu') }}</span>
                 </button>
 
-                <nav class="nav flex-column flex-grow-1 overflow-auto">
+                <nav class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
                     <div class="app-sidebar-section sidebar-label">{{ __('Geral') }}</div>
                     <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" title="{{ __('Dashboard') }}">
                         <i class="bi bi-speedometer2"></i> <span class="sidebar-label">{{ __('Dashboard') }}</span>
@@ -64,10 +64,10 @@
                 @include('layouts.partials.sidebar-user')
             </aside>
 
-            <div class="flex-grow-1 d-flex flex-column">
-                <header class="bg-body border-bottom">
-                    <div class="container-fluid px-4 py-3 d-flex align-items-center justify-content-between gap-3">
-                        <div class="flex-grow-1" style="min-width: 0;">
+            <div class="flex flex-col flex-1 min-w-0">
+                <header class="border-b border-line bg-panel">
+                    <div class="flex items-center justify-between gap-3 px-4 md:px-6 py-3">
+                        <div class="flex-1 min-w-0">
                             {{-- Qualquer rota com {hosting_account} (SSH, PHP, FTP, Mail,
                                  Recursos, etc.) ganha esse link de volta automaticamente — sem
                                  isso, a única forma de voltar era passar pela lista de
@@ -76,13 +76,12 @@
                                  view renderizar), não da variável $account da view — um
                                  <x-admin-layout> é um componente Blade à parte, não herda
                                  variável nenhuma da view que o chama a menos que seja passada
-                                 explicitamente, então @isset($account) aqui dentro nunca via nada.
-                                 Escondido na própria página da conta (senão vira link pra ela
-                                 mesma). --}}
+                                 explicitamente. Escondido na própria página da conta (senão vira
+                                 link pra ela mesma). --}}
                             @php $navAccount = request()->route('hosting_account'); @endphp
                             @if ($navAccount instanceof \App\Domain\Hosting\Models\HostingAccount && ! request()->routeIs('*.hosting-accounts.show'))
                                 <a href="{{ route('admin.hosting-accounts.show', $navAccount) }}"
-                                   class="d-inline-flex align-items-center gap-1 small text-secondary text-decoration-none mb-1">
+                                   class="inline-flex items-center gap-1 text-sm text-text-dim hover:text-accent no-underline mb-1">
                                     <i class="bi bi-arrow-left"></i> {{ $navAccount->primary_domain }}
                                 </a>
                             @endif
@@ -91,14 +90,14 @@
                             @endisset
                         </div>
 
-                        <button type="button" id="theme-toggle" class="btn btn-sm btn-outline-secondary flex-shrink-0" title="{{ __('Alternar tema claro/escuro') }}">
+                        <button type="button" id="theme-toggle" class="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded border border-line-strong text-text-dim hover:border-accent hover:text-accent" title="{{ __('Alternar tema claro/escuro') }}">
                             <i class="bi bi-moon-stars theme-icon-light"></i>
                             <i class="bi bi-sun theme-icon-dark"></i>
                         </button>
                     </div>
                 </header>
 
-                <main class="flex-grow-1 container-fluid px-4 py-4">
+                <main class="flex-1 px-4 md:px-6 py-5">
                     @include('layouts.partials.announcements')
 
                     {{ $slot }}

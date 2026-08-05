@@ -4,45 +4,43 @@ import { Compartment } from '@codemirror/state';
 import { indentWithTab, copyLineDown, copyLineUp, toggleComment } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { php } from '@codemirror/lang-php';
-import { html } from '@codemirror/lang-html';
-import { css } from '@codemirror/lang-css';
-import { javascript } from '@codemirror/lang-javascript';
-import { json } from '@codemirror/lang-json';
-import { sql } from '@codemirror/lang-sql';
-import { markdown } from '@codemirror/lang-markdown';
-import { yaml } from '@codemirror/lang-yaml';
 
 function isDarkTheme() {
-    return document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    return document.documentElement.getAttribute('data-theme') === 'dark';
 }
 
-const LANGUAGE_BY_EXTENSION = {
-    php: php(),
-    phtml: php(),
-    html: html(),
-    htm: html(),
-    css: css(),
-    js: javascript(),
-    mjs: javascript(),
-    cjs: javascript(),
-    json: json(),
-    sql: sql(),
-    md: markdown(),
-    yml: yaml(),
-    yaml: yaml(),
+// import() dinâmico em vez de importar os 8 pacotes de linguagem no
+// topo do arquivo — cada um vira um chunk separado que só baixa
+// quando alguém realmente abre um arquivo daquele tipo (antes, editar
+// um .txt baixava o parser de PHP/SQL/YAML/etc. igual, tudo junto num
+// chunk só de ~740KB). O editor aparece na hora; o highlight de
+// sintaxe entra um instante depois, quando o import resolve.
+const LANGUAGE_LOADERS = {
+    php: () => import('@codemirror/lang-php').then((m) => m.php()),
+    phtml: () => import('@codemirror/lang-php').then((m) => m.php()),
+    html: () => import('@codemirror/lang-html').then((m) => m.html()),
+    htm: () => import('@codemirror/lang-html').then((m) => m.html()),
+    css: () => import('@codemirror/lang-css').then((m) => m.css()),
+    js: () => import('@codemirror/lang-javascript').then((m) => m.javascript()),
+    mjs: () => import('@codemirror/lang-javascript').then((m) => m.javascript()),
+    cjs: () => import('@codemirror/lang-javascript').then((m) => m.javascript()),
+    json: () => import('@codemirror/lang-json').then((m) => m.json()),
+    sql: () => import('@codemirror/lang-sql').then((m) => m.sql()),
+    md: () => import('@codemirror/lang-markdown').then((m) => m.markdown()),
+    yml: () => import('@codemirror/lang-yaml').then((m) => m.yaml()),
+    yaml: () => import('@codemirror/lang-yaml').then((m) => m.yaml()),
 };
 
-function languageForFilename(filename) {
+function languageLoaderForFilename(filename) {
     const extension = filename.split('.').pop().toLowerCase();
 
-    return LANGUAGE_BY_EXTENSION[extension] ?? null;
+    return LANGUAGE_LOADERS[extension] ?? null;
 }
 
 const themeCompartments = [];
 
 // O toggle de tema global não recarrega a página — um MutationObserver
-// no atributo data-bs-theme do <html> é o jeito de manter editores já
+// no atributo data-theme do <html> é o jeito de manter editores já
 // abertos sincronizados quando o usuário troca o tema.
 new MutationObserver(() => {
     const dark = isDarkTheme();
@@ -50,12 +48,13 @@ new MutationObserver(() => {
     themeCompartments.forEach(({ view, compartment }) => {
         view.dispatch({ effects: compartment.reconfigure(dark ? oneDark : []) });
     });
-}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
     const filename = textarea.dataset.filename ?? '';
-    const language = languageForFilename(filename);
+    const languageLoader = languageLoaderForFilename(filename);
     const themeCompartment = new Compartment();
+    const languageCompartment = new Compartment();
 
     const extensions = [
         basicSetup,
@@ -101,16 +100,21 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
                 textarea.value = update.state.doc.toString();
             }
         }),
+        // Vazio até o import() dinâmico resolver — reconfigurado com a
+        // extensão de linguagem real assim que o chunk carrega.
+        languageCompartment.of([]),
     ];
-
-    if (language) {
-        extensions.push(language);
-    }
 
     const view = new EditorView({
         doc: textarea.value,
         extensions,
     });
+
+    if (languageLoader) {
+        languageLoader().then((language) => {
+            view.dispatch({ effects: languageCompartment.reconfigure(language) });
+        });
+    }
 
     themeCompartments.push({ view, compartment: themeCompartment });
 

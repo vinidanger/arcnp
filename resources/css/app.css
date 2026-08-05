@@ -1,0 +1,965 @@
+@import "tailwindcss";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
+/*
+ * Paleta "instrumento técnico" (aprovada em protótipo) — fundo tinta-
+ * azulada (não preto puro), âmbar como sinal de marca, semântica
+ * (sucesso/atenção/crítico) com matiz própria, deliberadamente
+ * distinta do âmbar, pra nunca competir visualmente com uma ação.
+ *
+ * Definidos como variáveis CSS simples (não dentro de @theme) porque
+ * o tema claro/escuro troca em TEMPO DE EXECUÇÃO (atributo
+ * data-theme no <html>, ver theme-init.blade.php) — @theme sozinho
+ * só dá token fixo de build. @theme abaixo referencia essas variáveis
+ * por indireção, o que ainda gera as utilities normais do Tailwind
+ * (bg-ink, text-accent, etc.), só que elas reagem à troca de tema.
+ */
+:root {
+    --ink: #f4f5f7;
+    --panel: #ffffff;
+    --panel-raised: #fafbfc;
+    --line: #dde1e8;
+    --line-strong: #c5cbd6;
+    --text: #12161f;
+    --text-dim: #5b6577;
+    --text-faint: #8890a0;
+    --accent: #b8720e;
+    --accent-ink: #ffffff;
+    --accent-wash: #b8720e14;
+    --success: #1f9d5d;
+    --success-wash: #1f9d5d14;
+    --warning: #c2661d;
+    --warning-wash: #c2661d14;
+    --danger: #c93a50;
+    --danger-wash: #c93a5014;
+    --rail-bg: #0a0f1a;
+    --rail-text: #aab3c4;
+    --rail-text-dim: #6b7488;
+    --rail-line: #1c2536;
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    --ink: #0a0f1a;
+    --panel: #121a2b;
+    --panel-raised: #16203399;
+    --line: #223049;
+    --line-strong: #2c3c5a;
+    --text: #e7ecf5;
+    --text-dim: #8b96ac;
+    --text-faint: #5e6883;
+    --accent: #f0a93a;
+    --accent-ink: #191305;
+    --accent-wash: #f0a93a1f;
+    --success: #3fbf7f;
+    --success-wash: #3fbf7f1f;
+    --warning: #e2833d;
+    --warning-wash: #e2833d1f;
+    --danger: #e5566b;
+    --danger-wash: #e5566b1f;
+    --rail-bg: #060a12;
+    --rail-text: #aab3c4;
+    --rail-text-dim: #565f74;
+    --rail-line: #151d2c;
+    color-scheme: dark;
+}
+
+@theme {
+    --color-ink: var(--ink);
+    --color-panel: var(--panel);
+    --color-panel-raised: var(--panel-raised);
+    --color-line: var(--line);
+    --color-line-strong: var(--line-strong);
+    --color-text: var(--text);
+    --color-text-dim: var(--text-dim);
+    --color-text-faint: var(--text-faint);
+    --color-accent: var(--accent);
+    --color-accent-ink: var(--accent-ink);
+    --color-accent-wash: var(--accent-wash);
+    --color-success: var(--success);
+    --color-success-wash: var(--success-wash);
+    --color-warning: var(--warning);
+    --color-warning-wash: var(--warning-wash);
+    --color-danger: var(--danger);
+    --color-danger-wash: var(--danger-wash);
+    --color-rail-bg: var(--rail-bg);
+    --color-rail-text: var(--rail-text);
+    --color-rail-text-dim: var(--rail-text-dim);
+    --color-rail-line: var(--rail-line);
+
+    --font-display: "Bahnschrift", "Barlow Semi Condensed", "Roboto Condensed", ui-sans-serif, sans-serif;
+    --font-body: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Cascadia Code", "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+}
+
+/* data-theme (não .dark) porque o toggle da aplicação define isso no
+   <html> antes do primeiro paint (ver theme-init.blade.php) — nunca
+   dependemos do prefers-color-scheme puro em CSS, o JS já resolveu
+   localStorage-vs-SO antes de chegar aqui. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@layer base {
+    body {
+        background-color: var(--color-ink);
+        color: var(--color-text);
+        font-family: var(--font-body);
+        overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        text-wrap: balance;
+    }
+
+    ::selection {
+        background-color: var(--color-accent);
+        color: var(--color-accent-ink);
+    }
+}
+
+@layer utilities {
+    .eyebrow {
+        font-family: var(--font-display);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-text-faint);
+    }
+
+    .font-mono {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Classes .h1-.h6 do Bootstrap: dão a escala tipográfica de título a
+       qualquer elemento, independente da tag real (ex. <h1 class="h4">,
+       usado pra manter a semântica de "isto é o título da página" com um
+       tamanho visual menor). Tag h1-h6 real já ganha family/weight/tracking
+       via @layer base — aqui só falta o tamanho. */
+    .h1 { font-size: 2.5rem; }
+    .h2 { font-size: 2rem; }
+    .h3 { font-size: 1.75rem; }
+    .h4 { font-size: 1.5rem; }
+    .h5 { font-size: 1.25rem; }
+    .h6 { font-size: 1rem; }
+
+    .visually-hidden {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+}
+
+/* ---------------------------------------------------------------------
+   Sidebar (admin + client)
+   --------------------------------------------------------------------- */
+
+.app-sidebar {
+    width: 15.5rem;
+    flex-shrink: 0;
+    background-color: var(--color-rail-bg);
+    color: var(--color-rail-text);
+    transition: width 0.15s ease;
+}
+
+.app-sidebar-section {
+    font-family: var(--font-display);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    color: var(--color-rail-text-dim);
+    padding: 0 0.6rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.4rem;
+}
+
+.app-sidebar .nav-link {
+    color: var(--color-rail-text);
+    border-radius: 3px;
+    padding: 0.5rem 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.87rem;
+    border-left: 2px solid transparent;
+}
+
+.app-sidebar .nav-link i {
+    font-size: 1rem;
+    width: 1.15rem;
+    text-align: center;
+    opacity: 0.85;
+}
+
+.app-sidebar .nav-link:hover {
+    background-color: #ffffff0a;
+    color: #fff;
+}
+
+.app-sidebar .nav-link.active {
+    background-color: var(--color-accent-wash);
+    color: #fff;
+    border-left-color: var(--color-accent);
+}
+
+.app-sidebar .nav-link.active i {
+    color: var(--color-accent);
+    opacity: 1;
+}
+
+/* Menu retraído — só ícone. Estado fica em <html class="sidebar-collapsed">
+   (ver app.js), aplicado antes do primeiro paint via theme-init. */
+html.sidebar-collapsed .app-sidebar {
+    width: 4.25rem;
+    overflow: hidden;
+    min-width: 4.25rem;
+}
+
+html.sidebar-collapsed .app-sidebar .px-3 {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+html.sidebar-collapsed .sidebar-label {
+    display: none;
+}
+
+html.sidebar-collapsed .app-sidebar-brand,
+html.sidebar-collapsed .app-sidebar .nav-link,
+html.sidebar-collapsed #sidebar-toggle {
+    justify-content: center;
+    gap: 0 !important;
+}
+
+#sidebar-toggle i {
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+}
+
+html.sidebar-collapsed #sidebar-toggle i {
+    transform: rotate(180deg);
+}
+
+.theme-icon-dark {
+    display: none;
+}
+
+[data-theme="dark"] .theme-icon-light {
+    display: none;
+}
+
+[data-theme="dark"] .theme-icon-dark {
+    display: inline-block;
+}
+
+/* ---------------------------------------------------------------------
+   Painéis (substituem .card), gauges do dashboard, atalhos
+   --------------------------------------------------------------------- */
+
+.panel {
+    background: var(--color-panel);
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+}
+
+.gauge {
+    background: var(--color-panel);
+    border: 1px solid var(--color-line);
+    padding: 1rem 1.15rem 1.15rem;
+}
+
+.gauge-bar {
+    height: 4px;
+    background: var(--color-line);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.gauge-bar > span {
+    display: block;
+    height: 100%;
+    background: var(--color-accent);
+}
+
+.gauge-bar.warn > span {
+    background: var(--color-warning);
+}
+
+.gauge-bar.danger > span {
+    background: var(--color-danger);
+}
+
+.gauge-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.gauge-dot.ok {
+    background: var(--color-success);
+    box-shadow: 0 0 0 3px var(--color-success-wash);
+}
+
+.gauge-dot.warn {
+    background: var(--color-warning);
+    box-shadow: 0 0 0 3px var(--color-warning-wash);
+}
+
+.gauge-dot.danger {
+    background: var(--color-danger);
+    box-shadow: 0 0 0 3px var(--color-danger-wash);
+}
+
+.quick-link-card {
+    border-radius: 3px;
+    border: 1px solid var(--color-line);
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    text-decoration: none;
+    color: var(--color-text);
+    background: var(--color-panel);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.quick-link-card:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+    transform: translateY(-1px);
+}
+
+.quick-link-icon {
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 3px;
+    background: var(--color-accent-wash);
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.stat-tile {
+    background: var(--color-panel);
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+    padding: 1rem;
+    height: 100%;
+}
+
+.stat-tile-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.stat-tile-value {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------
+   Tabelas
+   --------------------------------------------------------------------- */
+
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+table.data-table thead th {
+    text-align: left;
+    padding: 0.65rem 1rem;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-faint);
+    border-bottom: 1px solid var(--color-line);
+    white-space: nowrap;
+}
+
+table.data-table tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-line);
+    vertical-align: middle;
+}
+
+table.data-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+table.data-table tbody tr:hover {
+    background: var(--color-panel-raised);
+}
+
+/* ---------------------------------------------------------------------
+   Formulários
+   --------------------------------------------------------------------- */
+
+.field-input,
+.field-select,
+.field-textarea {
+    width: 100%;
+    background: var(--color-panel-raised);
+    border: 1px solid var(--color-line-strong);
+    border-radius: 3px;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.875rem;
+    color: var(--color-text);
+}
+
+.field-input:focus-visible,
+.field-select:focus-visible,
+.field-textarea:focus-visible,
+.field-input:focus,
+.field-select:focus,
+.field-textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.field-input::placeholder,
+.field-textarea::placeholder {
+    color: var(--color-text-faint);
+}
+
+/* ---------------------------------------------------------------------
+   Gerenciador de arquivos
+   --------------------------------------------------------------------- */
+
+.file-dropzone-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1090;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-accent-wash);
+    backdrop-filter: blur(1px);
+    pointer-events: none;
+}
+
+.file-dropzone-overlay-box {
+    border: 3px dashed var(--color-accent);
+    border-radius: 8px;
+    padding: 3rem 4rem;
+    background: var(--color-panel);
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.file-context-menu {
+    display: none;
+    position: absolute;
+    z-index: 1080;
+    min-width: 12rem;
+}
+
+.file-toolbar-path {
+    background: var(--color-panel-raised);
+    border-radius: 3px;
+    padding: 0.5rem 0.9rem;
+}
+
+.file-breadcrumb-divider::before {
+    content: "/";
+    color: var(--color-text-faint);
+    margin: 0 0.4rem;
+}
+
+.file-row {
+    cursor: context-menu;
+}
+
+/* ---------------------------------------------------------------------
+   Editor de código (CodeMirror)
+   --------------------------------------------------------------------- */
+
+.code-editor {
+    border: 1px solid var(--color-line-strong);
+    border-radius: 3px;
+    overflow: hidden;
+    font-size: 0.875rem;
+    height: calc(100vh - 300px);
+    min-height: 400px;
+}
+
+.code-editor .cm-scroller {
+    overflow: auto;
+}
+
+.code-editor-wrapper.is-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    background-color: var(--color-ink);
+}
+
+.code-editor-wrapper.is-fullscreen .code-editor {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+}
+
+/* ---------------------------------------------------------------------
+   Dropdown (substitui o comportamento JS do Bootstrap — ver app.js)
+   --------------------------------------------------------------------- */
+
+.dropdown-panel {
+    position: absolute;
+    z-index: 1060;
+    min-width: 12rem;
+    background: var(--color-panel);
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+    box-shadow: 0 8px 24px rgba(10, 15, 26, 0.16);
+    padding: 0.35rem;
+    display: none;
+}
+
+.dropdown-panel.is-open {
+    display: block;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.45rem 0.6rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    color: var(--color-text);
+    background: none;
+    border: 0;
+    text-decoration: none;
+}
+
+.dropdown-item:hover {
+    background: var(--color-panel-raised);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--color-line);
+    margin: 0.35rem 0;
+    border: 0;
+}
+
+/* ---------------------------------------------------------------------
+   Modal (dialog nativo — ver components/modal.blade.php)
+   --------------------------------------------------------------------- */
+
+dialog.app-modal {
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+    padding: 0;
+    color: var(--color-text);
+    background: var(--color-panel);
+    width: min(32rem, calc(100vw - 2rem));
+}
+
+dialog.app-modal::backdrop {
+    background: rgba(6, 10, 18, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* =======================================================================
+   Camada de compatibilidade — reimplementação própria (sem Bootstrap)
+   dos NOMES de classe já usados em ~100 views. Trocar o framework inteiro
+   por reescrita manual de cada arquivo era desproporcional; em vez disso,
+   toda a "aparência" (paleta, cantos, bordas, tipografia) é redefinida
+   aqui, e as views existentes já herdam o visual novo automaticamente.
+   Views novas/tocadas usam utilities do Tailwind direto (ver layouts).
+   ======================================================================= */
+
+@layer components {
+    /* ---- grid ---- */
+    .container-fluid { width: 100%; padding-left: 1rem; padding-right: 1rem; }
+
+    .row { display: flex; flex-wrap: wrap; margin-left: -0.5rem; margin-right: -0.5rem; row-gap: 1rem; }
+    .row > * { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .row.g-2 { row-gap: 0.5rem; column-gap: 0; }
+    .row.g-2 > * { padding-left: 0.25rem; padding-right: 0.25rem; }
+    .row.g-3 { row-gap: 1rem; }
+
+    .col-1 { flex: 0 0 auto; width: 8.333333%; }
+    .col-2 { flex: 0 0 auto; width: 16.666667%; }
+    .col-3 { flex: 0 0 auto; width: 25%; }
+    .col-4 { flex: 0 0 auto; width: 33.333333%; }
+    .col-5 { flex: 0 0 auto; width: 41.666667%; }
+    .col-6 { flex: 0 0 auto; width: 50%; }
+    .col-7 { flex: 0 0 auto; width: 58.333333%; }
+    .col-8 { flex: 0 0 auto; width: 66.666667%; }
+    .col-9 { flex: 0 0 auto; width: 75%; }
+    .col-10 { flex: 0 0 auto; width: 83.333333%; }
+    .col-11 { flex: 0 0 auto; width: 91.666667%; }
+    .col-12 { flex: 0 0 auto; width: 100%; }
+    .col-auto { flex: 0 0 auto; width: auto; }
+    .col { flex: 1 0 0%; }
+    .col-sm, .col-md, .col-lg, .col-xl { flex: 0 0 auto; width: 100%; }
+
+    /* ---- botões ---- */
+    .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+        border: 1px solid transparent; border-radius: 3px; padding: 0.5rem 0.9rem;
+        font-size: 0.85rem; font-weight: 600; letter-spacing: 0.01em; cursor: pointer;
+        background: transparent; color: var(--color-text); text-decoration: none;
+        line-height: 1.3;
+    }
+    .btn-sm { padding: 0.32rem 0.65rem; font-size: 0.8rem; }
+    .btn-link { border-color: transparent; text-decoration: underline; padding: 0; }
+    .btn-primary, .btn-accent { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-accent-ink); }
+    .btn-primary:hover, .btn-accent:hover { opacity: 0.9; }
+    .btn-danger { background: var(--color-danger); border-color: var(--color-danger); color: #fff; }
+    .btn-danger:hover { opacity: 0.9; }
+    .btn-success { background: var(--color-success); border-color: var(--color-success); color: #fff; }
+    .btn-secondary { background: var(--color-panel-raised); border-color: var(--color-line-strong); color: var(--color-text); }
+    .btn-outline-secondary { border-color: var(--color-line-strong); color: var(--color-text); }
+    .btn-outline-secondary:hover { border-color: var(--color-accent); color: var(--color-accent); }
+    .btn-outline-primary { border-color: var(--color-accent); color: var(--color-accent); }
+    .btn-outline-primary:hover { background: var(--color-accent-wash); }
+    .btn-outline-danger { border-color: var(--color-danger); color: var(--color-danger); }
+    .btn-outline-danger:hover { background: var(--color-danger-wash); }
+    .btn-outline-success { border-color: var(--color-success); color: var(--color-success); }
+    .btn-outline-success:hover { background: var(--color-success-wash); }
+    .btn-outline-warning { border-color: var(--color-warning); color: var(--color-warning); }
+    .btn-outline-warning:hover { background: var(--color-warning-wash); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-close {
+        width: 1.1rem; height: 1.1rem; border: 0; background: transparent; cursor: pointer;
+        color: var(--color-text-faint); font-size: 1.1rem; line-height: 1; padding: 0;
+    }
+    .btn-close::before { content: "\00d7"; }
+
+    /* ---- painéis (card) ---- */
+    .card { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 4px; }
+    .card-body { padding: 1.1rem 1.25rem; }
+    .card-header { padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--color-line); font-weight: 600; }
+    .card-footer { padding: 0.85rem 1.25rem; border-top: 1px solid var(--color-line); }
+
+    /* ---- badges ---- */
+    .badge {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        font-weight: 600; letter-spacing: 0.01em; padding: 0.28em 0.75em;
+        border-radius: 20px; font-size: 0.72rem; line-height: 1.4;
+    }
+    .badge::before { content: ""; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .text-bg-primary, .text-bg-accent { background: var(--color-accent-wash); color: var(--color-accent); }
+    .text-bg-secondary, .text-bg-light { background: var(--color-panel-raised); color: var(--color-text-dim); border: 1px solid var(--color-line); }
+    .text-bg-success { background: var(--color-success-wash); color: var(--color-success); }
+    .text-bg-danger { background: var(--color-danger-wash); color: var(--color-danger); }
+    .text-bg-warning { background: var(--color-warning-wash); color: var(--color-warning); }
+    .text-bg-info { background: var(--color-accent-wash); color: var(--color-accent); }
+
+    /* ---- tabelas ---- */
+    .table { width: 100%; border-collapse: collapse; font-size: 0.85rem; color: var(--color-text); background: transparent; }
+    .table thead th {
+        text-align: left; padding: 0.65rem 0.9rem; font-family: var(--font-display);
+        font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--color-text-faint); border-bottom: 1px solid var(--color-line); white-space: nowrap;
+    }
+    .table tbody td { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--color-line); vertical-align: middle; }
+    .table tbody tr:last-child td { border-bottom: 0; }
+    .table-hover tbody tr:hover { background: var(--color-panel-raised); }
+    .table-sm thead th, .table-sm tbody td { padding: 0.5rem 0.75rem; }
+    .table-responsive { overflow-x: auto; }
+
+    /* ---- formulários ---- */
+    .form-control, .form-select {
+        display: block; width: 100%; background: var(--color-panel-raised);
+        border: 1px solid var(--color-line-strong); border-radius: 3px;
+        padding: 0.5rem 0.7rem; font-size: 0.875rem; color: var(--color-text);
+    }
+    .form-control:focus, .form-select:focus {
+        outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-wash);
+    }
+    .form-control-sm, .form-select-sm { padding: 0.32rem 0.55rem; font-size: 0.8rem; }
+    .form-control::placeholder { color: var(--color-text-faint); }
+    .form-label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--color-text-dim); margin-bottom: 0.35rem; }
+    .form-text { font-size: 0.78rem; color: var(--color-text-faint); margin-top: 0.3rem; }
+    .form-check { display: flex; align-items: center; gap: 0.5rem; min-height: 1.4rem; }
+    .form-check-input {
+        width: 1rem; height: 1rem; border: 1px solid var(--color-line-strong); border-radius: 3px;
+        accent-color: var(--color-accent); background: var(--color-panel-raised);
+    }
+    .form-check-input[role="switch"] { width: 1.9rem; border-radius: 20px; }
+    .form-check-label { font-size: 0.85rem; color: var(--color-text); }
+    .form-switch { display: flex; align-items: center; gap: 0.5rem; }
+    .input-group { display: flex; align-items: stretch; }
+    .input-group .form-control { border-radius: 0; }
+    .input-group > :first-child { border-top-left-radius: 3px; border-bottom-left-radius: 3px; }
+    .input-group > :last-child { border-top-right-radius: 3px; border-bottom-right-radius: 3px; }
+    .input-group-text {
+        display: flex; align-items: center; padding: 0.4rem 0.6rem; font-size: 0.85rem;
+        background: var(--color-panel-raised); border: 1px solid var(--color-line-strong); color: var(--color-text-faint);
+    }
+    .input-group-sm .form-control, .input-group-sm .input-group-text { padding: 0.28rem 0.5rem; font-size: 0.8rem; }
+
+    /* ---- alertas ---- */
+    .alert { border: 1px solid transparent; border-radius: 4px; padding: 0.85rem 1.1rem; font-size: 0.875rem; position: relative; }
+    .alert-success { background: var(--color-success-wash); border-color: var(--color-success); color: var(--color-success); }
+    .alert-danger { background: var(--color-danger-wash); border-color: var(--color-danger); color: var(--color-danger); }
+    .alert-warning { background: var(--color-warning-wash); border-color: var(--color-warning); color: var(--color-warning); }
+    .alert-info, .alert-secondary { background: var(--color-panel-raised); border-color: var(--color-line); color: var(--color-text); }
+    .alert-dismissible { padding-right: 2.75rem; }
+    .alert-dismissible .btn-close { position: absolute; top: 0.85rem; right: 1rem; }
+
+    /* ---- navegação / abas ---- */
+    .nav { display: flex; flex-wrap: wrap; list-style: none; padding: 0; margin: 0; }
+    .nav-item { margin: 0; }
+    .nav-tabs { border-bottom: 1px solid var(--color-line); gap: 0.25rem; }
+    .nav-tabs .nav-link {
+        border: 1px solid transparent; border-bottom: 0; border-radius: 3px 3px 0 0;
+        padding: 0.55rem 0.9rem; font-size: 0.85rem; font-weight: 500; color: var(--color-text-dim);
+        background: transparent; cursor: pointer; margin-bottom: -1px;
+    }
+    .nav-tabs .nav-link.active { color: var(--color-accent); border-color: var(--color-line); border-bottom-color: var(--color-panel); background: var(--color-panel); }
+    .nav-tabs .nav-link:hover:not(.active) { color: var(--color-text); }
+    .tab-content { padding-top: 1rem; }
+    .tab-pane { display: none; }
+    .tab-pane.active.show { display: block; }
+    .breadcrumb { display: flex; flex-wrap: wrap; list-style: none; padding: 0; margin: 0; font-size: 0.82rem; }
+    .breadcrumb-item + .breadcrumb-item::before { content: "/"; color: var(--color-text-faint); margin: 0 0.5rem; }
+    .breadcrumb-item.active { color: var(--color-text-faint); }
+
+    /* ---- dropdown ---- */
+    .dropdown { position: relative; }
+    .dropdown-toggle { cursor: pointer; }
+    .dropdown-menu {
+        position: absolute; z-index: 1060; min-width: 12rem; list-style: none; margin: 0.25rem 0 0;
+        padding: 0.35rem; background: var(--color-panel); border: 1px solid var(--color-line);
+        border-radius: 4px; box-shadow: 0 8px 24px rgba(10, 15, 26, 0.16); display: none;
+    }
+    .dropdown-menu.show { display: block; }
+    .dropdown-menu-end { right: 0; left: auto; }
+    .dropup .dropdown-menu { top: auto; bottom: 100%; margin-bottom: 0.25rem; }
+    .dropdown-item {
+        display: flex; align-items: center; gap: 0.5rem; width: 100%; text-align: left;
+        padding: 0.45rem 0.6rem; border-radius: 3px; font-size: 0.85rem; color: var(--color-text);
+        background: none; border: 0; text-decoration: none; cursor: pointer;
+    }
+    .dropdown-item:hover { background: var(--color-panel-raised); }
+    .dropdown-divider { height: 1px; background: var(--color-line); margin: 0.35rem 0; border: 0; }
+
+    /* ---- modal ---- */
+    .modal { position: fixed; inset: 0; z-index: 1055; display: none; align-items: center; justify-content: center; background: rgba(6, 10, 18, 0.55); padding: 1rem; }
+    .modal.show { display: flex; }
+    .modal-dialog { width: 100%; max-width: 32rem; }
+    .modal-dialog-centered { margin: auto; }
+    .modal-content { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 6px; overflow: hidden; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--color-line); }
+    .modal-title { font-weight: 600; font-size: 1.05rem; }
+    .modal-body { padding: 1.25rem; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.25rem; border-top: 1px solid var(--color-line); }
+
+    /* ---- progresso ---- */
+    .progress { height: 0.5rem; background: var(--color-line); border-radius: 20px; overflow: hidden; }
+    .progress-bar { height: 100%; background: var(--color-accent); }
+
+    /* ---- utilitários que não existem (ou colidem em nome) no Tailwind ---- */
+    .d-flex { display: flex; }
+    .d-inline { display: inline; }
+    .d-inline-flex { display: inline-flex; }
+    .d-inline-block { display: inline-block; }
+    .d-inline-flex { display: inline-flex; }
+    .d-block { display: block; }
+    .d-inline-block { display: inline-block; }
+    .d-none { display: none; }
+    .d-grid { display: grid; }
+    .flex-column { flex-direction: column; }
+    .flex-wrap { flex-wrap: wrap; }
+    .flex-grow-1 { flex-grow: 1; }
+    .flex-shrink-0 { flex-shrink: 0; }
+    .justify-content-between { justify-content: space-between; }
+    .justify-content-center { justify-content: center; }
+    .justify-content-end { justify-content: flex-end; }
+    .justify-content-start { justify-content: flex-start; }
+    .align-items-center { align-items: center; }
+    .align-items-start { align-items: flex-start; }
+    .align-items-end { align-items: flex-end; }
+    .text-start { text-align: left; }
+    .text-end { text-align: right; }
+    .text-uppercase { text-transform: uppercase; }
+    .text-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .text-nowrap { white-space: nowrap; }
+    .text-break { overflow-wrap: break-word; word-break: break-word; }
+    .fw-normal { font-weight: 400; }
+    .fw-medium { font-weight: 500; }
+    .fw-semibold { font-weight: 600; }
+    .fw-bold { font-weight: 700; }
+    .small { font-size: 0.82rem; }
+    .fs-6 { font-size: 0.95rem; }
+    .w-100 { width: 100%; }
+    .h-100 { height: 100%; }
+    .align-middle { vertical-align: middle; }
+    .position-relative { position: relative; }
+    .position-absolute { position: absolute; }
+    .overflow-auto { overflow: auto; }
+    .shadow-sm { box-shadow: 0 1px 2px rgba(16, 22, 34, 0.08); }
+
+    /* cores de texto/fundo que não são tokens do Tailwind (evita colisão
+       de nome com utilities auto-geradas) */
+    .text-secondary, .text-body-secondary { color: var(--color-text-dim); }
+    .text-body-tertiary, .text-muted { color: var(--color-text-faint); }
+    .text-body { color: var(--color-text); }
+    .text-white { color: #fff; }
+    .bg-body, .bg-body-secondary, .bg-body-tertiary { background: var(--color-panel-raised); }
+    .bg-white { background: var(--color-panel); }
+    .border { border: 1px solid var(--color-line); }
+    .border-top { border-top: 1px solid var(--color-line); }
+    .border-bottom { border-bottom: 1px solid var(--color-line); }
+    .border-0 { border: 0; }
+    .rounded { border-radius: 4px; }
+    .rounded-1 { border-radius: 2px; }
+    .rounded-2 { border-radius: 3px; }
+    .rounded-3 { border-radius: 6px; }
+    .rounded-circle { border-radius: 50%; }
+    .rounded-pill { border-radius: 20px; }
+
+    /* "primary"/"info"/"light" do Bootstrap não têm token próprio no
+       tema novo (primary vira accent, info também, light vira o fundo
+       elevado neutro) — só esses precisam de shim; danger/warning/
+       success já saem prontos das utilities do Tailwind, porque são
+       tokens reais definidos em @theme. */
+    .bg-primary, .bg-info { background: var(--color-accent); color: var(--color-accent-ink); }
+    .text-primary, .text-info { color: var(--color-accent); }
+    .border-primary { border-color: var(--color-accent); }
+    .bg-secondary { background: var(--color-text-dim); color: #fff; }
+    .bg-light { background: var(--color-panel-raised); }
+
+    /* Variante "subtle" do Bootstrap: fundo levemente tingido pra badges/
+       ícones, mantendo o texto na cor cheia (text-primary etc., já shimado
+       acima ou já gerado pelo Tailwind pros tokens reais). */
+    .bg-primary-subtle, .bg-info-subtle { background: var(--color-accent-wash); }
+    .bg-success-subtle { background: var(--color-success-wash); }
+    .bg-warning-subtle { background: var(--color-warning-wash); }
+    .bg-danger-subtle { background: var(--color-danger-wash); }
+    .bg-secondary-subtle, .bg-light-subtle { background: var(--color-panel-raised); }
+}
+
+/* Espaçamento com valores do Bootstrap (escala 0/.25/.5/1/1.5/3rem) —
+   fora de @layer de propósito, assim vence a utility equivalente do
+   Tailwind (escala diferente) sem precisar de !important espalhado. */
+:where(.mb-0) { margin-bottom: 0; }
+:where(.mb-1) { margin-bottom: 0.25rem; }
+:where(.mb-2) { margin-bottom: 0.5rem; }
+:where(.mb-3) { margin-bottom: 1rem; }
+:where(.mb-4) { margin-bottom: 1.5rem; }
+:where(.mb-5) { margin-bottom: 3rem; }
+:where(.mt-0) { margin-top: 0; }
+:where(.mt-1) { margin-top: 0.25rem; }
+:where(.mt-2) { margin-top: 0.5rem; }
+:where(.mt-3) { margin-top: 1rem; }
+:where(.mt-4) { margin-top: 1.5rem; }
+:where(.mt-n1) { margin-top: -0.25rem; }
+:where(.mt-n2) { margin-top: -0.5rem; }
+:where(.mt-n3) { margin-top: -1rem; }
+:where(.ms-1) { margin-left: 0.25rem; }
+:where(.ms-2) { margin-left: 0.5rem; }
+:where(.me-1) { margin-right: 0.25rem; }
+:where(.me-2) { margin-right: 0.5rem; }
+:where(.mx-auto) { margin-left: auto; margin-right: auto; }
+:where(.p-2) { padding: 0.5rem; }
+:where(.p-3) { padding: 1rem; }
+:where(.p-4) { padding: 1.5rem; }
+:where(.px-2) { padding-left: 0.5rem; padding-right: 0.5rem; }
+:where(.px-3) { padding-left: 1rem; padding-right: 1rem; }
+:where(.px-4) { padding-left: 1.5rem; padding-right: 1.5rem; }
+:where(.py-1) { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+:where(.py-2) { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+:where(.py-3) { padding-top: 1rem; padding-bottom: 1rem; }
+:where(.py-4) { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+:where(.gap-1) { gap: 0.25rem; }
+:where(.gap-2) { gap: 0.5rem; }
+:where(.gap-3) { gap: 1rem; }
+
+/* Colunas responsivas do grid (col-sm, col-md, col-lg) — mesma
+   proporção de 12 colunas da base, só que só passam a valer a partir
+   do breakpoint. */
+@media (min-width: 576px) {
+    .col-sm-1 { flex: 0 0 auto; width: 8.333333%; }
+    .col-sm-2 { flex: 0 0 auto; width: 16.666667%; }
+    .col-sm-3 { flex: 0 0 auto; width: 25%; }
+    .col-sm-4 { flex: 0 0 auto; width: 33.333333%; }
+    .col-sm-5 { flex: 0 0 auto; width: 41.666667%; }
+    .col-sm-6 { flex: 0 0 auto; width: 50%; }
+    .col-sm-7 { flex: 0 0 auto; width: 58.333333%; }
+    .col-sm-8 { flex: 0 0 auto; width: 66.666667%; }
+    .col-sm-9 { flex: 0 0 auto; width: 75%; }
+    .col-sm-10 { flex: 0 0 auto; width: 83.333333%; }
+    .col-sm-11 { flex: 0 0 auto; width: 91.666667%; }
+    .col-sm-12 { flex: 0 0 auto; width: 100%; }
+    .col-sm-auto { flex: 0 0 auto; width: auto; }
+    .col-sm { flex: 1 0 0%; width: auto; }
+}
+
+@media (min-width: 768px) {
+    .col-md-1 { flex: 0 0 auto; width: 8.333333%; }
+    .col-md-2 { flex: 0 0 auto; width: 16.666667%; }
+    .col-md-3 { flex: 0 0 auto; width: 25%; }
+    .col-md-4 { flex: 0 0 auto; width: 33.333333%; }
+    .col-md-5 { flex: 0 0 auto; width: 41.666667%; }
+    .col-md-6 { flex: 0 0 auto; width: 50%; }
+    .col-md-7 { flex: 0 0 auto; width: 58.333333%; }
+    .col-md-8 { flex: 0 0 auto; width: 66.666667%; }
+    .col-md-9 { flex: 0 0 auto; width: 75%; }
+    .col-md-10 { flex: 0 0 auto; width: 83.333333%; }
+    .col-md-11 { flex: 0 0 auto; width: 91.666667%; }
+    .col-md-12 { flex: 0 0 auto; width: 100%; }
+    .col-md-auto { flex: 0 0 auto; width: auto; }
+    .col-md { flex: 1 0 0%; width: auto; }
+}
+
+@media (min-width: 992px) {
+    .col-lg-1 { flex: 0 0 auto; width: 8.333333%; }
+    .col-lg-2 { flex: 0 0 auto; width: 16.666667%; }
+    .col-lg-3 { flex: 0 0 auto; width: 25%; }
+    .col-lg-4 { flex: 0 0 auto; width: 33.333333%; }
+    .col-lg-5 { flex: 0 0 auto; width: 41.666667%; }
+    .col-lg-6 { flex: 0 0 auto; width: 50%; }
+    .col-lg-7 { flex: 0 0 auto; width: 58.333333%; }
+    .col-lg-8 { flex: 0 0 auto; width: 66.666667%; }
+    .col-lg-9 { flex: 0 0 auto; width: 75%; }
+    .col-lg-10 { flex: 0 0 auto; width: 83.333333%; }
+    .col-lg-11 { flex: 0 0 auto; width: 91.666667%; }
+    .col-lg-12 { flex: 0 0 auto; width: 100%; }
+    .col-lg-auto { flex: 0 0 auto; width: auto; }
+    .col-lg { flex: 1 0 0%; width: auto; }
+}

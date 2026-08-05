@@ -9,18 +9,16 @@
 
         <title>{{ config('app.name', 'Arcn Panel') }}</title>
 
-        @vite(['resources/css/app.scss', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body>
-        <div class="min-vh-100 d-flex flex-column justify-content-center align-items-center py-4">
-            <div class="mb-4">
-                <a href="/" class="text-decoration-none">
-                    <x-application-logo style="width: 3rem; height: 3rem; fill: currentColor;" class="text-secondary" />
-                </a>
-            </div>
+    <body class="min-h-screen bg-ink">
+        <div class="min-h-screen flex flex-col items-center justify-center py-8 px-4">
+            <a href="/" class="mb-6 no-underline">
+                <x-application-logo class="w-10 h-10 text-text-dim" style="fill: currentColor;" />
+            </a>
 
-            <div class="card shadow-sm w-100" style="max-width: 28rem;">
-                <div class="card-body p-4">
+            <div class="panel w-full" style="max-width: 26rem;">
+                <div class="p-6">
                     {{ $slot }}
                 </div>
             </div>

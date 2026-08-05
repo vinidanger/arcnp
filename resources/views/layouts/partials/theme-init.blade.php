@@ -5,7 +5,7 @@
     (function () {
         var storedTheme = localStorage.getItem('theme');
         var theme = storedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-bs-theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
 
         if (localStorage.getItem('sidebarCollapsed') === '1') {
             document.documentElement.classList.add('sidebar-collapsed');

@@ -2,14 +2,14 @@
 
 @php
 $maxWidthClass = match ($maxWidth) {
-    'sm' => 'modal-sm',
-    'lg' => 'modal-lg',
-    'xl' => 'modal-xl',
+    'sm' => 'max-w-sm',
+    'lg' => 'max-w-2xl',
+    'xl' => 'max-w-4xl',
     default => '',
 };
 @endphp
 
-<div class="modal fade" id="{{ $name }}" tabindex="-1" aria-hidden="true">
+<div class="modal" id="{{ $name }}">
     <div class="modal-dialog modal-dialog-centered {{ $maxWidthClass }}">
         <div class="modal-content">
             {{ $slot }}
@@ -20,7 +20,7 @@ $maxWidthClass = match ($maxWidth) {
 @if ($show)
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            new bootstrap.Modal(document.getElementById(@json($name))).show();
+            window.arcnModal?.show(@json($name));
         });
     </script>
 @endif

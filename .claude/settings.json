@@ -104,7 +104,14 @@
       "Bash(node_modules/.bin/sass --load-path=node_modules resources/css/app.scss /tmp/app-check.css)",
       "Bash(grep -n \"function update\" resources/../app/Domain/Hosting/Http/Controllers/Client/FileManagerController.php 2>/dev/null; find app/Domain/Hosting/Http/Controllers -iname \"FileManagerController.php\")",
       "Read(//c/laragon/www/arcnp/app/Domain/Hosting/Http/Controllers/Client/**)",
-      "Bash(node_modules/.bin/esbuild resources/js/code-editor.js --bundle --format=esm --outfile=/tmp/code-editor-check2.js)"
+      "Bash(node_modules/.bin/esbuild resources/js/code-editor.js --bundle --format=esm --outfile=/tmp/code-editor-check2.js)",
+      "Bash(node_modules/.bin/esbuild resources/js/code-editor.js --bundle --format=esm --splitting --outdir=/tmp/ce-check)",
+      "Bash(timeout 5 curl -sI https://registry.npmjs.org/)",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/tailwindcss/package.json'\\).version\\)\")",
+      "Bash(npm uninstall *)",
+      "Bash(xargs -I{} grep -oE \"data-bs-toggle=\\\\\"[a-z]+\\\\\"\" {})",
+      "Bash(node_modules/.bin/tailwindcss -i /tmp/app-test.css -o /tmp/app-out.css)",
+      "Bash(node_modules/.bin/tailwindcss -i resources/css/app.css -o /tmp/app-out.css --cwd .)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",
