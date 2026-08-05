@@ -122,6 +122,18 @@
                         </div>
                     </div>
 
+                    <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Já ativadas no servidor') }}</div>
+                    <p class="small text-secondary">{{ __('Essas extensões já estão disponíveis pra essa conta automaticamente — não é preciso (nem é possível) ativar por conta, e desativar afetaria todas as contas do servidor.') }}</p>
+                    @if (empty($activeExtensions))
+                        <p class="small text-secondary mb-3">{{ __('Nenhuma informação disponível.') }}</p>
+                    @else
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            @foreach ($activeExtensions as $extension)
+                                <span class="badge text-bg-light border"><code>{{ $extension }}</code></span>
+                            @endforeach
+                        </div>
+                    @endif
+
                     <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Extensões extras') }}</div>
                     <p class="small text-secondary">{{ __('Ativa extensões PHP disponíveis no servidor só pra essa conta, sem afetar as demais.') }}</p>
                     @if (empty($availableExtensions))

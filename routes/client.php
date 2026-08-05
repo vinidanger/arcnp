@@ -14,6 +14,7 @@ use App\Domain\Hosting\Http\Controllers\Client\MimeTypeController;
 use App\Domain\Hosting\Http\Controllers\Client\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Client\MailLogController;
 use App\Domain\Hosting\Http\Controllers\Client\PhpSettingsController;
+use App\Domain\Hosting\Http\Controllers\Client\ResourceLimitsController;
 use App\Domain\Hosting\Http\Controllers\Client\SiteRedirectController;
 use App\Domain\Hosting\Http\Controllers\Client\SshAccessController;
 use App\Domain\Support\Http\Controllers\Client\TicketController;
@@ -92,6 +93,9 @@ Route::post('hosting-accounts/{hosting_account}/php/version', [PhpSettingsContro
     ->name('hosting-accounts.php.version.update');
 Route::post('hosting-accounts/{hosting_account}/php/settings', [PhpSettingsController::class, 'updateSettings'])
     ->name('hosting-accounts.php.settings.update');
+
+Route::get('hosting-accounts/{hosting_account}/resources', [ResourceLimitsController::class, 'index'])
+    ->name('hosting-accounts.resources.index');
 
 Route::get('hosting-accounts/{hosting_account}/dns', [DnsZoneController::class, 'index'])
     ->name('hosting-accounts.dns.index');

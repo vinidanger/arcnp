@@ -69,6 +69,20 @@ class HostingAccountProvisioningService
             // fica "failed" — não desfaz a conta por causa disso, o
             // admin/cliente pode tentar de novo manualmente depois.
             $this->issueSslCertificate($account);
+
+            // Best-effort também — cgroup/quota faltando não deve travar
+            // a conta de ficar ativa, o admin pode reaplicar depois pela
+            // tela de Recursos. Só loga, não tem campo de status próprio
+            // (diferente do SSL) porque é síncrono e já teria retornado
+            // erro claro se algo realmente tivesse quebrado.
+            try {
+                $this->syncResourceLimits($account);
+            } catch (Throwable $e) {
+                logger()->warning('Falha ao aplicar limites de recursos na provisão', [
+                    'hosting_account_id' => $account->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         } catch (Throwable $e) {
             $this->rollback($server, $completed, $username, $domain);
 
@@ -294,6 +308,56 @@ class HostingAccountProvisioningService
         $account->update(['php_version' => $newVersion]);
     }
 
+    /**
+     * Migração ÚNICA pós-deploy (comando `php-fpm:migrate-to-per-account`)
+     * pra contas provisionadas ANTES da troca de arquitetura do PHP-FPM
+     * (de service compartilhado por versão pra 1 processo dedicado por
+     * conta) — não faz parte do ciclo de vida normal. Cria o service
+     * novo (caminho novo, não colide com o pool antigo) e re-renderiza
+     * o vhost de cada domínio, que passa a apontar pro socket novo
+     * (PhpFpmPool::socketPath() já mudou no Agent). Não apaga nada da
+     * arquitetura antiga — isso é limpeza manual documentada no
+     * deploy/README.md, feita conscientemente depois de confirmar que
+     * tudo migrou.
+     */
+    public function migratePhpFpmArchitecture(HostingAccount $account): void
+    {
+        $server = $account->server;
+        $username = $account->linux_username;
+        $phpVersion = $account->php_version;
+
+        $this->runStep($server, 'php.create_pool', array_merge([
+            'username' => $username,
+            'php_version' => $phpVersion,
+        ], $account->php_fpm_settings ? $this->formatPoolSettings($account->php_fpm_settings) : []));
+
+        $appDomains = HostedApp::where('hosting_account_id', $account->id)->pluck('domain')->all();
+
+        if (! in_array($account->primary_domain, $appDomains, true)) {
+            $this->runStep($server, 'web.update_vhost_php_version', [
+                'username' => $username,
+                'domain' => $account->primary_domain,
+                'php_version' => $phpVersion,
+                'ssl_active' => $account->ssl_status === 'active',
+            ]);
+        }
+
+        foreach ($account->domains as $domain) {
+            if (in_array($domain->domain, $appDomains, true)) {
+                continue;
+            }
+
+            $this->runStep($server, 'web.update_vhost_php_version', [
+                'username' => $username,
+                'domain' => $domain->domain,
+                'location' => $domain->isOutsidePublicHtml() ? 'outside' : 'inside',
+                'subdir' => $domain->subdirectory,
+                'php_version' => $phpVersion,
+                'ssl_active' => $domain->ssl_status === 'active',
+            ]);
+        }
+    }
+
     public function updatePhpFpmSettings(HostingAccount $account, array $settings): void
     {
         $this->runStep($account->server, 'php.update_pool_settings', array_merge([
@@ -407,6 +471,32 @@ class HostingAccountProvisioningService
         $account->update(['status' => 'active']);
     }
 
+    /**
+     * Aplica CPU/RAM/processos/I-O (cgroup, via user-{uid}.slice) e cota
+     * de disco (setquota -u) da conta, a partir dos limites do plano
+     * atual. Chamada na provisão (best-effort, ver provision()) e pelo
+     * botão admin "Reaplicar limites" (sem try/catch — erro real sobe
+     * normal pro controller). Ausência de limite no plano = sem limite
+     * (infinity/100 pro cgroup, 0 pra cota de disco).
+     */
+    public function syncResourceLimits(HostingAccount $account): void
+    {
+        $plan = $account->plan;
+
+        $this->runStep($account->server, 'resources.set_limits', [
+            'username' => $account->linux_username,
+            'cpu_percent' => $plan->cpu_cores ? (string) ($plan->cpu_cores * 100) : 'infinity',
+            'memory_mb' => $plan->memory_limit_mb ? (string) $plan->memory_limit_mb : 'infinity',
+            'tasks_max' => $plan->max_processes ? (string) $plan->max_processes : 'infinity',
+            'io_weight' => (string) ($plan->io_weight ?? 100),
+        ]);
+
+        $this->runStep($account->server, 'disk.sync_quota', [
+            'username' => $account->linux_username,
+            'quota_mb' => $plan->disk_quota_mb ?? 0,
+        ]);
+    }
+
     private function runStep(Server $server, string $action, array $payload): void
     {
         $job = $this->client->dispatch($server, $action, $payload);
@@ -427,6 +517,19 @@ class HostingAccountProvisioningService
         }
 
         if (in_array('user', $completedSteps, true)) {
+            // Limpa cgroup/cota ANTES de apagar o usuário — o drop-in do
+            // "systemctl set-property" e a entrada de "setquota" não são
+            // removidos automaticamente pelo userdel, e uma UID reciclada
+            // por um useradd futuro herdaria limites de uma conta antiga.
+            $this->client->dispatch($server, 'resources.set_limits', [
+                'username' => $username,
+                'cpu_percent' => 'infinity',
+                'memory_mb' => 'infinity',
+                'tasks_max' => 'infinity',
+                'io_weight' => '100',
+            ]);
+            $this->client->dispatch($server, 'disk.sync_quota', ['username' => $username, 'quota_mb' => 0]);
+
             $this->client->dispatch($server, 'linux.delete_user', ['username' => $username]);
         }
     }

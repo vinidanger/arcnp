@@ -21,6 +21,8 @@ class PlanResource extends JsonResource
             'max_email_accounts' => $this->max_email_accounts,
             'cpu_cores' => $this->cpu_cores,
             'max_processes' => $this->max_processes,
+            'memory_limit_mb' => $this->memory_limit_mb,
+            'io_weight' => $this->io_weight,
         ];
     }
 }

@@ -18,6 +18,8 @@ class Plan extends Model
         'max_backups',
         'cpu_cores',
         'max_processes',
+        'memory_limit_mb',
+        'io_weight',
         'is_active',
     ];
 

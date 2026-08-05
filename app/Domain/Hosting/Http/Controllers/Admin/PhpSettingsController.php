@@ -16,38 +16,50 @@ class PhpSettingsController extends Controller
     {
         $this->authorize('view', $hosting_account);
 
+        $extensions = $this->fetchExtensionsInfo($hosting_account, $client);
+
         return view('admin.hosting-accounts.php.index', [
             'account' => $hosting_account,
-            'availableExtensions' => $this->fetchAvailableExtensions($hosting_account, $client),
+            'availableExtensions' => $extensions['available'],
+            'activeExtensions' => $extensions['active'],
         ]);
     }
 
     /**
-     * Extensões que a conta PODE ativar no próprio pool — só as que
-     * existem no servidor, não são zend_extension (essas nunca podem
-     * ser por conta, ver PhpFpmPoolSettings no Agent) e ainda não estão
-     * ativas pra todo mundo (nesse caso já funcionam sem precisar de
-     * opt-in). Consulta ao vivo, nunca cacheada — a lista muda conforme
-     * o que o admin instala no servidor.
+     * "available": extensões que a conta PODE ativar no próprio pool —
+     * só as que existem no servidor, não são zend_extension (essas
+     * nunca podem ser por conta, ver PhpFpmPoolSettings no Agent) e
+     * ainda não estão ativas pra todo mundo. "active": as que JÁ estão
+     * ativas a nível de servidor (qualquer tipo, inclusive zend) — só
+     * informativo, a conta já tem acesso sem precisar de opt-in, não dá
+     * pra desativar por conta (afetaria todo o servidor). Consulta ao
+     * vivo, nunca cacheada — a lista muda conforme o que o admin
+     * instala no servidor.
      *
-     * @return list<string>
+     * @return array{available: list<string>, active: list<string>}
      */
-    private function fetchAvailableExtensions(HostingAccount $hosting_account, AgentHttpClient $client): array
+    private function fetchExtensionsInfo(HostingAccount $hosting_account, AgentHttpClient $client): array
     {
         $job = $client->dispatch($hosting_account->server, 'php.list_extensions', [
             'php_version' => $hosting_account->php_version,
         ]);
 
         if ($job->status !== 'completed') {
-            return [];
+            return ['available' => [], 'active' => []];
         }
 
         $extensions = $job->result['extensions'] ?? [];
 
-        return array_values(array_map(
-            fn (array $ext) => $ext['name'],
-            array_filter($extensions, fn (array $ext) => $ext['type'] === 'extension' && ! $ext['enabled'])
-        ));
+        return [
+            'available' => array_values(array_map(
+                fn (array $ext) => $ext['name'],
+                array_filter($extensions, fn (array $ext) => $ext['type'] === 'extension' && ! $ext['enabled'])
+            )),
+            'active' => array_values(array_map(
+                fn (array $ext) => $ext['name'],
+                array_filter($extensions, fn (array $ext) => $ext['enabled'])
+            )),
+        ];
     }
 
     public function updateVersion(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
@@ -92,7 +104,7 @@ class PhpSettingsController extends Controller
             'disable_functions' => ['nullable', 'array'],
             'disable_functions.*' => [Rule::in(config('hosting.disablable_php_functions'))],
             'extra_extensions' => ['nullable', 'array'],
-            'extra_extensions.*' => [Rule::in($this->fetchAvailableExtensions($hosting_account, $client))],
+            'extra_extensions.*' => [Rule::in($this->fetchExtensionsInfo($hosting_account, $client)['available'])],
         ]);
 
         $data['display_errors'] = $request->boolean('display_errors');

@@ -16,6 +16,7 @@ use App\Domain\Hosting\Http\Controllers\Admin\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Admin\MailLogController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\PhpSettingsController;
+use App\Domain\Hosting\Http\Controllers\Admin\ResourceLimitsController;
 use App\Domain\Hosting\Http\Controllers\Admin\PlanController;
 use App\Domain\Hosting\Http\Controllers\Admin\SiteRedirectController;
 use App\Domain\Hosting\Http\Controllers\Admin\SshAccessController;
@@ -129,6 +130,11 @@ Route::post('hosting-accounts/{hosting_account}/php/version', [PhpSettingsContro
     ->name('hosting-accounts.php.version.update');
 Route::post('hosting-accounts/{hosting_account}/php/settings', [PhpSettingsController::class, 'updateSettings'])
     ->name('hosting-accounts.php.settings.update');
+
+Route::get('hosting-accounts/{hosting_account}/resources', [ResourceLimitsController::class, 'index'])
+    ->name('hosting-accounts.resources.index');
+Route::post('hosting-accounts/{hosting_account}/resources/reapply', [ResourceLimitsController::class, 'reapply'])
+    ->name('hosting-accounts.resources.reapply');
 
 Route::get('hosting-accounts/{hosting_account}/dns', [DnsZoneController::class, 'index'])
     ->name('hosting-accounts.dns.index');

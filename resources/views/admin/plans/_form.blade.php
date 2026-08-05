@@ -51,13 +51,28 @@
         <x-input-label for="cpu_cores" value="{{ __('Núcleos de CPU') }}" />
         <x-text-input id="cpu_cores" name="cpu_cores" type="number" :value="old('cpu_cores', $plan?->cpu_cores)" />
         <x-input-error :messages="$errors->get('cpu_cores')" class="mt-2" />
-        <div class="form-text">{{ __('Ainda sem aplicação real (cgroup) — guardado pra quando existir.') }}</div>
+        <div class="form-text">{{ __('Vazio = sem limite. Aplicado como CPUQuota no cgroup da conta.') }}</div>
     </div>
     <div class="col-4 mb-3">
         <x-input-label for="max_processes" value="{{ __('Máx. processos simultâneos') }}" />
         <x-text-input id="max_processes" name="max_processes" type="number" :value="old('max_processes', $plan?->max_processes)" />
         <x-input-error :messages="$errors->get('max_processes')" class="mt-2" />
-        <div class="form-text">{{ __('Ainda sem aplicação real (pm.max_children) — guardado pra quando existir.') }}</div>
+        <div class="form-text">{{ __('Vazio = sem limite. Aplicado como TasksMax no cgroup da conta (todos os processos: PHP, cron, SSH, apps).') }}</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-4 mb-3">
+        <x-input-label for="memory_limit_mb" value="{{ __('Limite de RAM (MB)') }}" />
+        <x-text-input id="memory_limit_mb" name="memory_limit_mb" type="number" :value="old('memory_limit_mb', $plan?->memory_limit_mb)" />
+        <x-input-error :messages="$errors->get('memory_limit_mb')" class="mt-2" />
+        <div class="form-text">{{ __('Vazio = sem limite. Aplicado como MemoryMax no cgroup da conta.') }}</div>
+    </div>
+    <div class="col-4 mb-3">
+        <x-input-label for="io_weight" value="{{ __('Peso de I/O de disco') }}" />
+        <x-text-input id="io_weight" name="io_weight" type="number" min="1" max="10000" :value="old('io_weight', $plan?->io_weight)" />
+        <x-input-error :messages="$errors->get('io_weight')" class="mt-2" />
+        <div class="form-text">{{ __('1 a 10000, padrão 100. Prioridade relativa de I/O — não é limite de banda fixo.') }}</div>
     </div>
 </div>
 
