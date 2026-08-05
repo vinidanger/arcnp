@@ -72,7 +72,14 @@
       "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/PhpSettingsController.php)",
       "Bash(php -l app/Support/PhpFpmPoolSettings.php)",
       "Bash(grep -n '\\\\$user' /c/laragon/www/arcnp/resources/views/profile/partials/update-profile-information-form.blade.php)",
-      "Bash(php -l app/Actions/Server/CollectServerInfoAction.php)"
+      "Bash(php -l app/Actions/Server/CollectServerInfoAction.php)",
+      "Bash(php -l app/Services/TwoFactorAuthenticationService.php)",
+      "Bash(php -l app/Http/Controllers/TwoFactorController.php)",
+      "Bash(php -l app/Support/PhpExtensionList.php)",
+      "Bash(php -l app/Actions/Php/ListPhpExtensionsAction.php)",
+      "Bash(php -l app/Actions/Php/TogglePhpExtensionAction.php)",
+      "Bash(bash -n scripts/toggle-php-extension.sh)",
+      "Bash(php -l app/Domain/Servers/Http/Controllers/Admin/PhpExtensionController.php)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

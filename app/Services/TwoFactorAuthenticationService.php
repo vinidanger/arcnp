@@ -32,6 +32,21 @@ class TwoFactorAuthenticationService
     }
 
     /**
+     * URI padrão otpauth:// (RFC — usado por todo app autenticador pra
+     * ler via QR code). Não precisa de nenhuma lib de geração de
+     * imagem no servidor — é só um link; o QR em si é desenhado no
+     * navegador (ver resources/js/two-factor-qr.js), a partir desse
+     * texto puro.
+     */
+    public function generateQrCodeUri(string $email, string $secret): string
+    {
+        $issuer = config('app.name');
+        $label = rawurlencode("{$issuer}:{$email}");
+
+        return "otpauth://totp/{$label}?secret={$secret}&issuer=".rawurlencode($issuer).'&algorithm=SHA1&digits=6&period=30';
+    }
+
+    /**
      * @return list<string>
      */
     public function generateRecoveryCodes(): array

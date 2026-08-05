@@ -11,6 +11,7 @@
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Coletar agora') }}</button>
                 </form>
+                <a href="{{ route('admin.servers.php-extensions.index', $server) }}" class="btn btn-sm btn-outline-secondary">{{ __('Extensões PHP') }}</a>
                 <a href="{{ route('admin.servers.edit', $server) }}" class="btn btn-sm btn-outline-secondary">{{ __('Editar') }}</a>
             </div>
         </div>

@@ -35,14 +35,17 @@
             <button type="submit" class="btn btn-sm btn-outline-danger mt-2">{{ __('Desativar') }}</button>
         </form>
     @elseif ($user->two_factor_secret)
-        @if (session('two_factor_setup_key'))
-            <div class="alert alert-info">
-                <p class="small mb-2">{{ __('Adicione essa chave no seu app autenticador — procure a opção "inserir chave manualmente" ou "configuração manual":') }}</p>
-                <code class="d-block mb-0" style="letter-spacing: 0.1em;">{{ session('two_factor_setup_key') }}</code>
-            </div>
-        @else
-            <p class="small text-secondary">{{ __('Chave já gerada — digite o código do seu app pra confirmar.') }}</p>
-        @endif
+        @php
+            $otpauthUri = app(App\Services\TwoFactorAuthenticationService::class)->generateQrCodeUri($user->email, $user->two_factor_secret);
+        @endphp
+        <div class="alert alert-info">
+            <p class="small mb-2">{{ __('Escaneie o QR code com seu app autenticador (Google Authenticator, Authy, etc):') }}</p>
+            <canvas id="two-factor-qr-canvas" data-otpauth-uri="{{ $otpauthUri }}" class="mb-3 d-block"></canvas>
+
+            <p class="small mb-2">{{ __('Não consegue escanear? Digite essa chave manualmente:') }}</p>
+            <code class="d-block mb-0" style="letter-spacing: 0.1em;">{{ $user->two_factor_secret }}</code>
+        </div>
+        @vite('resources/js/two-factor-qr.js')
 
         <form method="POST" action="{{ route('two-factor.confirm') }}" style="max-width: 20rem;">
             @csrf

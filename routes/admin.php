@@ -19,6 +19,7 @@ use App\Domain\Hosting\Http\Controllers\Admin\PhpSettingsController;
 use App\Domain\Hosting\Http\Controllers\Admin\PlanController;
 use App\Domain\Hosting\Http\Controllers\Admin\SiteRedirectController;
 use App\Domain\Hosting\Http\Controllers\Admin\SshAccessController;
+use App\Domain\Servers\Http\Controllers\Admin\PhpExtensionController;
 use App\Domain\Servers\Http\Controllers\Admin\ServerController;
 use App\Domain\Support\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\AnnouncementController;
@@ -42,6 +43,10 @@ Route::post('servers/{server}/test-connection', [ServerController::class, 'testC
     ->name('servers.test-connection');
 Route::post('servers/{server}/collect-info', [ServerController::class, 'collectInfo'])
     ->name('servers.collect-info');
+Route::get('servers/{server}/php-extensions', [PhpExtensionController::class, 'index'])
+    ->name('servers.php-extensions.index');
+Route::post('servers/{server}/php-extensions/toggle', [PhpExtensionController::class, 'toggle'])
+    ->name('servers.php-extensions.toggle');
 
 Route::resource('plans', PlanController::class)->except(['show']);
 

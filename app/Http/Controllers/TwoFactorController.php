@@ -11,10 +11,12 @@ class TwoFactorController extends Controller
     /**
      * Gera um segredo novo (ainda NÃO confirmado — two_factor_confirmed_at
      * continua null até o usuário provar que configurou certo no app
-     * autenticador, evita a pessoa se trancar fora por engano). A chave
-     * fica exposta uma vez só na sessão pro formulário de confirmação
-     * mostrar o texto (sem QR code — ver TwoFactorAuthenticationService,
-     * decisão de escopo documentada no plano).
+     * autenticador, evita a pessoa se trancar fora por engano). O QR
+     * code/chave manual são derivados de $user->two_factor_secret
+     * direto na view enquanto estiver pendente — não precisa de flash
+     * (diferente de senha, aqui o valor já está gravado e criptografado
+     * no banco o tempo todo, então não tem porquê esconder de novo se
+     * a pessoa recarregar a página ou errar o código na primeira vez).
      */
     public function enable(Request $request): RedirectResponse
     {
@@ -28,7 +30,7 @@ class TwoFactorController extends Controller
 
         $user->update(['two_factor_secret' => $secret]);
 
-        return back()->with('two_factor_setup_key', $secret);
+        return back();
     }
 
     public function confirm(Request $request, TwoFactorAuthenticationService $twoFactor): RedirectResponse

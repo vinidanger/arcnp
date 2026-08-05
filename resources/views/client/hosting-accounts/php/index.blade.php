@@ -122,20 +122,6 @@
                         </div>
                     </div>
 
-                    <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Segurança — funções desabilitadas') }}</div>
-                    <p class="small text-secondary">{{ __('Desliga funções específicas do PHP só nessa conta (disable_functions). Não afeta outras contas nem remove a extensão em si.') }}</p>
-                    <div class="row g-2 mb-3">
-                        @foreach (config('hosting.disablable_php_functions') as $function)
-                            <div class="col-6 col-md-3">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="disable_functions_{{ $function }}" name="disable_functions[]" value="{{ $function }}"
-                                           @checked(in_array($function, old('disable_functions', $s['disable_functions'] ?? []), true))>
-                                    <label class="form-check-label" for="disable_functions_{{ $function }}"><code>{{ $function }}</code></label>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-
                     <button type="submit" class="btn btn-sm btn-primary">{{ __('Salvar') }}</button>
                 </form>
             </div>
