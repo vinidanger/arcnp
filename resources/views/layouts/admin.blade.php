@@ -68,6 +68,24 @@
                 <header class="bg-body border-bottom">
                     <div class="container-fluid px-4 py-3 d-flex align-items-center justify-content-between gap-3">
                         <div class="flex-grow-1" style="min-width: 0;">
+                            {{-- Qualquer rota com {hosting_account} (SSH, PHP, FTP, Mail,
+                                 Recursos, etc.) ganha esse link de volta automaticamente — sem
+                                 isso, a única forma de voltar era passar pela lista de
+                                 hospedagens de novo e reselecionar a conta. Lido direto do
+                                 parâmetro da rota (já resolvido pelo binding do Laravel antes da
+                                 view renderizar), não da variável $account da view — um
+                                 <x-admin-layout> é um componente Blade à parte, não herda
+                                 variável nenhuma da view que o chama a menos que seja passada
+                                 explicitamente, então @isset($account) aqui dentro nunca via nada.
+                                 Escondido na própria página da conta (senão vira link pra ela
+                                 mesma). --}}
+                            @php $navAccount = request()->route('hosting_account'); @endphp
+                            @if ($navAccount instanceof \App\Domain\Hosting\Models\HostingAccount && ! request()->routeIs('*.hosting-accounts.show'))
+                                <a href="{{ route('admin.hosting-accounts.show', $navAccount) }}"
+                                   class="d-inline-flex align-items-center gap-1 small text-secondary text-decoration-none mb-1">
+                                    <i class="bi bi-arrow-left"></i> {{ $navAccount->primary_domain }}
+                                </a>
+                            @endif
                             @isset($header)
                                 {{ $header }}
                             @endisset

@@ -70,8 +70,22 @@ class FileManagerController extends Controller
         try {
             $files->write($hosting_account, $data['path'], $data['content'] ?? '', $data['root'] ?? null);
 
+            // O editor de código salva via fetch() (ver code-editor.js)
+            // pra não recarregar a página inteira — perderia a posição
+            // de rolagem em arquivos grandes. expectsJson() só é
+            // verdadeiro nesse caminho (a requisição manda
+            // Accept: application/json); um <form> normal sem JS
+            // continua caindo no redirect de sempre.
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Arquivo salvo.']);
+            }
+
             return back()->with('status', 'Arquivo salvo.');
         } catch (Throwable $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Falha ao salvar: '.$e->getMessage()], 422);
+            }
+
             return back()->with('error', 'Falha ao salvar: '.$e->getMessage());
         }
     }

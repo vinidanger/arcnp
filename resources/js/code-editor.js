@@ -150,14 +150,56 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
     wrapper.append(toolbar, view.dom);
     textarea.style.display = 'none';
 
-    const saveButton = textarea.closest('form')?.querySelector('button[type="submit"]');
+    const form = textarea.closest('form');
+    const saveButton = form?.querySelector('button[type="submit"]');
 
     if (saveButton) {
         saveButton.classList.add('mt-2');
         wrapper.appendChild(saveButton);
     }
 
-    textarea.closest('form')?.addEventListener('submit', () => {
+    const feedback = document.createElement('span');
+    feedback.className = 'small ms-2';
+    wrapper.appendChild(feedback);
+
+    let feedbackTimeout;
+
+    function showFeedback(ok, message) {
+        clearTimeout(feedbackTimeout);
+        feedback.textContent = message;
+        feedback.className = 'small ms-2 ' + (ok ? 'text-success' : 'text-danger');
+        feedbackTimeout = setTimeout(() => { feedback.textContent = ''; }, 3000);
+    }
+
+    // Salva via fetch em vez de deixar o <form> navegar normalmente —
+    // um POST clássico recarrega a página inteira, e num arquivo grande
+    // isso joga quem está editando lá pela linha 1000 de volta pro
+    // topo toda vez que salva. O controller (FileManagerController::
+    // update) reconhece o cabeçalho Accept: application/json e devolve
+    // JSON em vez de redirect nesse caso.
+    form?.addEventListener('submit', async (event) => {
+        event.preventDefault();
         textarea.value = view.state.doc.toString();
+
+        if (saveButton) {
+            saveButton.disabled = true;
+        }
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { Accept: 'application/json' },
+            });
+            const data = await response.json().catch(() => ({}));
+
+            showFeedback(response.ok, data.message ?? (response.ok ? 'Salvo.' : 'Falha ao salvar.'));
+        } catch (error) {
+            showFeedback(false, 'Falha ao salvar — sem conexão.');
+        } finally {
+            if (saveButton) {
+                saveButton.disabled = false;
+            }
+        }
     });
 });

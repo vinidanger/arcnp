@@ -46,6 +46,16 @@
                 <header class="bg-body border-bottom">
                     <div class="container-fluid px-4 py-3 d-flex align-items-center justify-content-between gap-3">
                         <div class="flex-grow-1" style="min-width: 0;">
+                            {{-- Ver comentário equivalente em layouts/admin.blade.php — lido do
+                                 parâmetro da rota, não de $account da view (x-client-layout é um
+                                 componente à parte, não herda variável da view que o chama). --}}
+                            @php $navAccount = request()->route('hosting_account'); @endphp
+                            @if ($navAccount instanceof \App\Domain\Hosting\Models\HostingAccount && ! request()->routeIs('*.hosting-accounts.show'))
+                                <a href="{{ route('client.hosting-accounts.show', $navAccount) }}"
+                                   class="d-inline-flex align-items-center gap-1 small text-secondary text-decoration-none mb-1">
+                                    <i class="bi bi-arrow-left"></i> {{ $navAccount->primary_domain }}
+                                </a>
+                            @endif
                             @isset($header)
                                 {{ $header }}
                             @endisset

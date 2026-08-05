@@ -3,7 +3,7 @@
         <h1 class="h4 mb-0">{{ __('Novo plano') }}</h1>
     </x-slot>
 
-    <div class="card" style="max-width: 52rem;">
+    <div class="card">
         <div class="card-body p-4">
             <form method="POST" action="{{ route('admin.plans.store') }}">
                 @csrf

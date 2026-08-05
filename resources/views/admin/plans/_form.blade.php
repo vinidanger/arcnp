@@ -47,8 +47,6 @@
         <x-input-label for="max_email_accounts" value="{{ __('Máx. contas de e-mail') }}" />
         <x-text-input id="max_email_accounts" name="max_email_accounts" type="number" :value="old('max_email_accounts', $plan?->max_email_accounts ?? 0)" required />
         <x-input-error :messages="$errors->get('max_email_accounts')" class="mt-2" />
-        <div class="form-text">{{ __('Ainda sem sistema de e-mail — guardado pra quando existir.') }}</div>
-    </div>
     <div class="col-6 col-md-3">
         <x-input-label for="max_backups" value="{{ __('Máx. backups') }}" />
         <x-text-input id="max_backups" name="max_backups" type="number" :value="old('max_backups', $plan?->max_backups ?? 5)" required />
