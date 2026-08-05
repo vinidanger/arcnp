@@ -4,6 +4,7 @@ namespace App\Domain\Hosting\Http\Controllers\Admin;
 
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Services\HostingAccountProvisioningService;
+use App\Domain\Servers\Services\AgentHttpClient;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,11 +12,42 @@ use Throwable;
 
 class PhpSettingsController extends Controller
 {
-    public function index(HostingAccount $hosting_account)
+    public function index(HostingAccount $hosting_account, AgentHttpClient $client)
     {
         $this->authorize('view', $hosting_account);
 
-        return view('admin.hosting-accounts.php.index', ['account' => $hosting_account]);
+        return view('admin.hosting-accounts.php.index', [
+            'account' => $hosting_account,
+            'availableExtensions' => $this->fetchAvailableExtensions($hosting_account, $client),
+        ]);
+    }
+
+    /**
+     * Extensões que a conta PODE ativar no próprio pool — só as que
+     * existem no servidor, não são zend_extension (essas nunca podem
+     * ser por conta, ver PhpFpmPoolSettings no Agent) e ainda não estão
+     * ativas pra todo mundo (nesse caso já funcionam sem precisar de
+     * opt-in). Consulta ao vivo, nunca cacheada — a lista muda conforme
+     * o que o admin instala no servidor.
+     *
+     * @return list<string>
+     */
+    private function fetchAvailableExtensions(HostingAccount $hosting_account, AgentHttpClient $client): array
+    {
+        $job = $client->dispatch($hosting_account->server, 'php.list_extensions', [
+            'php_version' => $hosting_account->php_version,
+        ]);
+
+        if ($job->status !== 'completed') {
+            return [];
+        }
+
+        $extensions = $job->result['extensions'] ?? [];
+
+        return array_values(array_map(
+            fn (array $ext) => $ext['name'],
+            array_filter($extensions, fn (array $ext) => $ext['type'] === 'extension' && ! $ext['enabled'])
+        ));
     }
 
     public function updateVersion(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
@@ -39,7 +71,7 @@ class PhpSettingsController extends Controller
         }
     }
 
-    public function updateSettings(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    public function updateSettings(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning, AgentHttpClient $client)
     {
         $this->authorize('update', $hosting_account);
 
@@ -59,6 +91,8 @@ class PhpSettingsController extends Controller
             'error_reporting' => ['required', Rule::in(array_keys(config('hosting.error_reporting_presets')))],
             'disable_functions' => ['nullable', 'array'],
             'disable_functions.*' => [Rule::in(config('hosting.disablable_php_functions'))],
+            'extra_extensions' => ['nullable', 'array'],
+            'extra_extensions.*' => [Rule::in($this->fetchAvailableExtensions($hosting_account, $client))],
         ]);
 
         $data['display_errors'] = $request->boolean('display_errors');
@@ -66,6 +100,7 @@ class PhpSettingsController extends Controller
         $data['file_uploads'] = $request->boolean('file_uploads');
         $data['short_open_tag'] = $request->boolean('short_open_tag');
         $data['disable_functions'] = $data['disable_functions'] ?? [];
+        $data['extra_extensions'] = $data['extra_extensions'] ?? [];
 
         try {
             $provisioning->updatePhpFpmSettings($hosting_account, $data);

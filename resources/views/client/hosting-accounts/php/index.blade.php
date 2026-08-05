@@ -122,6 +122,24 @@
                         </div>
                     </div>
 
+                    <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Extensões extras') }}</div>
+                    <p class="small text-secondary">{{ __('Ativa extensões PHP disponíveis no servidor só pra essa conta, sem afetar as demais.') }}</p>
+                    @if (empty($availableExtensions))
+                        <p class="small text-secondary mb-3">{{ __('Nenhuma extensão disponível pra ativar por conta nessa versão de PHP.') }}</p>
+                    @else
+                        <div class="row g-2 mb-3">
+                            @foreach ($availableExtensions as $extension)
+                                <div class="col-6 col-md-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="extra_extensions_{{ $extension }}" name="extra_extensions[]" value="{{ $extension }}"
+                                               @checked(in_array($extension, old('extra_extensions', $s['extra_extensions'] ?? []), true))>
+                                        <label class="form-check-label" for="extra_extensions_{{ $extension }}"><code>{{ $extension }}</code></label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
                     <button type="submit" class="btn btn-sm btn-primary">{{ __('Salvar') }}</button>
                 </form>
             </div>

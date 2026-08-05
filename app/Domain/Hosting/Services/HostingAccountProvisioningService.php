@@ -324,6 +324,7 @@ class HostingAccountProvisioningService
             'file_uploads' => ($settings['file_uploads'] ?? true) ? 'On' : 'Off',
             'short_open_tag' => ($settings['short_open_tag'] ?? false) ? 'On' : 'Off',
             'disable_functions' => implode(',', $settings['disable_functions'] ?? []),
+            'extra_extensions' => implode(',', $settings['extra_extensions'] ?? []),
         ];
     }
 

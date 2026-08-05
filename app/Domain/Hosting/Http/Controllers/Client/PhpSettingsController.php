@@ -4,6 +4,7 @@ namespace App\Domain\Hosting\Http\Controllers\Client;
 
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Services\HostingAccountProvisioningService;
+use App\Domain\Servers\Services\AgentHttpClient;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,11 +12,40 @@ use Throwable;
 
 class PhpSettingsController extends Controller
 {
-    public function index(HostingAccount $hosting_account)
+    public function index(HostingAccount $hosting_account, AgentHttpClient $client)
     {
         $this->authorize('view', $hosting_account);
 
-        return view('client.hosting-accounts.php.index', ['account' => $hosting_account]);
+        return view('client.hosting-accounts.php.index', [
+            'account' => $hosting_account,
+            'availableExtensions' => $this->fetchAvailableExtensions($hosting_account, $client),
+        ]);
+    }
+
+    /**
+     * Extensões que a conta PODE ativar no próprio pool — mesma lógica
+     * do controller admin (ver o comentário lá), duplicada aqui porque
+     * os dois controllers já são espelhados ponto a ponto no resto do
+     * projeto (mesmo padrão adotado em toda a sessão).
+     *
+     * @return list<string>
+     */
+    private function fetchAvailableExtensions(HostingAccount $hosting_account, AgentHttpClient $client): array
+    {
+        $job = $client->dispatch($hosting_account->server, 'php.list_extensions', [
+            'php_version' => $hosting_account->php_version,
+        ]);
+
+        if ($job->status !== 'completed') {
+            return [];
+        }
+
+        $extensions = $job->result['extensions'] ?? [];
+
+        return array_values(array_map(
+            fn (array $ext) => $ext['name'],
+            array_filter($extensions, fn (array $ext) => $ext['type'] === 'extension' && ! $ext['enabled'])
+        ));
     }
 
     public function updateVersion(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
@@ -39,7 +69,7 @@ class PhpSettingsController extends Controller
         }
     }
 
-    public function updateSettings(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    public function updateSettings(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning, AgentHttpClient $client)
     {
         $this->authorize('update', $hosting_account);
 
@@ -57,12 +87,15 @@ class PhpSettingsController extends Controller
             'max_file_uploads' => ['required', 'integer', 'min:1', 'max:100'],
             'session_gc_maxlifetime' => ['required', 'integer', 'min:60', 'max:86400'],
             'error_reporting' => ['required', Rule::in(array_keys(config('hosting.error_reporting_presets')))],
+            'extra_extensions' => ['nullable', 'array'],
+            'extra_extensions.*' => [Rule::in($this->fetchAvailableExtensions($hosting_account, $client))],
         ]);
 
         $data['display_errors'] = $request->boolean('display_errors');
         $data['log_errors'] = $request->boolean('log_errors');
         $data['file_uploads'] = $request->boolean('file_uploads');
         $data['short_open_tag'] = $request->boolean('short_open_tag');
+        $data['extra_extensions'] = $data['extra_extensions'] ?? [];
 
         // "Funções desabilitadas" é admin-only (não aparece no form do
         // cliente) — preserva o que já estava salvo em vez de assumir
