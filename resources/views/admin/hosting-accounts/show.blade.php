@@ -237,7 +237,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                     @csrf
                                     @method('PATCH')
                                     <code class="small">public_html{{ $account->public_path ? '/'.$account->public_path : '' }}</code>
-                                    <input type="text" name="public_path" value="{{ $account->public_path }}" placeholder="{{ __('vazio = raiz') }}" class="form-control form-control-sm" style="width: 9rem;">
+                                    <input type="text" name="public_path" value="{{ old('public_path', $account->public_path) }}" placeholder="{{ __('vazio = raiz') }}" class="form-control form-control-sm" style="width: 9rem;">
                                     <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Salvar') }}</button>
                                 </form>
                                 <x-input-error :messages="$errors->get('public_path')" class="mt-1" />
