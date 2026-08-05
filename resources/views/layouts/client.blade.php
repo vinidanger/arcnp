@@ -40,6 +40,22 @@
                         <a href="{{ route('client.dashboard') }}" class="nav-link {{ request()->routeIs('client.dashboard') || request()->routeIs('client.hosting-accounts.show') ? 'active' : '' }}">
                             <i class="bi bi-grid-3x3-gap"></i> <span>{{ __('Tools') }}</span>
                         </a>
+
+                        @if ($navAccount)
+                            <a href="{{ route('client.hosting-accounts.files.index', $navAccount) }}" class="nav-link {{ request()->routeIs('client.hosting-accounts.files.*') ? 'active' : '' }}">
+                                <i class="bi bi-folder2-open"></i> <span>{{ __('Arquivos') }}</span>
+                            </a>
+                            <a href="{{ route('client.hosting-accounts.mail.index', $navAccount) }}" class="nav-link {{ request()->routeIs('client.hosting-accounts.mail.*') ? 'active' : '' }}">
+                                <i class="bi bi-envelope"></i> <span>{{ __('E-mail') }}</span>
+                            </a>
+                            <a href="{{ route('client.hosting-accounts.show', $navAccount) }}#tab-databases" class="nav-link">
+                                <i class="bi bi-database"></i> <span>{{ __('Bancos de Dados') }}</span>
+                            </a>
+                            <a href="{{ route('client.hosting-accounts.show', $navAccount) }}#tab-backups" class="nav-link">
+                                <i class="bi bi-archive"></i> <span>{{ __('Backups') }}</span>
+                            </a>
+                        @endif
+
                         <a href="{{ route('client.tickets.index') }}" class="nav-link {{ request()->routeIs('client.tickets.*') ? 'active' : '' }}">
                             <i class="bi bi-life-preserver"></i> <span>{{ __('Chamados') }}</span>
                         </a>

@@ -261,14 +261,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ---------------------------------------------------------------------
 // Template "cPanel" — página "Tools" (client/hosting-accounts/show.blade.php):
-// colapsar/expandir categoria e busca ao vivo filtrando os itens da
-// grade (não as categorias inteiras — combina com o colapso acima, uma
-// categoria com algum item batendo a busca se auto-expande).
+// colapsar/expandir categoria (persistido em localStorage, por
+// navegador, mesmo padrão do menu lateral retrátil) e busca ao vivo
+// filtrando os itens da grade (não as categorias inteiras — combina
+// com o colapso acima, uma categoria com algum item batendo a busca se
+// auto-expande sem mexer na preferência salva).
 // ---------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
+    const collapsedKey = (category) => `cpanelCategoryCollapsed:${category.dataset.category}`;
+
+    document.querySelectorAll('.cpanel-category[data-category]').forEach((category) => {
+        if (localStorage.getItem(collapsedKey(category)) === '1') {
+            category.classList.add('collapsed');
+        }
+    });
+
     document.querySelectorAll('[data-cpanel-category-toggle]').forEach((button) => {
         button.addEventListener('click', () => {
-            button.closest('.cpanel-category')?.classList.toggle('collapsed');
+            const category = button.closest('.cpanel-category');
+
+            if (! category) {
+                return;
+            }
+
+            const collapsed = category.classList.toggle('collapsed');
+            localStorage.setItem(collapsedKey(category), collapsed ? '1' : '0');
         });
     });
 
@@ -290,7 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 categoryHasMatch = categoryHasMatch || matches;
             });
 
-            category.classList.toggle('collapsed', query !== '' && ! categoryHasMatch);
+            if (query === '') {
+                // Busca limpa — volta pra preferência salva em vez de
+                // forçar expandido.
+                category.classList.toggle('collapsed', localStorage.getItem(collapsedKey(category)) === '1');
+            } else {
+                category.classList.toggle('collapsed', ! categoryHasMatch);
+            }
+
             category.hidden = query !== '' && ! categoryHasMatch;
         });
     });

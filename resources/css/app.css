@@ -541,10 +541,10 @@ html.sidebar-collapsed #sidebar-toggle i {
 }
 
 .cpanel-tool-item .cpanel-tool-icon {
-    width: 1.75rem;
+    width: 2.5rem;
     text-align: center;
     color: var(--color-text-dim);
-    font-size: 1.05rem;
+    font-size: 1.85rem;
     flex-shrink: 0;
 }
 

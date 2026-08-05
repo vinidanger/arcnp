@@ -141,7 +141,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         <div class="row g-3">
             <div class="col-lg-8">
                 @foreach ($cpanelCategories as $categoryName => [$categoryIcon, $tools])
-                    <div class="cpanel-category">
+                    <div class="cpanel-category" data-category="{{ \Illuminate\Support\Str::slug($categoryName) }}">
                         <button type="button" class="cpanel-category-header" data-cpanel-category-toggle>
                             <span class="cpanel-category-icon"><i class="bi {{ $categoryIcon }}"></i></span>
                             <span class="cpanel-category-title">{{ __($categoryName) }}</span>
@@ -158,7 +158,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     </div>
                 @endforeach
 
-                <div class="cpanel-category">
+                <div class="cpanel-category" data-category="conta">
                     <button type="button" class="cpanel-category-header" data-cpanel-category-toggle>
                         <span class="cpanel-category-icon"><i class="bi bi-hdd-stack"></i></span>
                         <span class="cpanel-category-title">{{ __('Conta') }}</span>
