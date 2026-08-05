@@ -355,7 +355,6 @@ html.sidebar-collapsed #sidebar-toggle i {
     border: 1px solid var(--color-line);
     border-radius: 4px;
     padding: 1rem;
-    height: 100%;
 }
 
 .stat-tile-icon {
@@ -452,15 +451,26 @@ table.data-table tbody tr:hover {
    --------------------------------------------------------------------- */
 
 .file-dropzone-overlay {
+    display: none;
     position: fixed;
     inset: 0;
     z-index: 1090;
-    display: flex;
     align-items: center;
     justify-content: center;
     background: var(--color-accent-wash);
     backdrop-filter: blur(1px);
     pointer-events: none;
+}
+
+/* Estado visível controlado por JS via .show, não .d-none — esse bloco
+   fica FORA de @layer (mesma zona do resto do CSS do gerenciador de
+   arquivos), então uma classe .d-none vinda de @layer components nunca
+   consegue vencer o display:flex daqui na cascata (camadas não-nomeadas
+   sempre ganham de qualquer @layer). Foi exatamente isso que deixava os
+   dois overlays (dropzone e "Processando...") sempre visíveis, cobrindo
+   a tela inteira assim que a página de Arquivos carregava. */
+.file-dropzone-overlay.show {
+    display: flex;
 }
 
 .file-dropzone-overlay-box {

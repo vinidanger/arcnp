@@ -201,7 +201,7 @@
     </div>
 
     {{-- Overlay de "solte pra enviar" — só some do d-none durante um arrasto real (ver file-manager.js) --}}
-    <div id="file-dropzone-overlay" class="file-dropzone-overlay d-none">
+    <div id="file-dropzone-overlay" class="file-dropzone-overlay">
         <div class="file-dropzone-overlay-box">
             <i class="bi bi-cloud-arrow-up d-block mb-2" style="font-size: 2.5rem;"></i>
             {{ __('Solte aqui pra enviar') }}
@@ -212,7 +212,7 @@
          real (o servidor só responde quando termina), mas evita a tela
          parecer travada durante operações mais demoradas. Some sozinho
          quando a página recarrega (sucesso ou erro). --}}
-    <div id="file-operation-overlay" class="file-dropzone-overlay d-none">
+    <div id="file-operation-overlay" class="file-dropzone-overlay">
         <div class="file-dropzone-overlay-box">
             <div class="spinner-border mb-2" role="status"></div>
             <div id="file-operation-label">{{ __('Processando...') }}</div>

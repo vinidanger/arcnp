@@ -98,7 +98,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         <div class="tab-pane fade show active" id="tab-overview">
             <div class="row g-3 mb-3">
                 <div class="col-6 col-lg-3">
-                    <div class="stat-tile">
+                    <div class="stat-tile h-100">
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <div class="stat-tile-icon bg-{{ $diskSeverity }}-subtle text-{{ $diskSeverity }}"><i class="bi bi-hdd"></i></div>
                             <div>
@@ -112,7 +112,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     </div>
                 </div>
                 <div class="col-6 col-lg-3">
-                    <div class="stat-tile">
+                    <div class="stat-tile h-100">
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <div class="stat-tile-icon bg-primary-subtle text-primary"><i class="bi bi-database"></i></div>
                             <div>
@@ -126,7 +126,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     </div>
                 </div>
                 <div class="col-6 col-lg-3">
-                    <div class="stat-tile">
+                    <div class="stat-tile h-100">
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <div class="stat-tile-icon bg-info-subtle text-info"><i class="bi bi-globe2"></i></div>
                             <div>
@@ -140,7 +140,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     </div>
                 </div>
                 <div class="col-6 col-lg-3">
-                    <div class="stat-tile">
+                    <div class="stat-tile h-100">
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <div class="stat-tile-icon bg-warning-subtle text-warning"><i class="bi bi-clock-history"></i></div>
                             <div>

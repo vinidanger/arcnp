@@ -49,7 +49,7 @@ function showOperationOverlay(message) {
         label.textContent = message;
     }
 
-    overlay.classList.remove('d-none');
+    overlay.classList.add('show');
 }
 
 function setupOperationOverlay() {
@@ -294,7 +294,7 @@ function setupDropzone(config) {
         }
         e.preventDefault();
         dragCounter++;
-        overlay.classList.remove('d-none');
+        overlay.classList.add('show');
     });
 
     window.addEventListener('dragover', (e) => {
@@ -309,7 +309,7 @@ function setupDropzone(config) {
         }
         dragCounter = Math.max(0, dragCounter - 1);
         if (dragCounter === 0) {
-            overlay.classList.add('d-none');
+            overlay.classList.remove('show');
         }
     });
 
@@ -320,7 +320,7 @@ function setupDropzone(config) {
         e.preventDefault();
         e.stopPropagation();
         dragCounter = 0;
-        overlay.classList.add('d-none');
+        overlay.classList.remove('show');
         uploadFiles(e.dataTransfer.files);
     });
 }
