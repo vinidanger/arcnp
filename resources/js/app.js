@@ -258,3 +258,40 @@ document.addEventListener('DOMContentLoaded', () => {
         toggle();
     });
 });
+
+// ---------------------------------------------------------------------
+// Template "cPanel" — página "Tools" (client/hosting-accounts/show.blade.php):
+// colapsar/expandir categoria e busca ao vivo filtrando os itens da
+// grade (não as categorias inteiras — combina com o colapso acima, uma
+// categoria com algum item batendo a busca se auto-expande).
+// ---------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-cpanel-category-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+            button.closest('.cpanel-category')?.classList.toggle('collapsed');
+        });
+    });
+
+    const search = document.getElementById('cpanel-tool-search');
+
+    if (! search) {
+        return;
+    }
+
+    search.addEventListener('input', () => {
+        const query = search.value.trim().toLowerCase();
+
+        document.querySelectorAll('.cpanel-category').forEach((category) => {
+            let categoryHasMatch = false;
+
+            category.querySelectorAll('.cpanel-tool-item').forEach((item) => {
+                const matches = item.dataset.toolLabel.toLowerCase().includes(query);
+                item.hidden = ! matches;
+                categoryHasMatch = categoryHasMatch || matches;
+            });
+
+            category.classList.toggle('collapsed', query !== '' && ! categoryHasMatch);
+            category.hidden = query !== '' && ! categoryHasMatch;
+        });
+    });
+});

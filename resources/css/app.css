@@ -67,27 +67,30 @@
 /*
  * Template "cPanel" (só painel do cliente, ver
  * ProfileController::updateTemplate() / layouts/client.blade.php) —
- * reskin, não reconstrução: reaproveita 100% das páginas/formulários
- * já existentes, só troca a paleta. Só os tokens que precisam DIVERGIR
- * do tema padrão entram aqui — --success/--warning/--danger (cor
- * semântica de status) continuam as mesmas, não fazem parte da
- * identidade visual do cPanel. Maior divergência: --rail-* vira claro
- * (cPanel Jupiter tem sidebar branca com item ativo em azul, bem
- * diferente do rail sempre-escuro que este app usa por padrão).
+ * clona a LINGUAGEM visual do cPanel (Jupiter): paleta, espaçamento,
+ * estilo de card/ícone, arquitetura de navegação (sidebar mínima +
+ * grade central de ferramentas). Nunca a logomarca nem os ícones
+ * proprietários deles — nosso nome/logo continua no lugar do
+ * wordmark, ícones usam Bootstrap Icons (já a biblioteca do projeto
+ * inteiro). Só os tokens que precisam DIVERGIR do tema padrão entram
+ * aqui — --success/--warning/--danger continuam os mesmos, não fazem
+ * parte da identidade visual do cPanel. "--font-display" reaponta pra
+ * mesma pilha de "--font-body" porque cPanel não usa fonte condensada
+ * em título nenhum (diferente do resto deste app).
  *
  * cPanel não tem modo escuro reconhecível — enquanto esse template
- * estiver ativo, o botão de alternar claro/escuro fica oculto (ver
- * regra mais abaixo) e o bloco seguinte (com os dois atributos juntos,
- * maior especificidade que "[data-theme=dark]" sozinho) garante que a
- * paleta clara vence mesmo que "data-theme=dark" já esteja gravado no
- * localStorage do navegador de uma troca anterior.
+ * estiver ativo, o botão de alternar claro/escuro nem é renderizado
+ * (ver layouts/client.blade.php) e o bloco seguinte (com os dois
+ * atributos juntos, maior especificidade que "[data-theme=dark]"
+ * sozinho) garante que a paleta clara vence mesmo que "data-theme=dark"
+ * já esteja gravado no localStorage do navegador de uma troca anterior.
  */
 :root[data-template="cpanel"],
 :root[data-theme="dark"][data-template="cpanel"] {
-    --ink: #f4f6f8;
+    --ink: #f4f6f9;
     --panel: #ffffff;
     --panel-raised: #fafbfc;
-    --line: #dfe3ea;
+    --line: #e1e5ec;
     --line-strong: #c7ced9;
     --text: #1b2430;
     --text-dim: #5b6577;
@@ -95,10 +98,11 @@
     --accent: #3874b8;
     --accent-ink: #ffffff;
     --accent-wash: #3874b814;
-    --rail-bg: #ffffff;
-    --rail-text: #3c4656;
-    --rail-text-dim: #8890a0;
-    --rail-line: #e4e8ee;
+    --rail-bg: #141b41;
+    --rail-text: #ffffff;
+    --rail-text-dim: #8b93b8;
+    --rail-line: #262d5c;
+    --font-display: var(--font-body);
     color-scheme: light;
 }
 
@@ -401,41 +405,21 @@ html.sidebar-collapsed #sidebar-toggle i {
 }
 
 /* ---------------------------------------------------------------------
-   Template "cPanel" — overrides estruturais (fora de @layer de propósito,
-   pra vencer utilitário Tailwind tipo "text-white" que a sidebar usa
-   hoje assumindo rail sempre escuro, sem precisar tocar o HTML do
-   layout — só o atributo data-template muda no Blade).
+   Template "cPanel" — overrides estruturais (fora de @layer de propósito).
+   O rail volta a ser escuro (só que navy-índigo, via --rail-* no bloco
+   de :root acima) — as regras padrão de .app-sidebar/.nav-link (que já
+   assumem texto claro sobre fundo escuro) continuam funcionando sem
+   overrides extra aqui, diferente da primeira tentativa deste template
+   (que tinha posto o rail branco).
    --------------------------------------------------------------------- */
 
 [data-template="cpanel"] .app-sidebar {
     border-right: 1px solid var(--color-rail-line);
 }
 
-[data-template="cpanel"] .app-sidebar a,
-[data-template="cpanel"] .app-sidebar button,
-[data-template="cpanel"] .app-sidebar .sidebar-label {
-    color: var(--color-rail-text);
-}
-
-[data-template="cpanel"] .app-sidebar .nav-link:hover {
-    background-color: var(--color-accent-wash);
-    color: var(--color-accent);
-}
-
-[data-template="cpanel"] .app-sidebar .nav-link.active {
-    background-color: var(--color-accent-wash);
-    color: var(--color-accent);
-    border-left-color: var(--color-accent);
-}
-
-[data-template="cpanel"] .app-sidebar .nav-link i,
-[data-template="cpanel"] .app-sidebar .nav-link.active i {
-    color: var(--color-accent);
-    opacity: 1;
-}
-
-/* cPanel não tem identidade "escura" — esconde o alternador claro/escuro
-   enquanto esse template estiver ativo (ver bloco de :root acima). */
+/* cPanel não tem identidade "escura" — o alternador claro/escuro nem é
+   renderizado nesse template (ver layouts/client.blade.php); a regra
+   abaixo é só defesa extra caso algum ponto ainda o inclua. */
 [data-template="cpanel"] #theme-toggle {
     display: none;
 }
@@ -443,20 +427,177 @@ html.sidebar-collapsed #sidebar-toggle i {
 [data-template="cpanel"] .panel,
 [data-template="cpanel"] .card,
 [data-template="cpanel"] .gauge,
-[data-template="cpanel"] .stat-tile,
-[data-template="cpanel"] .quick-link-card {
+[data-template="cpanel"] .stat-tile {
     border-radius: 8px;
     box-shadow: 0 1px 2px #10182809;
 }
 
-[data-template="cpanel"] .quick-link-icon {
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 50%;
-}
-
 [data-template="cpanel"] .btn-primary {
     border-radius: 6px;
+}
+
+/* ---------------------------------------------------------------------
+   Template "cPanel" — página "Tools" (client/hosting-accounts/show.blade.php)
+   --------------------------------------------------------------------- */
+
+.cpanel-topbar {
+    background: var(--color-panel);
+    border-bottom: 1px solid var(--color-line);
+}
+
+.cpanel-search {
+    width: 100%;
+    max-width: 22rem;
+    background: var(--color-ink);
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+    padding: 0.45rem 0.75rem 0.45rem 2.25rem;
+    font-size: 0.875rem;
+    color: var(--color-text);
+}
+
+.cpanel-search:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    background: var(--color-panel);
+}
+
+.cpanel-page-title {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 1.9rem;
+    color: var(--color-text-dim);
+    letter-spacing: 0;
+}
+
+.cpanel-category {
+    background: var(--color-panel);
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.cpanel-category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-body);
+}
+
+.cpanel-category-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 6px;
+    background: var(--color-ink);
+    border: 1px solid var(--color-line);
+    color: var(--color-text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+
+.cpanel-category-title {
+    font-weight: 600;
+    color: var(--color-text);
+    flex: 1;
+}
+
+.cpanel-category-chevron {
+    color: var(--color-text-faint);
+    transition: transform 0.15s ease;
+}
+
+.cpanel-category.collapsed .cpanel-category-chevron {
+    transform: rotate(-90deg);
+}
+
+.cpanel-category.collapsed .cpanel-tool-grid {
+    display: none;
+}
+
+.cpanel-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: 0.9rem 1.25rem;
+    padding: 1rem 1.1rem 1.25rem;
+    border-top: 1px solid var(--color-line);
+}
+
+.cpanel-tool-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    color: var(--color-text);
+}
+
+.cpanel-tool-item .cpanel-tool-icon {
+    width: 1.75rem;
+    text-align: center;
+    color: var(--color-text-dim);
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+
+.cpanel-tool-item .cpanel-tool-label {
+    color: #0b5ed7;
+    font-size: 0.9rem;
+}
+
+.cpanel-tool-item:hover .cpanel-tool-label {
+    text-decoration: underline;
+}
+
+.cpanel-tool-item[hidden] {
+    display: none;
+}
+
+.cpanel-info-panel {
+    background: var(--color-panel);
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+    padding: 1.1rem;
+}
+
+.cpanel-info-panel h2 {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.85rem;
+}
+
+.cpanel-info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-line);
+    font-size: 0.85rem;
+}
+
+.cpanel-info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.cpanel-info-row dt {
+    color: var(--color-text-dim);
+}
+
+.cpanel-info-row dd {
+    margin: 0;
+    color: var(--color-text);
+    font-weight: 600;
+    text-align: right;
 }
 
 .stat-tile {

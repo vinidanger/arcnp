@@ -1,29 +1,25 @@
 <x-client-layout>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h1 class="h4 mb-1">{{ $account->primary_domain }}</h1>
-                <div class="d-flex align-items-center gap-2">
-                    @php
-                        $badge = match ($account->status) {
-                            'active' => 'success',
-                            'suspended' => 'warning',
-                            'error' => 'danger',
-                            default => 'secondary',
-                        };
-                    @endphp
-                    <span class="badge text-bg-{{ $badge }}">{{ status_label($account->status) }}</span>
-                    <span class="text-secondary small">{{ $account->plan->name }}</span>
-                </div>
-            </div>
+    @php $uiTemplate = auth()->user()->resolvedUiTemplate(); @endphp
 
-            @if ($account->status === 'active' && $account->ssl_status !== 'active')
-                <form method="POST" action="{{ route('client.hosting-accounts.ssl.store', $account) }}">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Emitir SSL') }}</button>
-                </form>
-            @endif
-        </div>
+    <x-slot name="header">
+        @unless ($uiTemplate === 'cpanel')
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h4 mb-1">{{ $account->primary_domain }}</h1>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge text-bg-{{ $badge }}">{{ status_label($account->status) }}</span>
+                        <span class="text-secondary small">{{ $account->plan->name }}</span>
+                    </div>
+                </div>
+
+                @if ($account->status === 'active' && $account->ssl_status !== 'active')
+                    <form method="POST" action="{{ route('client.hosting-accounts.ssl.store', $account) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Emitir SSL') }}</button>
+                    </form>
+                @endif
+            </div>
+        @endunless
     </x-slot>
 
     @if (session('status'))
@@ -50,6 +46,13 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
     @endif
 
     @php
+        $badge = match ($account->status) {
+            'active' => 'success',
+            'suspended' => 'warning',
+            'error' => 'danger',
+            default => 'secondary',
+        };
+
         $diskUsed = $account->disk_usage_mb ?? 0;
         $diskQuota = max($account->plan->disk_quota_mb, 1);
         $diskPercent = min(100, (int) round(($diskUsed / $diskQuota) * 100));
@@ -70,32 +73,185 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         $backupLimitReached = $backupCount >= $account->plan->max_backups;
     @endphp
 
-    <ul class="nav nav-tabs mb-3">
-        <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">
-                <i class="bi bi-grid-1x2 me-1"></i> {{ __('Visão geral') }}
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-domains" type="button">
-                <i class="bi bi-globe2 me-1"></i> {{ __('Domínios') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $domainCount }}</span>
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-databases" type="button">
-                <i class="bi bi-database me-1"></i> {{ __('Bancos de dados') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $dbCount }}</span>
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-backups" type="button">
-                <i class="bi bi-archive me-1"></i> {{ __('Backups') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $account->backups->count() }}</span>
-            </button>
-        </li>
-    </ul>
+    @unless ($uiTemplate === 'cpanel')
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">
+                    <i class="bi bi-grid-1x2 me-1"></i> {{ __('Visão geral') }}
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-domains" type="button">
+                    <i class="bi bi-globe2 me-1"></i> {{ __('Domínios') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $domainCount }}</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-databases" type="button">
+                    <i class="bi bi-database me-1"></i> {{ __('Bancos de dados') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $dbCount }}</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-backups" type="button">
+                    <i class="bi bi-archive me-1"></i> {{ __('Backups') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $account->backups->count() }}</span>
+                </button>
+            </li>
+        </ul>
+    @endunless
 
-    <div class="tab-content">
-        {{-- ============================== VISÃO GERAL ============================== --}}
-        <div class="tab-pane fade show active" id="tab-overview">
+    {{-- ============================== TEMPLATE CPANEL: página "Tools" ==============================
+         Reaproveita os MESMOS destinos (rotas) da grade "Acesso rápido" de sempre, só
+         reorganizados no layout de categorias colapsáveis do cPanel. "Domínios"/"Bancos de
+         Dados"/"Backups" disparam a MESMA troca de aba que a barra escondida acima já fazia
+         (data-bs-toggle="tab", sem JS novo pra isso — ver resources/js/app.js). --}}
+    @if ($uiTemplate === 'cpanel' && $account->status !== 'active')
+        <div class="cpanel-page-title mb-3">{{ __('Tools') }}</div>
+        <div class="cpanel-info-panel">
+            <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>
+        </div>
+    @elseif ($uiTemplate === 'cpanel')
+        @php
+            $cpanelCategories = [
+                'Site' => ['bi-folder2-open', [
+                    ['client.hosting-accounts.files.index', 'bi-folder2-open', 'Arquivos'],
+                    ['client.hosting-accounts.php.index', 'bi-filetype-php', 'PHP'],
+                    ['client.hosting-accounts.protected-folders.index', 'bi-shield-lock', 'Proteção de pasta'],
+                    ['client.hosting-accounts.redirects.index', 'bi-signpost-split', 'Redirecionamentos'],
+                    ['client.hosting-accounts.hotlink-protection.index', 'bi-link-45deg', 'Proteção Hotlink'],
+                    ['client.hosting-accounts.logs.index', 'bi-file-text', 'Logs'],
+                    ['client.hosting-accounts.apps.index', 'bi-cpu', 'Apps'],
+                    ['client.hosting-accounts.installer.index', 'bi-box-seam', 'Instalador'],
+                    ['client.hosting-accounts.mime-types.index', 'bi-file-earmark-code', 'MIME Types'],
+                ]],
+                'Domínio' => ['bi-globe2', [
+                    ['client.hosting-accounts.dns.index', 'bi-globe2', 'DNS'],
+                    ['client.hosting-accounts.mail.index', 'bi-envelope', 'E-mail'],
+                    ['client.hosting-accounts.mail-log.index', 'bi-envelope-paper', 'Rastrear e-mails'],
+                ]],
+                'Avançado' => ['bi-gear', [
+                    ['client.hosting-accounts.ssh.index', 'bi-terminal', 'SSH'],
+                    ['client.hosting-accounts.cron.index', 'bi-clock-history', 'Cron'],
+                    ['client.hosting-accounts.ftp.index', 'bi-hdd-network', 'FTP'],
+                    ['client.hosting-accounts.resources.index', 'bi-speedometer2', 'Recursos'],
+                ]],
+            ];
+        @endphp
+
+        <div class="cpanel-page-title mb-3">{{ __('Tools') }}</div>
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+                @foreach ($cpanelCategories as $categoryName => [$categoryIcon, $tools])
+                    <div class="cpanel-category">
+                        <button type="button" class="cpanel-category-header" data-cpanel-category-toggle>
+                            <span class="cpanel-category-icon"><i class="bi {{ $categoryIcon }}"></i></span>
+                            <span class="cpanel-category-title">{{ __($categoryName) }}</span>
+                            <i class="bi bi-chevron-up cpanel-category-chevron"></i>
+                        </button>
+                        <div class="cpanel-tool-grid">
+                            @foreach ($tools as [$routeName, $icon, $label])
+                                <a href="{{ route($routeName, $account) }}" class="cpanel-tool-item" data-tool-label="{{ __($label) }}">
+                                    <span class="cpanel-tool-icon"><i class="bi {{ $icon }}"></i></span>
+                                    <span class="cpanel-tool-label">{{ __($label) }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+
+                <div class="cpanel-category">
+                    <button type="button" class="cpanel-category-header" data-cpanel-category-toggle>
+                        <span class="cpanel-category-icon"><i class="bi bi-hdd-stack"></i></span>
+                        <span class="cpanel-category-title">{{ __('Conta') }}</span>
+                        <i class="bi bi-chevron-up cpanel-category-chevron"></i>
+                    </button>
+                    <div class="cpanel-tool-grid">
+                        <a href="#tab-domains" data-bs-toggle="tab" data-bs-target="#tab-domains" class="cpanel-tool-item" data-tool-label="{{ __('Domínios') }}">
+                            <span class="cpanel-tool-icon"><i class="bi bi-globe2"></i></span>
+                            <span class="cpanel-tool-label">{{ __('Domínios') }}</span>
+                        </a>
+                        <a href="#tab-databases" data-bs-toggle="tab" data-bs-target="#tab-databases" class="cpanel-tool-item" data-tool-label="{{ __('Bancos de Dados') }}">
+                            <span class="cpanel-tool-icon"><i class="bi bi-database"></i></span>
+                            <span class="cpanel-tool-label">{{ __('Bancos de Dados') }}</span>
+                        </a>
+                        <a href="#tab-backups" data-bs-toggle="tab" data-bs-target="#tab-backups" class="cpanel-tool-item" data-tool-label="{{ __('Backups') }}">
+                            <span class="cpanel-tool-icon"><i class="bi bi-archive"></i></span>
+                            <span class="cpanel-tool-label">{{ __('Backups') }}</span>
+                        </a>
+                        @if ($account->ssh_enabled)
+                            <a href="{{ $account->server->terminalBaseUrl() }}" target="_blank" rel="noopener" class="cpanel-tool-item" data-tool-label="{{ __('Terminal') }}">
+                                <span class="cpanel-tool-icon"><i class="bi bi-terminal-fill"></i></span>
+                                <span class="cpanel-tool-label">{{ __('Terminal') }}</span>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="cpanel-info-panel mb-3">
+                    <h2>{{ __('Informações Gerais') }}</h2>
+                    <dl class="mb-0">
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('Usuário') }}</dt>
+                            <dd>{{ $account->linux_username }}</dd>
+                        </div>
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('Domínio principal') }}</dt>
+                            <dd>{{ $account->primary_domain }}</dd>
+                        </div>
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('Plano') }}</dt>
+                            <dd>{{ $account->plan->name }}</dd>
+                        </div>
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('Status') }}</dt>
+                            <dd><span class="badge text-bg-{{ $badge }}">{{ status_label($account->status) }}</span></dd>
+                        </div>
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('SSL') }}</dt>
+                            <dd><x-ssl-info :model="$account" /></dd>
+                        </div>
+                    </dl>
+
+                    @if ($account->ssl_status !== 'active')
+                        <form method="POST" action="{{ route('client.hosting-accounts.ssl.store', $account) }}" class="mt-2">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-primary w-100">{{ __('Emitir SSL') }}</button>
+                        </form>
+                    @endif
+                </div>
+
+                <div class="cpanel-info-panel">
+                    <h2>{{ __('Estatísticas') }}</h2>
+                    <dl class="mb-0">
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('Disco') }}</dt>
+                            <dd>{{ $diskUsed }} / {{ $diskQuota }} MB</dd>
+                        </div>
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('Bancos de dados') }}</dt>
+                            <dd>{{ $dbCount }} / {{ $account->plan->max_databases }}</dd>
+                        </div>
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('Domínios adicionais') }}</dt>
+                            <dd>{{ $domainCount }} / {{ $account->plan->max_addon_domains }}</dd>
+                        </div>
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('Tarefas cron') }}</dt>
+                            <dd>{{ $cronCount }} / {{ $account->plan->max_cron_jobs }}</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div class="tab-content {{ $uiTemplate === 'cpanel' ? 'mt-3' : '' }}">
+        {{-- ============================== VISÃO GERAL ==============================
+             Só existe/começa ativa no template Padrão — no cPanel esse conteúdo
+             (stat-tiles, detalhes, acesso rápido) foi reorganizado no painel
+             "Informações Gerais"/"Estatísticas" + grade de ferramentas acima. --}}
+        <div class="tab-pane fade {{ $uiTemplate === 'cpanel' ? '' : 'show active' }}" id="tab-overview">
             <div class="row g-3 mb-3">
                 <div class="col-6 col-lg-3">
                     <div class="stat-tile">
