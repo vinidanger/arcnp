@@ -26,7 +26,7 @@
         <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Limites do plano') }} — {{ $plan->name }}</div>
         <div class="row g-3 mb-4">
             <div class="col-6 col-lg-3">
-                <div class="stat-tile h-100">
+                <div class="stat-tile">
                     <div class="d-flex align-items-center gap-3">
                         <div class="stat-tile-icon bg-primary-subtle text-primary"><i class="bi bi-cpu"></i></div>
                         <div>
@@ -37,7 +37,7 @@
                 </div>
             </div>
             <div class="col-6 col-lg-3">
-                <div class="stat-tile h-100">
+                <div class="stat-tile">
                     <div class="d-flex align-items-center gap-3">
                         <div class="stat-tile-icon bg-info-subtle text-info"><i class="bi bi-memory"></i></div>
                         <div>
@@ -48,7 +48,7 @@
                 </div>
             </div>
             <div class="col-6 col-lg-3">
-                <div class="stat-tile h-100">
+                <div class="stat-tile">
                     <div class="d-flex align-items-center gap-3">
                         <div class="stat-tile-icon bg-warning-subtle text-warning"><i class="bi bi-list-task"></i></div>
                         <div>
@@ -59,7 +59,7 @@
                 </div>
             </div>
             <div class="col-6 col-lg-3">
-                <div class="stat-tile h-100">
+                <div class="stat-tile">
                     <div class="d-flex align-items-center gap-3">
                         <div class="stat-tile-icon bg-secondary-subtle text-secondary"><i class="bi bi-hdd-network"></i></div>
                         <div>
@@ -80,7 +80,7 @@
         @else
             <div class="row g-3">
                 <div class="col-md-4">
-                    <div class="stat-tile h-100">
+                    <div class="stat-tile">
                         <div class="d-flex align-items-center gap-3">
                             <div class="stat-tile-icon bg-primary-subtle text-primary"><i class="bi bi-cpu"></i></div>
                             <div>
@@ -92,7 +92,7 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-tile h-100">
+                    <div class="stat-tile">
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <div class="stat-tile-icon bg-{{ $severityOf($memPercent) }}-subtle text-{{ $severityOf($memPercent) }}"><i class="bi bi-memory"></i></div>
                             <div>
@@ -108,7 +108,7 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-tile h-100">
+                    <div class="stat-tile">
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <div class="stat-tile-icon bg-{{ $severityOf($tasksPercent) }}-subtle text-{{ $severityOf($tasksPercent) }}"><i class="bi bi-list-task"></i></div>
                             <div>

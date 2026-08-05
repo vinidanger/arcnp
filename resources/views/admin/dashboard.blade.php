@@ -8,7 +8,7 @@
     {{-- Estatísticas --}}
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
-            <div class="stat-tile h-100 d-flex align-items-center gap-3">
+            <div class="stat-tile d-flex align-items-center gap-3">
                 <div class="stat-tile-icon bg-primary-subtle text-primary">
                     <i class="bi bi-people"></i>
                 </div>
@@ -19,7 +19,7 @@
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="stat-tile h-100 d-flex align-items-center gap-3">
+            <div class="stat-tile d-flex align-items-center gap-3">
                 <div class="stat-tile-icon bg-success-subtle text-success">
                     <i class="bi bi-check-circle"></i>
                 </div>
@@ -30,7 +30,7 @@
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="stat-tile h-100 d-flex align-items-center gap-3">
+            <div class="stat-tile d-flex align-items-center gap-3">
                 <div class="stat-tile-icon bg-info-subtle text-info">
                     <i class="bi bi-hdd-network"></i>
                 </div>
@@ -41,7 +41,7 @@
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="stat-tile h-100 d-flex align-items-center gap-3">
+            <div class="stat-tile d-flex align-items-center gap-3">
                 <div class="stat-tile-icon bg-warning-subtle text-warning">
                     <i class="bi bi-device-hdd"></i>
                 </div>
