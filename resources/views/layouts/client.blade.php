@@ -130,14 +130,20 @@
                             </div>
 
                             <div class="flex items-center gap-2 shrink-0">
-                                <a href="{{ route('client.tickets.index') }}" class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-line text-text-dim hover:border-accent hover:text-accent" title="{{ __('Chamados') }}">
+                                @php
+                                    $hasAnnouncements = \App\Models\Announcement::active()->forAudience('client')->exists();
+                                @endphp
+                                <a href="{{ route('client.tickets.index') }}" class="cpanel-topbar-icon" title="{{ __('Chamados') }}">
                                     <i class="bi bi-bell"></i>
+                                    @if ($hasAnnouncements)
+                                        <span class="cpanel-notif-dot"></span>
+                                    @endif
                                 </a>
 
                                 <x-dropdown>
                                     <x-slot name="trigger">
-                                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-accent text-accent-ink font-semibold text-xs cursor-pointer">
-                                            {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(Auth::user()->name, 0, 1)) }}
+                                        <span class="cpanel-topbar-icon cursor-pointer">
+                                            <i class="bi bi-person"></i>
                                         </span>
                                     </x-slot>
 

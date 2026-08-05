@@ -196,8 +196,12 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                             <dd>{{ $account->linux_username }}</dd>
                         </div>
                         <div class="cpanel-info-row">
-                            <dt>{{ __('Domínio principal') }}</dt>
-                            <dd>{{ $account->primary_domain }}</dd>
+                            <dt><i class="bi bi-lock-fill"></i> {{ __('Domínio principal') }}</dt>
+                            <dd>
+                                <a href="http://{{ $account->primary_domain }}" target="_blank" rel="noopener" class="text-decoration-none">
+                                    {{ $account->primary_domain }} <i class="bi bi-box-arrow-up-right" style="font-size: 0.7rem;"></i>
+                                </a>
+                            </dd>
                         </div>
                         <div class="cpanel-info-row">
                             <dt>{{ __('Plano') }}</dt>
@@ -216,8 +220,10 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     @if ($account->ssl_status !== 'active')
                         <form method="POST" action="{{ route('client.hosting-accounts.ssl.store', $account) }}" class="mt-2">
                             @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-primary w-100">{{ __('Emitir SSL') }}</button>
+                            <button type="submit" class="cpanel-ssl-btn"><i class="bi bi-bar-chart-line"></i> {{ __('Emitir SSL') }}</button>
                         </form>
+                    @else
+                        <div class="cpanel-ssl-btn mt-2" style="cursor: default;"><i class="bi bi-bar-chart-line"></i> {{ __('SSL/TLS ativo') }}</div>
                     @endif
                 </div>
 
