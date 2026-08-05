@@ -161,7 +161,7 @@
                 </div>
                 <div class="col-6 col-md-3 col-lg-2">
                     <a href="{{ route('client.hosting-accounts.php.index', $primary) }}" class="quick-link-card">
-                        <span class="quick-link-icon"><i class="bi bi-sliders"></i></span>
+                        <span class="quick-link-icon"><i class="bi bi-filetype-php"></i></span>
                         <div class="fw-semibold small">{{ __('PHP') }}</div>
                     </a>
                 </div>

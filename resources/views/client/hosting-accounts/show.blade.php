@@ -78,17 +78,17 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         </li>
         <li class="nav-item">
             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-domains" type="button">
-                {{ __('Domínios') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $domainCount }}</span>
+                <i class="bi bi-globe2 me-1"></i> {{ __('Domínios') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $domainCount }}</span>
             </button>
         </li>
         <li class="nav-item">
             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-databases" type="button">
-                {{ __('Bancos de dados') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $dbCount }}</span>
+                <i class="bi bi-database me-1"></i> {{ __('Bancos de dados') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $dbCount }}</span>
             </button>
         </li>
         <li class="nav-item">
             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-backups" type="button">
-                {{ __('Backups') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $account->backups->count() }}</span>
+                <i class="bi bi-archive me-1"></i> {{ __('Backups') }} <span class="badge text-bg-secondary rounded-pill ms-1">{{ $account->backups->count() }}</span>
             </button>
         </li>
     </ul>
@@ -202,7 +202,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         </div>
                         <div class="col-6 col-md-3 col-lg-2">
                             <a href="{{ route('client.hosting-accounts.php.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-sliders"></i></span>
+                                <span class="quick-link-icon"><i class="bi bi-filetype-php"></i></span>
                                 <div class="fw-semibold small">{{ __('PHP') }}</div>
                             </a>
                         </div>
