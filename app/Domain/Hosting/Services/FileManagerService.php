@@ -97,17 +97,25 @@ class FileManagerService
         }
     }
 
+    /**
+     * Tempo generoso (mesmo usado pro upload) — extrair/compactar depende
+     * do tamanho do arquivo e do chown -R recursivo que o Agent roda no
+     * final, nada a ver com a lentidão típica de outras ações (criar
+     * usuário, alternar toggle) que já saem rápido com o timeout padrão.
+     */
+    private const SLOW_IO_TIMEOUT = 240;
+
     /** @param list<string> $paths */
     public function compress(HostingAccount $account, array $paths, string $output, ?string $root = null): void
     {
         $this->assertUnderQuota($account);
-        $this->run($account, 'files.compress', ['paths' => $paths, 'output' => $output], $root);
+        $this->run($account, 'files.compress', ['paths' => $paths, 'output' => $output], $root, self::SLOW_IO_TIMEOUT);
     }
 
     public function extract(HostingAccount $account, string $path, string $dest, ?string $root = null): void
     {
         $this->assertUnderQuota($account);
-        $this->run($account, 'files.extract', ['path' => $path, 'dest' => $dest], $root);
+        $this->run($account, 'files.extract', ['path' => $path, 'dest' => $dest], $root, self::SLOW_IO_TIMEOUT);
     }
 
     /**
@@ -129,7 +137,7 @@ class FileManagerService
         return $this->client->streamDownload($account->server, $agentPath, basename($path));
     }
 
-    private function run(HostingAccount $account, string $action, array $payload, ?string $root = null): array
+    private function run(HostingAccount $account, string $action, array $payload, ?string $root = null, int $timeoutSeconds = 10): array
     {
         if ($root !== null) {
             $this->assertRootBelongsToAccount($account, $root);
@@ -139,7 +147,7 @@ class FileManagerService
             'username' => $account->linux_username,
             'root' => $root,
             ...$payload,
-        ]);
+        ], $timeoutSeconds);
 
         if ($job->status !== 'completed') {
             throw new RuntimeException($job->error ?? "Falha ao executar {$action}");

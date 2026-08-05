@@ -18,7 +18,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class AgentHttpClient
 {
-    public function dispatch(Server $server, string $action, array $payload = []): AgentJob
+    /**
+     * $timeoutSeconds default (10) serve pra maioria das ações, que são
+     * rápidas (criar usuário, alternar toggle, etc.). Ações
+     * ligadas a I/O de disco variável (extrair/compactar arquivo grande,
+     * upload) precisam de um valor bem maior — ver FileManagerService.
+     */
+    public function dispatch(Server $server, string $action, array $payload = [], int $timeoutSeconds = 10): AgentJob
     {
         $credential = $server->currentCredential;
 
@@ -68,7 +74,7 @@ class AgentHttpClient
                 'X-Agent-Signature' => $signature,
                 'Content-Type' => 'application/json',
             ])
-                ->timeout(10)
+                ->timeout($timeoutSeconds)
                 // O Agent sempre usa certificado self-signed por padrão (deploy/README.md
                 // do arcnp-agent) — autenticidade e integridade vêm da assinatura HMAC,
                 // não da cadeia de confiança TLS. Validar contra uma CA aqui nunca bateria.
