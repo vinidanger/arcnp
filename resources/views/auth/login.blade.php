@@ -15,7 +15,7 @@
         @endif
 
         <div>
-            <x-input-label for="login" :value="__('E-mail ou usuário da hospedagem')" />
+            <x-input-label for="login" :value="__('Usuário')" />
             <x-text-input id="login" type="text" name="login" :value="old('login')" required autofocus autocomplete="username" class="w-full" />
             <x-input-error :messages="$errors->get('login')" class="mt-1.5" />
         </div>
@@ -32,15 +32,7 @@
             {{ __('Lembrar de mim') }}
         </label>
 
-        <div class="flex items-center justify-between pt-1">
-            @if (Route::has('password.request'))
-                <a class="text-sm text-text-dim hover:text-accent no-underline" href="{{ route('password.request') }}">
-                    {{ __('Esqueceu a senha?') }}
-                </a>
-            @else
-                <span></span>
-            @endif
-
+        <div class="flex items-center justify-end pt-1">
             <x-primary-button>
                 {{ __('Entrar') }}
             </x-primary-button>

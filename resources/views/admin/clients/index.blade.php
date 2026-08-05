@@ -41,7 +41,7 @@
                     @forelse ($clients as $client)
                         <tr>
                             <td>{{ $client->name }}</td>
-                            <td>{{ $client->email }}</td>
+                            <td>{{ $client->email ?? '—' }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $client->status === 'active' ? 'success' : 'secondary' }}">
                                     {{ status_label($client->status) }}

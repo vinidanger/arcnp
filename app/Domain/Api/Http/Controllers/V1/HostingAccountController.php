@@ -15,29 +15,26 @@ use Throwable;
 class HostingAccountController extends Controller
 {
     /**
-     * Cria o cliente (se o e-mail ainda não existir) e já provisiona a
-     * conta de hospedagem numa chamada só — o caso de uso real é "outro
-     * painel vendeu um plano, cria tudo agora".
+     * Cria um cliente novo e já provisiona a conta de hospedagem numa
+     * chamada só — o caso de uso real é "outro painel vendeu um plano,
+     * cria tudo agora". Sempre cria um cliente novo (nunca reaproveita
+     * por e-mail — isso aqui é só contato/referência, não identifica
+     * cliente; cada chamada é uma hospedagem nova, 1 cliente = 1 conta).
      */
     public function store(StoreHostingAccountRequest $request, HostingAccountProvisioningService $provisioning)
     {
         $data = $request->validated();
 
-        $client = User::where('type', 'client')->where('email', $data['client']['email'])->first();
-        $generatedPassword = null;
-
-        if (! $client) {
-            $generatedPassword = $data['client']['password'] ?? Str::password(16);
-
-            $client = User::create([
-                'name' => $data['client']['name'],
-                'email' => $data['client']['email'],
-                'password' => $generatedPassword,
-                'type' => 'client',
-                'status' => 'active',
-                'email_verified_at' => now(),
-            ]);
-        }
+        $client = User::create([
+            'name' => $data['client']['name'],
+            'email' => $data['client']['email'] ?? null,
+            // users.password não é credencial de login pro cliente (isso
+            // é ssh_password, gerado no provisionamento abaixo).
+            'password' => Str::password(32),
+            'type' => 'client',
+            'status' => 'active',
+            'email_verified_at' => now(),
+        ]);
 
         $account = HostingAccount::create([
             'user_id' => $client->id,
@@ -53,7 +50,10 @@ class HostingAccountController extends Controller
         $account = $account->fresh(['client', 'plan', 'server']);
 
         return (new HostingAccountResource($account))
-            ->additional(['client_password' => $generatedPassword])
+            ->additional([
+                'client_username' => $account->linux_username,
+                'client_password' => $account->ssh_password,
+            ])
             ->response()
             ->setStatusCode($account->status === 'active' ? 201 : 422);
     }

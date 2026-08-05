@@ -107,7 +107,7 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
 
     @php $info = $server->server_info ?? []; @endphp
 
-    <div class="row g-3 mt-0">
+    <div class="row g-3 mt-3">
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-body">

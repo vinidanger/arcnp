@@ -20,9 +20,18 @@
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
+        @if ($user->isAdmin())
+            <div class="mb-3">
+                <x-input-label for="username" :value="__('Usuário (login)')" />
+                <x-text-input id="username" name="username" type="text" :value="old('username', $user->username)" required autocomplete="username" />
+                <x-input-error class="mt-2" :messages="$errors->get('username')" />
+                <p class="small text-secondary mt-1 mb-0">{{ __('É isso que você digita pra entrar no painel.') }}</p>
+            </div>
+        @endif
+
         <div class="mb-3">
-            <x-input-label for="email" :value="__('E-mail')" />
-            <x-text-input id="email" name="email" type="email" :value="old('email', $user->email)" required autocomplete="username" />
+            <x-input-label for="email" :value="__('E-mail') . ($user->isClient() ? ' (' . __('opcional, só contato') . ')' : '')" />
+            <x-text-input id="email" name="email" type="email" :value="old('email', $user->email)" autocomplete="email" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())

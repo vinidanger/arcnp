@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
 
         $admin = User::create([
             'name' => 'Administrador',
-            'email' => 'arcndev@gmail.com',
+            'username' => 'admin',
             'password' => $password,
             'type' => 'admin',
             'status' => 'active',
@@ -31,6 +31,6 @@ class DatabaseSeeder extends Seeder
 
         $admin->assignRole('admin');
 
-        $this->command->info("Admin criado: {$admin->email} / senha: {$password}");
+        $this->command->info("Admin criado: usuário {$admin->username} / senha: {$password}");
     }
 }

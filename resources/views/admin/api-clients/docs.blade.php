@@ -28,8 +28,8 @@ Accept: application/json</pre>
             <p class="small mb-2"><code>{{ $base }}</code></p>
             <p class="small text-secondary mb-1">{{ __('Erro de validação (422):') }}</p>
             <pre class="bg-body-tertiary p-2 rounded border small mb-2">{
-  "message": "The client.email field is required.",
-  "errors": { "client.email": ["The client.email field is required."] }
+  "message": "The client.name field is required.",
+  "errors": { "client.name": ["The client.name field is required."] }
 }</pre>
             <p class="small text-secondary mb-1">{{ __('Falha ao executar uma ação (422) ou recurso inexistente (404):') }}</p>
             <pre class="bg-body-tertiary p-2 rounded border small mb-0">{ "message": "descrição do erro" }</pre>
@@ -67,7 +67,7 @@ Accept: application/json</pre>
         <div class="card-body">
             <h2 class="h6"><span class="badge text-bg-primary me-2">POST</span><code>/hosting-accounts</code></h2>
             <p class="small text-secondary">
-                {{ __('Cria a conta de hospedagem. Se "client.email" já existir como cliente, reaproveita — não cria duplicado. Se for cliente novo e "client.password" não for enviado, uma senha é gerada e devolvida UMA VEZ na resposta ("client_password") — se não for capturada aqui, não tem como recuperar depois (mesma lógica de qualquer senha gerada nesse sistema).') }}
+                {{ __('Cria um cliente novo e já provisiona a hospedagem numa chamada só — cada chamada é sempre uma conta nova (1 cliente = 1 hospedagem, sempre; "client.email" é só contato/referência, não identifica cliente, pode repetir entre chamadas ou nem ser enviado).') }}
             </p>
             <pre class="bg-body-tertiary p-2 rounded border small mb-0">curl -X POST {{ $base }}/hosting-accounts \
   -H "Authorization: Bearer SEU_TOKEN" \
@@ -76,8 +76,7 @@ Accept: application/json</pre>
   -d '{
     "client": {
       "name": "Fulano de Tal",
-      "email": "fulano@exemplo.com",
-      "password": null
+      "email": "fulano@exemplo.com"
     },
     "server_id": 1,
     "plan_id": 1,
@@ -100,10 +99,11 @@ Accept: application/json</pre>
     "client": { "id": 7, "name": "Fulano de Tal", "email": "fulano@exemplo.com" },
     "created_at": "2026-07-30T12:00:00.000000Z"
   },
+  "client_username": "sitedofulano",
   "client_password": "aB3xxxxxxxxxxxxx"
 }</pre>
             <p class="small text-secondary mt-2 mb-0">
-                {{ __('"client_password" só vem preenchido quando um cliente novo foi criado sem senha explícita. Guarde o "id" da conta — é o que identifica ela nos próximos 4 endpoints.') }}
+                {{ __('"client_username" + "client_password" são as credenciais de login do cliente no painel (mesmas do SSH) — aparecem só nessa resposta, uma vez só, guarde agora. Não é mais por e-mail: o cliente loga com o "client_username" (usuário Linux gerado a partir do domínio) direto, estilo cPanel/DirectAdmin. Guarde também o "id" da conta — é o que identifica ela nos próximos 4 endpoints.') }}
             </p>
         </div>
     </div>

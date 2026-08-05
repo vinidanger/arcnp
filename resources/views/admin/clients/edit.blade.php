@@ -16,8 +16,8 @@
                 </div>
 
                 <div class="mb-3">
-                    <x-input-label for="email" value="{{ __('E-mail') }}" />
-                    <x-text-input id="email" name="email" type="email" :value="old('email', $client->email)" required />
+                    <x-input-label for="email" value="{{ __('E-mail (opcional, só contato)') }}" />
+                    <x-text-input id="email" name="email" type="email" :value="old('email', $client->email)" />
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
 
@@ -28,17 +28,6 @@
                         <option value="suspended" @selected(old('status', $client->status) === 'suspended')>{{ __('Suspenso') }}</option>
                     </select>
                     <x-input-error :messages="$errors->get('status')" class="mt-2" />
-                </div>
-
-                <div class="mb-3">
-                    <x-input-label for="password" value="{{ __('Nova senha (deixe em branco para não alterar)') }}" />
-                    <x-text-input id="password" name="password" type="password" />
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                </div>
-
-                <div class="mb-3">
-                    <x-input-label for="password_confirmation" value="{{ __('Confirmar nova senha') }}" />
-                    <x-text-input id="password_confirmation" name="password_confirmation" type="password" />
                 </div>
 
                 <button type="submit" class="btn btn-primary">{{ __('Salvar') }}</button>

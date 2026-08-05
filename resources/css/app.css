@@ -113,6 +113,18 @@
         text-wrap: balance;
     }
 
+    /* O reset do Tailwind zera margin de <p> por padrão (filosofia
+       utility-first: espaçamento é sempre explícito) — mas as ~100 views
+       deste projeto foram escritas assumindo o espaçamento padrão do
+       Bootstrap/navegador, sem classe mb-* em quase nenhum <p>. Sem isso,
+       parágrafo gruda no elemento seguinte (foi o caso real da legenda
+       de extensões PHP colada na lista de badges). Onde um <p> quer ficar
+       colado de propósito, a classe mb-0 já usada em várias views
+       continua vencendo (fica fora de @layer, tem prioridade sobre isto). */
+    p {
+        margin-bottom: 1rem;
+    }
+
     ::selection {
         background-color: var(--color-accent);
         color: var(--color-accent-ink);
@@ -743,7 +755,7 @@ dialog.app-modal::backdrop {
     .input-group-sm .form-control, .input-group-sm .input-group-text { padding: 0.28rem 0.5rem; font-size: 0.8rem; }
 
     /* ---- alertas ---- */
-    .alert { border: 1px solid transparent; border-radius: 4px; padding: 0.85rem 1.1rem; font-size: 0.875rem; position: relative; }
+    .alert { border: 1px solid transparent; border-radius: 4px; padding: 0.85rem 1.1rem; font-size: 0.875rem; position: relative; margin-bottom: 1rem; }
     .alert-success { background: var(--color-success-wash); border-color: var(--color-success); color: var(--color-success); }
     .alert-danger { background: var(--color-danger-wash); border-color: var(--color-danger); color: var(--color-danger); }
     .alert-warning { background: var(--color-warning-wash); border-color: var(--color-warning); color: var(--color-warning); }

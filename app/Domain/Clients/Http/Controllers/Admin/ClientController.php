@@ -7,6 +7,7 @@ use App\Domain\Clients\Http\Requests\UpdateClientRequest;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
@@ -35,8 +36,12 @@ class ClientController extends Controller
 
         $client = User::create([
             'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
+            'email' => $data['email'] ?? null,
+            // users.password não é mais credencial de login pra cliente
+            // (isso é ssh_password, gerado só quando a hospedagem é
+            // provisionada) — valor aleatório só pra satisfazer a coluna
+            // NOT NULL, nunca usado nem exibido.
+            'password' => Str::password(32),
             'type' => 'client',
             'status' => 'active',
             'email_verified_at' => now(),
@@ -64,13 +69,9 @@ class ClientController extends Controller
 
         $client->update([
             'name' => $data['name'],
-            'email' => $data['email'],
+            'email' => $data['email'] ?? null,
             'status' => $data['status'],
         ]);
-
-        if (! empty($data['password'])) {
-            $client->update(['password' => $data['password']]);
-        }
 
         return redirect()->route('admin.clients.index')->with('status', 'Cliente atualizado.');
     }

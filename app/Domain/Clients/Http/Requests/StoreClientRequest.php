@@ -3,7 +3,6 @@
 namespace App\Domain\Clients\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
 class StoreClientRequest extends FormRequest
 {
@@ -16,8 +15,12 @@ class StoreClientRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            // Só contato/referência — cliente loga pelo usuário da
+            // hospedagem, não por e-mail, então não precisa ser único.
+            // Sem campo de senha aqui: a credencial de login real do
+            // cliente (mesma do SSH) só existe depois que a hospedagem é
+            // provisionada — ver HostingAccountProvisioningService.
+            'email' => ['nullable', 'string', 'email', 'max:255'],
         ];
     }
 }
