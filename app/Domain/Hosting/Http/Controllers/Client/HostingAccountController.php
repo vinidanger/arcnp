@@ -253,6 +253,10 @@ class HostingAccountController extends Controller
     {
         $this->authorize('update', $hosting_account);
 
+        // Aceita "/public", "public/" etc. — tira barra e espaço nas
+        // pontas antes de validar, em vez de rejeitar por causa disso.
+        $request->merge(['public_path' => trim((string) $request->input('public_path', ''), " /\t\n\r\0\x0B")]);
+
         $data = $request->validate([
             'public_path' => ['nullable', 'string', 'regex:/^[a-z0-9][a-z0-9_-]{0,63}$/i'],
         ]);
@@ -271,6 +275,8 @@ class HostingAccountController extends Controller
         $this->authorize('update', $hosting_account);
 
         abort_unless($domain->hosting_account_id === $hosting_account->id, 404);
+
+        $request->merge(['public_path' => trim((string) $request->input('public_path', ''), " /\t\n\r\0\x0B")]);
 
         $data = $request->validate([
             'public_path' => ['nullable', 'string', 'regex:/^[a-z0-9][a-z0-9_-]{0,63}$/i'],
