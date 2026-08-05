@@ -60,7 +60,7 @@
                                         default => 'secondary',
                                     };
                                 @endphp
-                                <span class="badge text-bg-{{ $badge }}">{{ $server->agent_status }}</span>
+                                <span class="badge text-bg-{{ $badge }}">{{ status_label($server->agent_status) }}</span>
                             </td>
                             <td>{{ $server->last_heartbeat_at?->diffForHumans() ?? '—' }}</td>
                             <td class="text-end">

@@ -55,7 +55,7 @@
                                         default => 'info',
                                     };
                                 @endphp
-                                <span class="badge text-bg-{{ $priorityBadge }}">{{ $ticket->priority }}</span>
+                                <span class="badge text-bg-{{ $priorityBadge }}">{{ status_label($ticket->priority) }}</span>
                             </td>
                             <td>
                                 @php
@@ -65,7 +65,7 @@
                                         default => 'secondary',
                                     };
                                 @endphp
-                                <span class="badge text-bg-{{ $statusBadge }}">{{ $ticket->status }}</span>
+                                <span class="badge text-bg-{{ $statusBadge }}">{{ status_label($ticket->status) }}</span>
                             </td>
                             <td class="small text-secondary">{{ $ticket->updated_at->diffForHumans() }}</td>
                             <td class="text-end">

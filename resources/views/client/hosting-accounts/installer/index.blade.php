@@ -118,7 +118,7 @@
                                         default => 'bg-secondary',
                                     };
                                 @endphp
-                                <span class="badge {{ $badge }}">{{ $installation->status }}</span>
+                                <span class="badge {{ $badge }}">{{ status_label($installation->status) }}</span>
                                 @if ($installation->status === 'failed' && $installation->error)
                                     <div class="small text-danger mt-1">{{ $installation->error }}</div>
                                 @endif

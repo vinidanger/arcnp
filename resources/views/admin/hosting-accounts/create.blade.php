@@ -33,7 +33,7 @@
                         <option value="">{{ __('Selecione...') }}</option>
                         @foreach ($servers as $server)
                             <option value="{{ $server->id }}" @selected(old('server_id') == $server->id)>
-                                {{ $server->name }} ({{ $server->ip_address }}) — {{ $server->agent_status }}
+                                {{ $server->name }} ({{ $server->ip_address }}) — {{ status_label($server->agent_status) }}
                             </option>
                         @endforeach
                     </select>

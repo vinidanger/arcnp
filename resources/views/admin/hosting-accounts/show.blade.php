@@ -12,7 +12,7 @@
                             default => 'secondary',
                         };
                     @endphp
-                    <span class="badge text-bg-{{ $badge }}">{{ $account->status }}</span>
+                    <span class="badge text-bg-{{ $badge }}">{{ status_label($account->status) }}</span>
                     <span class="text-secondary small">{{ $account->client->name }} · {{ $account->plan->name }}</span>
                 </div>
             </div>
@@ -425,7 +425,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                                         default => 'secondary',
                                                     };
                                                 @endphp
-                                                <span class="badge text-bg-{{ $domainBadge }}">{{ $domain->status }}</span>
+                                                <span class="badge text-bg-{{ $domainBadge }}">{{ status_label($domain->status) }}</span>
                                                 @if ($domain->status === 'error' && $domain->last_error)
                                                     <div class="small text-danger">{{ $domain->last_error }}</div>
                                                 @endif
@@ -563,7 +563,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                         <tr>
                                             <td>{{ $backup->created_at->format('d/m/Y H:i') }}</td>
                                             <td>
-                                                <span class="badge text-bg-{{ $backupBadge }}">{{ $backup->status }}</span>
+                                                <span class="badge text-bg-{{ $backupBadge }}">{{ status_label($backup->status) }}</span>
                                                 @if ($backup->status === 'failed' && $backup->error)
                                                     <div class="small text-danger">{{ $backup->error }}</div>
                                                 @endif

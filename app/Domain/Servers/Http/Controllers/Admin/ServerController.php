@@ -7,6 +7,7 @@ use App\Domain\Servers\Http\Requests\UpdateServerRequest;
 use App\Domain\Servers\Models\Server;
 use App\Domain\Servers\Services\AgentHttpClient;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -76,11 +77,23 @@ class ServerController extends Controller
         return redirect()->route('admin.servers.show', $server)->with('status', 'Servidor atualizado.');
     }
 
-    public function destroy(Server $server)
+    public function destroy(Request $request, Server $server)
     {
         $this->authorize('delete', $server);
 
-        $server->delete();
+        $request->validateWithBag('serverDeletion', [
+            'password' => ['required', 'current_password'],
+        ]);
+
+        try {
+            $server->delete();
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return back()->with('error', 'Não é possível excluir: este servidor ainda tem hospedagens ativas. Remova ou migre as contas antes de excluir o servidor.');
+            }
+
+            throw $e;
+        }
 
         return redirect()->route('admin.servers.index')->with('status', 'Servidor removido.');
     }

@@ -49,7 +49,7 @@
                                         default => 'secondary',
                                     };
                                 @endphp
-                                <span class="badge text-bg-{{ $sslBadge }}">{{ $account->ssl_status }}</span>
+                                <span class="badge text-bg-{{ $sslBadge }}">{{ status_label($account->ssl_status) }}</span>
                             </td>
                             <td>
                                 @php
@@ -60,7 +60,7 @@
                                         default => 'secondary',
                                     };
                                 @endphp
-                                <span class="badge text-bg-{{ $badge }}">{{ $account->status }}</span>
+                                <span class="badge text-bg-{{ $badge }}">{{ status_label($account->status) }}</span>
                             </td>
                             <td class="text-end">
                                 <a href="{{ route('client.hosting-accounts.show', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Gerenciar') }}</a>

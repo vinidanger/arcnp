@@ -76,7 +76,7 @@
                                     default => 'secondary',
                                 };
                             @endphp
-                            <span class="badge text-bg-{{ $badge }}">{{ $account->status }}</span>
+                            <span class="badge text-bg-{{ $badge }}">{{ status_label($account->status) }}</span>
                         </div>
                     @empty
                         <p class="small text-secondary mb-0">{{ __('Nenhuma conta cadastrada ainda.') }}</p>
@@ -98,7 +98,7 @@
                             </div>
                             <div class="d-flex gap-1">
                                 @if ($account->status !== 'active')
-                                    <span class="badge text-bg-{{ $account->status === 'suspended' ? 'warning' : 'danger' }}">{{ $account->status }}</span>
+                                    <span class="badge text-bg-{{ $account->status === 'suspended' ? 'warning' : 'danger' }}">{{ status_label($account->status) }}</span>
                                 @endif
                                 @if ($account->ssl_status === 'failed')
                                     <span class="badge text-bg-danger">SSL</span>

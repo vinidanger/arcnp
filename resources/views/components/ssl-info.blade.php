@@ -9,7 +9,7 @@
     };
 @endphp
 
-<span class="badge text-bg-{{ $badge }}">{{ $model->ssl_status }}</span>
+<span class="badge text-bg-{{ $badge }}">{{ status_label($model->ssl_status) }}</span>
 
 @if ($model->ssl_status === 'failed' && $model->ssl_error)
     <div class="small text-danger mt-1">{{ $model->ssl_error }}</div>

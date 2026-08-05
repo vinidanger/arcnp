@@ -44,7 +44,7 @@
                             <td>{{ $client->email }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $client->status === 'active' ? 'success' : 'secondary' }}">
-                                    {{ $client->status }}
+                                    {{ status_label($client->status) }}
                                 </span>
                             </td>
                             <td class="text-end">

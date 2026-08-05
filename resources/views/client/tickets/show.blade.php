@@ -14,8 +14,8 @@
     <div class="card mb-3">
         <div class="card-body py-2 d-flex flex-wrap gap-3 align-items-center small text-secondary">
             <span>{{ __('Conta') }}: <strong class="text-body">{{ $ticket->hostingAccount?->primary_domain ?? '—' }}</strong></span>
-            <span>{{ __('Prioridade') }}: <strong class="text-body">{{ $ticket->priority }}</strong></span>
-            <span>{{ __('Status') }}: <strong class="text-body">{{ $ticket->status }}</strong></span>
+            <span>{{ __('Prioridade') }}: <strong class="text-body">{{ status_label($ticket->priority) }}</strong></span>
+            <span>{{ __('Status') }}: <strong class="text-body">{{ status_label($ticket->status) }}</strong></span>
             @if ($ticket->status !== 'closed')
                 <form method="POST" action="{{ route('client.tickets.close', $ticket) }}" class="ms-auto">
                     @csrf

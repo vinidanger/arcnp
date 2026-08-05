@@ -67,7 +67,7 @@
                                         default => 'secondary',
                                     };
                                 @endphp
-                                <span class="badge text-bg-{{ $badge }}">{{ $account->status }}</span>
+                                <span class="badge text-bg-{{ $badge }}">{{ status_label($account->status) }}</span>
                             </td>
                             <td class="text-end">
                                 <a href="{{ route('admin.hosting-accounts.show', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Ver') }}</a>

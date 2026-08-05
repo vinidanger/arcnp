@@ -13,6 +13,9 @@
                 </form>
                 <a href="{{ route('admin.servers.php-extensions.index', $server) }}" class="btn btn-sm btn-outline-secondary">{{ __('Extensões PHP') }}</a>
                 <a href="{{ route('admin.servers.edit', $server) }}" class="btn btn-sm btn-outline-secondary">{{ __('Editar') }}</a>
+                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirm-server-deletion">
+                    {{ __('Excluir') }}
+                </button>
             </div>
         </div>
     </x-slot>
@@ -61,7 +64,7 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
                                     default => 'secondary',
                                 };
                             @endphp
-                            <span class="badge text-bg-{{ $badge }}">{{ $server->agent_status }}</span>
+                            <span class="badge text-bg-{{ $badge }}">{{ status_label($server->agent_status) }}</span>
                         </dd>
                         <dt class="col-5">{{ __('Último heartbeat') }}</dt>
                         <dd class="col-7">{{ $server->last_heartbeat_at?->diffForHumans() ?? '—' }}</dd>
@@ -250,7 +253,7 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
                                             default => 'secondary',
                                         };
                                     @endphp
-                                    <span class="badge text-bg-{{ $jobBadge }}">{{ $job->status }}</span>
+                                    <span class="badge text-bg-{{ $jobBadge }}">{{ status_label($job->status) }}</span>
                                 </td>
                                 <td>{{ $job->dispatched_at?->diffForHumans() ?? '—' }}</td>
                                 <td>{{ $job->completed_at?->diffForHumans() ?? '—' }}</td>
@@ -265,4 +268,41 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
             </div>
         </div>
     </div>
+
+    <x-modal name="confirm-server-deletion" :show="$errors->serverDeletion->isNotEmpty()" focusable>
+        <form method="post" action="{{ route('admin.servers.destroy', $server) }}" class="p-3">
+            @csrf
+            @method('delete')
+
+            <h2 class="h5">
+                {{ __('Tem certeza que deseja excluir este servidor?') }}
+            </h2>
+
+            <p class="small text-secondary">
+                {{ __('Isso remove o servidor :name (:ip) e revoga as credenciais de pareamento. Só é possível excluir se não houver nenhuma hospedagem ativa nele. Digite sua senha para confirmar.', ['name' => $server->name, 'ip' => $server->ip_address]) }}
+            </p>
+
+            <div class="mt-3">
+                <x-input-label for="server-deletion-password" value="{{ __('Senha') }}" class="visually-hidden" />
+                <x-text-input
+                    id="server-deletion-password"
+                    name="password"
+                    type="password"
+                    placeholder="{{ __('Senha') }}"
+                    class="w-full"
+                />
+                <x-input-error :messages="$errors->serverDeletion->get('password')" class="mt-2" />
+            </div>
+
+            <div class="mt-3 d-flex justify-content-end gap-2">
+                <x-secondary-button type="button" data-bs-dismiss="modal">
+                    {{ __('Cancelar') }}
+                </x-secondary-button>
+
+                <x-danger-button>
+                    {{ __('Excluir servidor') }}
+                </x-danger-button>
+            </div>
+        </form>
+    </x-modal>
 </x-admin-layout>
