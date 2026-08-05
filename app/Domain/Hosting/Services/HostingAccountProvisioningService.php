@@ -69,7 +69,7 @@ class HostingAccountProvisioningService
             // cliente não consegue nem entrar no painel.
             $this->ssh->setPassword($account, Str::password(20));
 
-            $this->runStep($server, 'php.create_pool', ['username' => $username, 'php_version' => $phpVersion]);
+            $this->syncPhpPools($account);
             $completed[] = 'pool';
 
             $this->runStep($server, 'web.create_vhost', ['username' => $username, 'domain' => $domain, 'php_version' => $phpVersion, 'public_path' => $account->public_path]);
@@ -132,21 +132,30 @@ class HostingAccountProvisioningService
         $outside = $location === 'outside_public_html';
         $subdir = $outside ? null : SubdirectoryGenerator::fromDomain($account, $domainName);
 
+        // Nasce com a versão/settings ATUAIS da conta como ponto de
+        // partida — depois é editável independente, pela própria tela
+        // de PHP desse domínio (ver PhpSettingsController).
         $domain = $account->domains()->create([
             'domain' => $domainName,
             'type' => $type,
             'location' => $location,
             'subdirectory' => $subdir,
+            'php_version' => $account->php_version,
+            'php_fpm_settings' => $account->php_fpm_settings,
             'status' => 'creating',
         ]);
 
         try {
+            // Precisa existir ANTES do vhost, senão o socket que o vhost
+            // referencia não teria processo nenhum escutando nele ainda.
+            $this->syncPhpPools($account);
+
             $this->runStep($account->server, 'web.create_addon_domain', [
                 'username' => $account->linux_username,
                 'domain' => $domainName,
                 'location' => $outside ? 'outside' : 'inside',
                 'subdir' => $subdir,
-                'php_version' => $account->php_version,
+                'php_version' => $domain->php_version,
             ]);
 
             $domain->update(['status' => 'active']);
@@ -171,6 +180,11 @@ class HostingAccountProvisioningService
         ]);
 
         $domain->delete();
+
+        // O domínio já sumiu do banco — o próximo resync (que consulta
+        // $account->domains() fresco) naturalmente não inclui mais ele,
+        // e o pool dele é removido do lado do Agent.
+        $this->syncPhpPools($account);
     }
 
     /**
@@ -240,7 +254,7 @@ class HostingAccountProvisioningService
             'domain' => $domain ? $domain->domain : $account->primary_domain,
             'location' => $domain?->isOutsidePublicHtml() ? 'outside' : 'inside',
             'subdir' => $domain?->subdirectory,
-            'php_version' => $account->php_version,
+            'php_version' => $domain ? $domain->php_version : $account->php_version,
             'public_path' => $domain ? $domain->public_path : $account->public_path,
         ]);
 
@@ -281,7 +295,7 @@ class HostingAccountProvisioningService
             'domain' => $domain->domain,
             'location' => $domain->isOutsidePublicHtml() ? 'outside' : 'inside',
             'subdir' => $domain->subdirectory,
-            'php_version' => $account->php_version,
+            'php_version' => $domain->php_version,
             'ssl_active' => $domain->ssl_status === 'active',
             'public_path' => $publicPath,
         ]);
@@ -290,55 +304,150 @@ class HostingAccountProvisioningService
     }
 
     /**
-     * Troca a versão de PHP de uma conta já provisionada: cria o pool
-     * na versão nova, apaga o da antiga (SwitchPhpVersionAction, uma
-     * chamada só), depois reescreve o vhost de cada domínio da conta
-     * (principal + adicionais) pra apontar pro socket novo, preservando
-     * SSL onde já tiver certificado ativo.
+     * PHP por DOMÍNIO, não por conta — $domain null representa o
+     * domínio PRINCIPAL (lê/grava direto em $account; ele nunca ganha
+     * uma linha na tabela domains, ver plano). As 3 operações abaixo
+     * (versão, settings, zend_extensions) todas terminam chamando
+     * syncPhpPools(), que resincroniza o estado INTEIRO da conta de
+     * uma vez (mesmo domínio que não mudou é reenviado, sem efeito
+     * colateral — é assim que o Agent reconcilia servidores/processos).
      */
-    public function changePhpVersion(HostingAccount $account, string $newVersion): void
+    public function updateDomainPhpVersion(HostingAccount $account, ?Domain $domain, string $newVersion): void
     {
-        $oldVersion = $account->php_version;
+        if ($domain) {
+            if ($domain->php_version === $newVersion) {
+                return;
+            }
 
-        if ($oldVersion === $newVersion) {
-            return;
+            $domain->update(['php_version' => $newVersion]);
+        } else {
+            if ($account->php_version === $newVersion) {
+                return;
+            }
+
+            $account->update(['php_version' => $newVersion]);
         }
+
+        $this->syncPhpPools($account);
+    }
+
+    public function updateDomainPhpSettings(HostingAccount $account, ?Domain $domain, array $settings): void
+    {
+        // Esse formulário não mexe em zend_extensions (fica numa tela
+        // própria, ver updateDomainZendExtensions()) — preserva o que já
+        // estava salvo pro domínio, senão salvar as configurações
+        // "normais" apagaria silenciosamente a extensão Zend escolhida.
+        $current = $domain ? $domain->php_fpm_settings : $account->php_fpm_settings;
+        $settings['zend_extensions'] = ($current ?? [])['zend_extensions'] ?? [];
+
+        if ($domain) {
+            $domain->update(['php_fpm_settings' => $settings]);
+        } else {
+            $account->update(['php_fpm_settings' => $settings]);
+        }
+
+        $this->syncPhpPools($account);
+    }
+
+    /**
+     * Muda só a extensão Zend (ex.: ioncube_loader) do domínio — reaproveita
+     * os MESMOS settings já salvos pros outros tunables (memory_limit,
+     * extra_extensions etc.) não resetarem sem querer.
+     */
+    public function updateDomainZendExtensions(HostingAccount $account, ?Domain $domain, array $zendExtensions): void
+    {
+        $existing = ($domain ? $domain->php_fpm_settings : $account->php_fpm_settings) ?? [];
+        $existing['zend_extensions'] = $zendExtensions;
+
+        if ($domain) {
+            $domain->update(['php_fpm_settings' => $existing]);
+        } else {
+            $account->update(['php_fpm_settings' => $existing]);
+        }
+
+        $this->syncPhpPools($account);
+    }
+
+    /**
+     * Resync COMPLETO dos processos PHP-FPM da conta — monta o estado
+     * desejado de TODOS os domínios (principal + adicionais, pulando
+     * os que estão em modo app/HostedApp, que não usam PHP-FPM) e
+     * manda pro Agent numa chamada só (php.sync_account_pools). Usa
+     * $account->domains()->get() (consulta nova, não a relação
+     * possivelmente já carregada em memória) — importante logo depois
+     * de criar/remover um domínio, senão o resync sairia com a lista
+     * desatualizada.
+     */
+    private function syncPhpPools(HostingAccount $account): void
+    {
+        $appDomains = HostedApp::where('hosting_account_id', $account->id)->pluck('domain')->all();
+
+        $domains = [];
+
+        if (! in_array($account->primary_domain, $appDomains, true)) {
+            $domains[] = [
+                'domain' => $account->primary_domain,
+                'php_version' => $account->php_version,
+                'settings' => $account->php_fpm_settings ? $this->formatPoolSettings($account->php_fpm_settings) : [],
+            ];
+        }
+
+        foreach ($account->domains()->get() as $domain) {
+            if (in_array($domain->domain, $appDomains, true)) {
+                continue;
+            }
+
+            $domains[] = [
+                'domain' => $domain->domain,
+                'php_version' => $domain->php_version,
+                'settings' => $domain->php_fpm_settings ? $this->formatPoolSettings($domain->php_fpm_settings) : [],
+            ];
+        }
+
+        $this->runStep($account->server, 'php.sync_account_pools', [
+            'username' => $account->linux_username,
+            'domains' => $domains,
+        ]);
+    }
+
+    /**
+     * Migração ÚNICA pós-deploy (comando `php-fpm:migrate-to-per-domain-pools`)
+     * pra contas provisionadas ANTES do PHP passar a ser por domínio —
+     * não faz parte do ciclo de vida normal. syncPhpPools() já cria os
+     * processos novos (um por grupo versão+zend_extensions em uso,
+     * caminho novo, não colide com o processo antigo "arcnp-php-
+     * {username}.service" sem sufixo de grupo); falta só re-renderizar
+     * o vhost de cada domínio pra apontar pro socket novo
+     * (PhpFpmPool::socketPath() mudou de "por conta" pra "por
+     * domínio"). Não apaga nada da arquitetura antiga — isso é limpeza
+     * manual documentada no deploy/README.md, feita conscientemente
+     * depois de confirmar que tudo migrou.
+     */
+    public function migrateToPerDomainPools(HostingAccount $account): void
+    {
+        $this->syncPhpPools($account);
 
         $server = $account->server;
         $username = $account->linux_username;
-
-        // Repassa os pool settings customizados da conta (se tiver
-        // algum salvo) — sem isso, a troca de versão silenciosamente
-        // resetaria memory_limit/upload_max_filesize/etc pro padrão
-        // global (ver PhpFpmPoolSettings::variables no Agent).
-        $this->runStep($server, 'php.switch_version', array_merge([
-            'username' => $username,
-            'old_php_version' => $oldVersion,
-            'new_php_version' => $newVersion,
-        ], $account->php_fpm_settings ? $this->formatPoolSettings($account->php_fpm_settings) : []));
-
-        // Domínios em modo app (Node.js/Python) não usam PHP-FPM — o
-        // vhost deles é proxy_pass, não faz sentido regenerar pro socket
-        // da nova versão nem resincronizar proteção/redirect/hotlink
-        // (a pasta virou o alvo do proxy, não conteúdo servido por
-        // localização).
         $appDomains = HostedApp::where('hosting_account_id', $account->id)->pluck('domain')->all();
 
         if (! in_array($account->primary_domain, $appDomains, true)) {
             $this->runStep($server, 'web.update_vhost_php_version', [
                 'username' => $username,
                 'domain' => $account->primary_domain,
-                'php_version' => $newVersion,
+                'php_version' => $account->php_version,
                 'ssl_active' => $account->ssl_status === 'active',
                 'public_path' => $account->public_path,
             ]);
+            // Reescrever o vhost do zero (stub) apaga qualquer bloco
+            // customizado injetado nele — reinjeta os que existirem.
             $this->folderProtections->resyncIfNeeded($account, $account->primary_domain);
             $this->siteRedirects->resyncIfNeeded($account, $account->primary_domain);
             $this->hotlinkProtection->resyncIfNeeded($account, $account->primary_domain);
             $this->mimeTypes->resyncIfNeeded($account, $account->primary_domain);
         }
 
-        foreach ($account->domains as $domain) {
+        foreach ($account->domains()->get() as $domain) {
             if (in_array($domain->domain, $appDomains, true)) {
                 continue;
             }
@@ -348,7 +457,7 @@ class HostingAccountProvisioningService
                 'domain' => $domain->domain,
                 'location' => $domain->isOutsidePublicHtml() ? 'outside' : 'inside',
                 'subdir' => $domain->subdirectory,
-                'php_version' => $newVersion,
+                'php_version' => $domain->php_version,
                 'ssl_active' => $domain->ssl_status === 'active',
                 'public_path' => $domain->public_path,
             ]);
@@ -357,104 +466,6 @@ class HostingAccountProvisioningService
             $this->hotlinkProtection->resyncIfNeeded($account, $domain->domain);
             $this->mimeTypes->resyncIfNeeded($account, $domain->domain);
         }
-
-        $account->update(['php_version' => $newVersion]);
-    }
-
-    /**
-     * Migração ÚNICA pós-deploy (comando `php-fpm:migrate-to-per-account`)
-     * pra contas provisionadas ANTES da troca de arquitetura do PHP-FPM
-     * (de service compartilhado por versão pra 1 processo dedicado por
-     * conta) — não faz parte do ciclo de vida normal. Cria o service
-     * novo (caminho novo, não colide com o pool antigo) e re-renderiza
-     * o vhost de cada domínio, que passa a apontar pro socket novo
-     * (PhpFpmPool::socketPath() já mudou no Agent). Não apaga nada da
-     * arquitetura antiga — isso é limpeza manual documentada no
-     * deploy/README.md, feita conscientemente depois de confirmar que
-     * tudo migrou.
-     */
-    public function migratePhpFpmArchitecture(HostingAccount $account): void
-    {
-        $server = $account->server;
-        $username = $account->linux_username;
-        $phpVersion = $account->php_version;
-
-        $this->runStep($server, 'php.create_pool', array_merge([
-            'username' => $username,
-            'php_version' => $phpVersion,
-        ], $account->php_fpm_settings ? $this->formatPoolSettings($account->php_fpm_settings) : []));
-
-        $appDomains = HostedApp::where('hosting_account_id', $account->id)->pluck('domain')->all();
-
-        if (! in_array($account->primary_domain, $appDomains, true)) {
-            $this->runStep($server, 'web.update_vhost_php_version', [
-                'username' => $username,
-                'domain' => $account->primary_domain,
-                'php_version' => $phpVersion,
-                'ssl_active' => $account->ssl_status === 'active',
-            ]);
-        }
-
-        foreach ($account->domains as $domain) {
-            if (in_array($domain->domain, $appDomains, true)) {
-                continue;
-            }
-
-            $this->runStep($server, 'web.update_vhost_php_version', [
-                'username' => $username,
-                'domain' => $domain->domain,
-                'location' => $domain->isOutsidePublicHtml() ? 'outside' : 'inside',
-                'subdir' => $domain->subdirectory,
-                'php_version' => $phpVersion,
-                'ssl_active' => $domain->ssl_status === 'active',
-            ]);
-        }
-    }
-
-    public function updatePhpFpmSettings(HostingAccount $account, array $settings): void
-    {
-        // Esse formulário não mexe em zend_extensions (fica numa tela
-        // própria, ver updateZendExtensions()) — preserva o que já
-        // estava salvo, senão salvar as configurações "normais" apagaria
-        // silenciosamente a extensão Zend escolhida (o valor ficaria
-        // errado em php_fpm_settings mesmo sem o unit ter mudado de
-        // verdade, e a próxima troca de versão de PHP reproduziria esse
-        // valor errado pro Agent).
-        $settings['zend_extensions'] = ($account->php_fpm_settings ?? [])['zend_extensions'] ?? [];
-
-        $this->runStep($account->server, 'php.update_pool_settings', array_merge([
-            'username' => $account->linux_username,
-            'php_version' => $account->php_version,
-        ], $this->formatPoolSettings($settings)));
-
-        $account->update(['php_fpm_settings' => $settings]);
-    }
-
-    /**
-     * Muda só a extensão Zend (ex.: ioncube_loader) — precisa de uma
-     * Action própria no Agent (reinicia o processo, diferente do reload
-     * gracioso de updatePhpFpmSettings()), mas reaproveita os MESMOS
-     * settings já salvos pros outros tunables (memory_limit,
-     * extra_extensions etc.) não resetarem sem querer.
-     */
-    public function updateZendExtensions(HostingAccount $account, array $zendExtensions): void
-    {
-        // Conta pode nunca ter salvo os outros tunáveis ainda (settings
-        // vazio) — nesse caso não dá pra chamar formatPoolSettings()
-        // (espera todas as chaves preenchidas), então manda só
-        // zend_extensions e deixa os demais tunáveis caírem no padrão do
-        // Agent, mesmo padrão já usado em changePhpVersion().
-        $existing = $account->php_fpm_settings ?? [];
-        $formatted = $existing ? $this->formatPoolSettings($existing) : [];
-        $formatted['zend_extensions'] = implode(',', $zendExtensions);
-
-        $this->runStep($account->server, 'php.update_zend_extensions', array_merge([
-            'username' => $account->linux_username,
-            'php_version' => $account->php_version,
-        ], $formatted));
-
-        $existing['zend_extensions'] = $zendExtensions;
-        $account->update(['php_fpm_settings' => $existing]);
     }
 
     /**
@@ -603,7 +614,10 @@ class HostingAccountProvisioningService
         }
 
         if (in_array('pool', $completedSteps, true)) {
-            $this->client->dispatch($server, 'php.delete_pool', ['username' => $username]);
+            // Lista de domínios vazia = desprovisiona TODOS os processos
+            // PHP-FPM da conta (o Agent descobre e remove qualquer grupo
+            // versão+zend_extensions que sobrar sem nenhum domínio).
+            $this->client->dispatch($server, 'php.sync_account_pools', ['username' => $username, 'domains' => []]);
         }
 
         if (in_array('user', $completedSteps, true)) {

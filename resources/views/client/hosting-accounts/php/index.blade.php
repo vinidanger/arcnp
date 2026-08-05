@@ -1,7 +1,14 @@
 <x-client-layout>
     <x-slot name="header">
-        <h1 class="h4 mb-0">{{ __('PHP') }} — {{ $account->primary_domain }}</h1>
+        <h1 class="h4 mb-0">{{ __('PHP') }} — {{ $domain ? $domain->domain : $account->primary_domain }}</h1>
     </x-slot>
+
+    @php
+        $versionRoute = $domain ? 'client.hosting-accounts.domains.php.version.update' : 'client.hosting-accounts.php.version.update';
+        $settingsRoute = $domain ? 'client.hosting-accounts.domains.php.settings.update' : 'client.hosting-accounts.php.settings.update';
+        $zendRoute = $domain ? 'client.hosting-accounts.domains.php.zend-extensions.update' : 'client.hosting-accounts.php.zend-extensions.update';
+        $routeParams = $domain ? [$account, $domain] : $account;
+    @endphp
 
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
@@ -20,29 +27,29 @@
             <h2 class="h6">{{ __('Versão do PHP') }}</h2>
 
             @if ($account->status === 'active')
-                <form method="POST" action="{{ route('client.hosting-accounts.php.version.update', $account) }}" class="d-flex gap-2">
+                <form method="POST" action="{{ route($versionRoute, $routeParams) }}" class="d-flex gap-2">
                     @csrf
                     <select name="php_version" class="form-select form-select-sm w-auto">
                         @foreach (config('hosting.php_versions') as $version)
-                            <option value="{{ $version }}" @selected($account->php_version === $version)>{{ $version }}</option>
+                            <option value="{{ $version }}" @selected($phpVersion === $version)>{{ $version }}</option>
                         @endforeach
                     </select>
                     <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Trocar') }}</button>
                 </form>
             @else
-                <p class="mb-0">{{ $account->php_version }}</p>
+                <p class="mb-0">{{ $phpVersion }}</p>
             @endif
         </div>
     </div>
 
     @if ($account->status === 'active')
-        @php $s = $account->php_fpm_settings ?? config('hosting.default_pool_settings'); @endphp
+        @php $s = $settings; @endphp
         <div class="card">
             <div class="card-body">
                 <h2 class="h6">{{ __('Configurações') }}</h2>
-                <p class="small text-secondary">{{ __('Aplicadas no pool PHP-FPM desta conta — equivalente a um php.ini por conta.') }}</p>
+                <p class="small text-secondary">{{ __('Aplicadas no pool PHP-FPM desse domínio — equivalente a um php.ini próprio.') }}</p>
 
-                <form method="POST" action="{{ route('client.hosting-accounts.php.settings.update', $account) }}">
+                <form method="POST" action="{{ route($settingsRoute, $routeParams) }}">
                     @csrf
 
                     <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Limites de recursos') }}</div>
@@ -123,7 +130,7 @@
                     </div>
 
                     <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Já ativadas no servidor') }}</div>
-                    <p class="small text-secondary">{{ __('Essas extensões já estão disponíveis pra essa conta automaticamente — não é preciso (nem é possível) ativar por conta, e desativar afetaria todas as contas do servidor.') }}</p>
+                    <p class="small text-secondary">{{ __('Essas extensões já estão disponíveis pra esse domínio automaticamente — não é preciso (nem é possível) ativar por domínio, e desativar afetaria todas as contas do servidor.') }}</p>
                     @if (empty($activeExtensions))
                         <p class="small text-secondary mb-3">{{ __('Nenhuma informação disponível.') }}</p>
                     @else
@@ -135,9 +142,9 @@
                     @endif
 
                     <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Extensões extras') }}</div>
-                    <p class="small text-secondary">{{ __('Ativa extensões PHP disponíveis no servidor só pra essa conta, sem afetar as demais.') }}</p>
+                    <p class="small text-secondary">{{ __('Ativa extensões PHP disponíveis no servidor só pra esse domínio, sem afetar os demais.') }}</p>
                     @if (empty($availableExtensions))
-                        <p class="small text-secondary mb-3">{{ __('Nenhuma extensão disponível pra ativar por conta nessa versão de PHP.') }}</p>
+                        <p class="small text-secondary mb-3">{{ __('Nenhuma extensão disponível pra ativar por domínio nessa versão de PHP.') }}</p>
                     @else
                         <div class="row g-2 mb-3">
                             @foreach ($availableExtensions as $extension)
@@ -160,7 +167,7 @@
         <div class="card mt-3">
             <div class="card-body">
                 <h2 class="h6">{{ __('Extensões Zend') }}</h2>
-                <p class="small text-secondary">{{ __('zend_extension (ex.: ioncube_loader, opcache) carrega no boot do processo PHP dessa conta — diferente de uma extensão comum, ativar/desativar reinicia o PHP-FPM dela.') }}</p>
+                <p class="small text-secondary">{{ __('zend_extension (ex.: ioncube_loader, opcache) carrega no boot do processo PHP desse domínio — diferente de uma extensão comum, ativar/desativar reinicia o PHP-FPM dele.') }}</p>
 
                 <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Já ativadas no servidor') }}</div>
                 @if (empty($activeZendExtensions))
@@ -173,13 +180,13 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('client.hosting-accounts.php.zend-extensions.update', $account) }}" onsubmit="return confirm('Isso reinicia o PHP dessa conta — o site fica fora do ar por um instante. Continuar?')">
+                <form method="POST" action="{{ route($zendRoute, $routeParams) }}" onsubmit="return confirm('Isso reinicia o PHP desse domínio — o site fica fora do ar por um instante. Continuar?')">
                     @csrf
 
-                    <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Disponíveis por conta') }}</div>
-                    <p class="small text-secondary">{{ __('Ativa a extensão Zend só pra essa conta (isolamento real — não afeta as demais).') }}</p>
+                    <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Disponíveis por domínio') }}</div>
+                    <p class="small text-secondary">{{ __('Ativa a extensão Zend só pra esse domínio (isolamento real — não afeta os demais).') }}</p>
                     @if (empty($availableZendExtensions))
-                        <p class="small text-secondary mb-3">{{ __('Nenhuma extensão Zend disponível pra ativar por conta nessa versão de PHP.') }}</p>
+                        <p class="small text-secondary mb-3">{{ __('Nenhuma extensão Zend disponível pra ativar por domínio nessa versão de PHP.') }}</p>
                     @else
                         <div class="row g-2 mb-3">
                             @foreach ($availableZendExtensions as $extension)

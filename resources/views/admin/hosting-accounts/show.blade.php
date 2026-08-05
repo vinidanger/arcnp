@@ -418,21 +418,49 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         @endif
                     </div>
 
-                    @if ($account->domains->isNotEmpty())
-                        <div class="table-responsive mb-3">
-                            <table class="table table-sm mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>{{ __('Domínio') }}</th>
-                                        <th>{{ __('Tipo') }}</th>
-                                        <th>{{ __('Document root') }}</th>
-                                        <th>{{ __('Status') }}</th>
-                                        <th>{{ __('SSL') }}</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($account->domains as $domain)
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Domínio') }}</th>
+                                    <th>{{ __('Tipo') }}</th>
+                                    <th>{{ __('Document root') }}</th>
+                                    <th>{{ __('Status') }}</th>
+                                    <th>{{ __('SSL') }}</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ $account->primary_domain }}</td>
+                                    <td><span class="badge text-bg-primary">{{ __('Principal') }}</span></td>
+                                    <td>
+                                        <form method="POST" action="{{ route('admin.hosting-accounts.public-path.update', $account) }}" class="d-flex align-items-center gap-1">
+                                            @csrf
+                                            @method('PATCH')
+                                            <code class="small">public_html{{ $account->public_path ? '/'.$account->public_path : '' }}</code>
+                                            <input type="text" name="public_path" value="{{ $account->public_path }}" placeholder="public" class="form-control form-control-sm" style="width: 6rem;">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('OK') }}</button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $accountBadge = match ($account->status) {
+                                                'active' => 'success',
+                                                'error' => 'danger',
+                                                default => 'secondary',
+                                            };
+                                        @endphp
+                                        <span class="badge text-bg-{{ $accountBadge }}">{{ status_label($account->status) }}</span>
+                                    </td>
+                                    <td>
+                                        <x-ssl-info :model="$account" />
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ route('admin.hosting-accounts.php.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>
+                                    </td>
+                                </tr>
+                                @foreach ($account->domains as $domain)
                                         <tr>
                                             <td>{{ $domain->domain }}</td>
                                             <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
@@ -467,7 +495,9 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                                 <x-ssl-info :model="$domain" />
                                             </td>
                                             <td class="text-end">
+                                                <a href="{{ route('admin.hosting-accounts.domains.php.index', [$account, $domain]) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>
                                                 <form method="POST" action="{{ route('admin.hosting-accounts.domains.destroy', [$account, $domain]) }}"
+                                                      class="d-inline"
                                                       onsubmit="return confirm('{{ __('Remove o vhost e o diretório desse domínio. Continuar?') }}')">
                                                     @csrf
                                                     @method('DELETE')
@@ -475,11 +505,10 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                                 </form>
                                             </td>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
 
                     @unless ($account->status === 'active')
                         <p class="small text-secondary mb-0">{{ __('Disponível quando a conta estiver ativa.') }}</p>

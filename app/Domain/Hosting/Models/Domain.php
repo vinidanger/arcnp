@@ -14,6 +14,8 @@ class Domain extends Model
         'location',
         'subdirectory',
         'public_path',
+        'php_version',
+        'php_fpm_settings',
         'status',
         'last_error',
         'ssl_status',
@@ -25,6 +27,7 @@ class Domain extends Model
     protected function casts(): array
     {
         return [
+            'php_fpm_settings' => 'array',
             'ssl_issued_at' => 'datetime',
             'ssl_expires_at' => 'datetime',
         ];

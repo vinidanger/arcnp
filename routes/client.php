@@ -100,6 +100,15 @@ Route::post('hosting-accounts/{hosting_account}/php/settings', [PhpSettingsContr
 Route::post('hosting-accounts/{hosting_account}/php/zend-extensions', [PhpSettingsController::class, 'updateZendExtensions'])
     ->name('hosting-accounts.php.zend-extensions.update');
 
+Route::get('hosting-accounts/{hosting_account}/domains/{domain}/php', [PhpSettingsController::class, 'indexForDomain'])
+    ->name('hosting-accounts.domains.php.index');
+Route::post('hosting-accounts/{hosting_account}/domains/{domain}/php/version', [PhpSettingsController::class, 'updateVersionForDomain'])
+    ->name('hosting-accounts.domains.php.version.update');
+Route::post('hosting-accounts/{hosting_account}/domains/{domain}/php/settings', [PhpSettingsController::class, 'updateSettingsForDomain'])
+    ->name('hosting-accounts.domains.php.settings.update');
+Route::post('hosting-accounts/{hosting_account}/domains/{domain}/php/zend-extensions', [PhpSettingsController::class, 'updateZendExtensionsForDomain'])
+    ->name('hosting-accounts.domains.php.zend-extensions.update');
+
 Route::get('hosting-accounts/{hosting_account}/resources', [ResourceLimitsController::class, 'index'])
     ->name('hosting-accounts.resources.index');
 
