@@ -72,7 +72,7 @@ class HostingAccountProvisioningService
             $this->runStep($server, 'php.create_pool', ['username' => $username, 'php_version' => $phpVersion]);
             $completed[] = 'pool';
 
-            $this->runStep($server, 'web.create_vhost', ['username' => $username, 'domain' => $domain, 'php_version' => $phpVersion]);
+            $this->runStep($server, 'web.create_vhost', ['username' => $username, 'domain' => $domain, 'php_version' => $phpVersion, 'public_path' => $account->public_path]);
             $completed[] = 'vhost';
 
             $account->update(['status' => 'active', 'last_provision_error' => null]);
@@ -241,6 +241,7 @@ class HostingAccountProvisioningService
             'location' => $domain?->isOutsidePublicHtml() ? 'outside' : 'inside',
             'subdir' => $domain?->subdirectory,
             'php_version' => $account->php_version,
+            'public_path' => $domain ? $domain->public_path : $account->public_path,
         ]);
 
         if ($domain) {
@@ -248,6 +249,44 @@ class HostingAccountProvisioningService
         } else {
             $account->update(['ssl_status' => 'pending', 'ssl_error' => null]);
         }
+    }
+
+    /**
+     * Muda a subpasta que o nginx serve de fato (ex.: "public", pra um
+     * projeto Laravel/Symfony extraído com a árvore inteira do
+     * framework) — reescreve só o vhost, não mexe em arquivo nenhum.
+     */
+    public function updateDocumentRoot(HostingAccount $account, ?string $publicPath): void
+    {
+        $this->runStep($account->server, 'web.update_document_root', [
+            'username' => $account->linux_username,
+            'domain' => $account->primary_domain,
+            'php_version' => $account->php_version,
+            'ssl_active' => $account->ssl_status === 'active',
+            'public_path' => $publicPath,
+        ]);
+
+        $account->update(['public_path' => $publicPath]);
+    }
+
+    /**
+     * Mesma ideia do método acima, pra um domínio adicional/subdomínio.
+     */
+    public function updateDomainDocumentRoot(Domain $domain, ?string $publicPath): void
+    {
+        $account = $domain->hostingAccount;
+
+        $this->runStep($account->server, 'web.update_document_root', [
+            'username' => $account->linux_username,
+            'domain' => $domain->domain,
+            'location' => $domain->isOutsidePublicHtml() ? 'outside' : 'inside',
+            'subdir' => $domain->subdirectory,
+            'php_version' => $account->php_version,
+            'ssl_active' => $domain->ssl_status === 'active',
+            'public_path' => $publicPath,
+        ]);
+
+        $domain->update(['public_path' => $publicPath]);
     }
 
     /**
@@ -291,6 +330,7 @@ class HostingAccountProvisioningService
                 'domain' => $account->primary_domain,
                 'php_version' => $newVersion,
                 'ssl_active' => $account->ssl_status === 'active',
+                'public_path' => $account->public_path,
             ]);
             $this->folderProtections->resyncIfNeeded($account, $account->primary_domain);
             $this->siteRedirects->resyncIfNeeded($account, $account->primary_domain);
@@ -310,6 +350,7 @@ class HostingAccountProvisioningService
                 'subdir' => $domain->subdirectory,
                 'php_version' => $newVersion,
                 'ssl_active' => $domain->ssl_status === 'active',
+                'public_path' => $domain->public_path,
             ]);
             $this->folderProtections->resyncIfNeeded($account, $domain->domain);
             $this->siteRedirects->resyncIfNeeded($account, $domain->domain);

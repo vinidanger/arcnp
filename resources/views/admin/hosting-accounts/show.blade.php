@@ -230,6 +230,22 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         <dt class="col-sm-3">{{ __('Username Linux') }}</dt>
                         <dd class="col-sm-9"><code>{{ $account->linux_username }}</code></dd>
 
+                        <dt class="col-sm-3">{{ __('Diretório público') }}</dt>
+                        <dd class="col-sm-9">
+                            @if ($account->status === 'active')
+                                <form method="POST" action="{{ route('admin.hosting-accounts.public-path.update', $account) }}" class="d-flex align-items-center gap-2">
+                                    @csrf
+                                    @method('PATCH')
+                                    <code class="small">public_html{{ $account->public_path ? '/'.$account->public_path : '' }}</code>
+                                    <input type="text" name="public_path" value="{{ $account->public_path }}" placeholder="{{ __('vazio = raiz') }}" class="form-control form-control-sm" style="width: 9rem;">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Salvar') }}</button>
+                                </form>
+                                <div class="small text-secondary mt-1">{{ __('Pra apps tipo Laravel/Symfony, cujo index.php real fica numa subpasta (ex.: "public") em vez da raiz do projeto.') }}</div>
+                            @else
+                                <code class="small">public_html{{ $account->public_path ? '/'.$account->public_path : '' }}</code>
+                            @endif
+                        </dd>
+
                         <dt class="col-sm-3">{{ __('Versão PHP') }}</dt>
                         <dd class="col-sm-9">
                             @if ($account->status === 'active')
@@ -420,11 +436,18 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                             <td>{{ $domain->domain }}</td>
                                             <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
                                             <td>
-                                                @if ($domain->isOutsidePublicHtml())
-                                                    <code>domains/{{ $domain->domain }}/public_html</code>
-                                                @else
-                                                    <code>public_html/{{ $domain->subdirectory }}</code>
-                                                @endif
+                                                @php
+                                                    $domainBase = $domain->isOutsidePublicHtml()
+                                                        ? "domains/{$domain->domain}/public_html"
+                                                        : "public_html/{$domain->subdirectory}";
+                                                @endphp
+                                                <form method="POST" action="{{ route('admin.hosting-accounts.domains.public-path.update', [$account, $domain]) }}" class="d-flex align-items-center gap-1">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <code class="small">{{ $domainBase }}{{ $domain->public_path ? '/'.$domain->public_path : '' }}</code>
+                                                    <input type="text" name="public_path" value="{{ $domain->public_path }}" placeholder="public" class="form-control form-control-sm" style="width: 6rem;">
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('OK') }}</button>
+                                                </form>
                                             </td>
                                             <td>
                                                 @php

@@ -248,4 +248,40 @@ class HostingAccountController extends Controller
 
         return back()->with('status', 'Domínio removido.');
     }
+
+    public function updatePublicPath(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $data = $request->validate([
+            'public_path' => ['nullable', 'string', 'regex:/^[a-z0-9][a-z0-9_-]{0,63}$/i'],
+        ]);
+
+        try {
+            $provisioning->updateDocumentRoot($hosting_account, $data['public_path'] ?: null);
+
+            return back()->with('status', 'Diretório público atualizado.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao atualizar diretório público: '.$e->getMessage());
+        }
+    }
+
+    public function updateDomainPublicPath(Request $request, HostingAccount $hosting_account, Domain $domain, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($domain->hosting_account_id === $hosting_account->id, 404);
+
+        $data = $request->validate([
+            'public_path' => ['nullable', 'string', 'regex:/^[a-z0-9][a-z0-9_-]{0,63}$/i'],
+        ]);
+
+        try {
+            $provisioning->updateDomainDocumentRoot($domain, $data['public_path'] ?: null);
+
+            return back()->with('status', 'Diretório público atualizado.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao atualizar diretório público: '.$e->getMessage());
+        }
+    }
 }

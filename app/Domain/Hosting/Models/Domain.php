@@ -13,6 +13,7 @@ class Domain extends Model
         'type',
         'location',
         'subdirectory',
+        'public_path',
         'status',
         'last_error',
         'ssl_status',

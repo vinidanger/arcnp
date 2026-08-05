@@ -17,6 +17,7 @@ class HostingAccount extends Model
         'plan_id',
         'linux_username',
         'primary_domain',
+        'public_path',
         'php_version',
         'php_fpm_settings',
         'status',

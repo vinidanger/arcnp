@@ -70,6 +70,10 @@ Route::post('hosting-accounts/{hosting_account}/domains', [HostingAccountControl
     ->name('hosting-accounts.domains.store');
 Route::delete('hosting-accounts/{hosting_account}/domains/{domain}', [HostingAccountController::class, 'destroyDomain'])
     ->name('hosting-accounts.domains.destroy');
+Route::patch('hosting-accounts/{hosting_account}/public-path', [HostingAccountController::class, 'updatePublicPath'])
+    ->name('hosting-accounts.public-path.update');
+Route::patch('hosting-accounts/{hosting_account}/domains/{domain}/public-path', [HostingAccountController::class, 'updateDomainPublicPath'])
+    ->name('hosting-accounts.domains.public-path.update');
 Route::post('hosting-accounts/{hosting_account}/backup-frequency', [HostingAccountController::class, 'updateBackupFrequency'])
     ->name('hosting-accounts.backup-frequency.update');
 Route::post('hosting-accounts/{hosting_account}/backups', [HostingAccountController::class, 'createBackup'])

@@ -85,6 +85,24 @@ php artisan route:cache    # idem
 existe, e qualquer chamada à função dá "Call to undefined function" em
 produção mesmo com o código já deployado.
 
+## Diretório público customizado (public_path)
+
+Por padrão, o vhost de uma conta/domínio serve `public_html` (ou
+`public_html/{subdiretório}` pra domínio adicional) diretamente. Apps
+tipo Laravel/Symfony esperam que o webroot seja uma subpasta (`public/`)
+dentro do projeto — extrair um desses direto na raiz dá 403 (nginx não
+acha `index.php` em `public_html/`).
+
+Campo `public_path` (nullable) em `hosting_accounts` (domínio principal)
+e `domains` (adicionais/subdomínios) resolve isso — é a subpasta que o
+nginx deve servir de verdade, ex. `public`. Editável em "Detalhes da
+conta" (domínio principal) e na tabela de domínios (adicionais), tanto
+admin quanto cliente. Por baixo dos panos dispara `web.update_document_root`
+pro Agent (`HostingAccountProvisioningService::updateDocumentRoot()` /
+`updateDomainDocumentRoot()`) — só reescreve o vhost, não move nenhum
+arquivo. Validação (Painel e Agent) aceita só um segmento simples
+(`[a-z0-9][a-z0-9_-]{0,63}`, sem `/` nem `..`).
+
 ## Estrutura (visão rápida)
 
 - `app/Domain/Hosting` — contas de hospedagem, DNS, e-mail, PHP, SSH,
