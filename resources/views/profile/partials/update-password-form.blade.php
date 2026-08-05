@@ -1,11 +1,20 @@
 <section>
     <header>
         <h2 class="h5">{{ __('Alterar senha') }}</h2>
-        <p class="small text-secondary">
-            {{ __('Garanta que sua conta esteja usando uma senha longa e aleatória para se manter segura.') }}
-        </p>
+        @if (auth()->user()->isClient())
+            <p class="small text-secondary">
+                {{ __('Essa é a mesma senha usada pra entrar no painel e pro acesso SSH — altere aqui e ela vale para os dois.') }}
+            </p>
+        @else
+            <p class="small text-secondary">
+                {{ __('Garanta que sua conta esteja usando uma senha longa e aleatória para se manter segura.') }}
+            </p>
+        @endif
     </header>
 
+    @if (auth()->user()->isClient() && ! auth()->user()->hostingAccount)
+        <p class="small text-secondary mb-0">{{ __('Disponível assim que sua hospedagem for provisionada.') }}</p>
+    @else
     <form method="post" action="{{ route('password.update') }}" class="mt-3">
         @csrf
         @method('put')
@@ -36,4 +45,5 @@
             @endif
         </div>
     </form>
+    @endif
 </section>

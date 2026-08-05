@@ -20,9 +20,9 @@ class TicketController extends Controller
         return view('client.tickets.index', ['tickets' => $tickets]);
     }
 
-    public function create(Request $request)
+    public function create()
     {
-        return view('client.tickets.create', ['accounts' => $request->user()->hostingAccounts]);
+        return view('client.tickets.create');
     }
 
     public function store(Request $request, TicketService $tickets)
@@ -30,13 +30,14 @@ class TicketController extends Controller
         $data = $request->validate([
             'subject' => ['required', 'string', 'max:255'],
             'priority' => ['required', 'string', 'in:low,normal,high'],
-            'hosting_account_id' => ['nullable', 'integer', 'exists:hosting_accounts,id'],
             'body' => ['required', 'string', 'max:10000'],
         ]);
 
-        $account = $data['hosting_account_id']
-            ? $request->user()->hostingAccounts()->findOrFail($data['hosting_account_id'])
-            : null;
+        // Cliente tem no máximo uma hospedagem — atrela sozinho, sem
+        // seletor no formulário. Pode ser null (ex.: cliente ainda sem
+        // hospedagem provisionada, ou dúvida que não é sobre nenhuma
+        // conta específica) — TicketService já aceita isso.
+        $account = $request->user()->hostingAccount;
 
         $ticket = $tickets->create($request->user(), $data['subject'], $data['priority'], $account, $data['body']);
 

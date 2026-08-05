@@ -15,9 +15,9 @@
         @endif
 
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" class="w-full" />
-            <x-input-error :messages="$errors->get('email')" class="mt-1.5" />
+            <x-input-label for="login" :value="__('E-mail ou usuário da hospedagem')" />
+            <x-text-input id="login" type="text" name="login" :value="old('login')" required autofocus autocomplete="username" class="w-full" />
+            <x-input-error :messages="$errors->get('login')" class="mt-1.5" />
         </div>
 
         <div>

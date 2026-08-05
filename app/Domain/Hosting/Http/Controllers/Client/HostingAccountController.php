@@ -23,14 +23,18 @@ use Throwable;
  */
 class HostingAccountController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Cliente sempre tem no máximo uma hospedagem — "a lista" não faz
+     * mais sentido, redireciona direto pra ela (mesmo espírito do
+     * DashboardController).
+     */
+    public function index()
     {
-        $accounts = auth()->user()->hostingAccounts()->with('plan')
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->latest()
-            ->get();
+        $account = auth()->user()->hostingAccount;
 
-        return view('client.hosting-accounts.index', compact('accounts'));
+        return $account
+            ? redirect()->route('client.hosting-accounts.show', $account)
+            : redirect()->route('client.dashboard');
     }
 
     public function show(HostingAccount $hosting_account)

@@ -16,7 +16,14 @@ class StoreHostingAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', Rule::exists('users', 'id')->where('type', 'client')],
+            'user_id' => [
+                'required',
+                Rule::exists('users', 'id')->where('type', 'client'),
+                // 1 cliente = 1 hospedagem, sempre — mensagem amigável em
+                // vez de deixar estourar a constraint unique(user_id) do
+                // banco.
+                Rule::unique('hosting_accounts', 'user_id'),
+            ],
             'server_id' => ['required', 'exists:servers,id'],
             'plan_id' => ['required', 'exists:plans,id'],
             'primary_domain' => [

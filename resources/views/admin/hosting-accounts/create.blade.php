@@ -19,7 +19,7 @@
                     <select id="user_id" name="user_id" class="form-select" required>
                         <option value="">{{ __('Selecione...') }}</option>
                         @foreach ($clients as $client)
-                            <option value="{{ $client->id }}" @selected(old('user_id') == $client->id)>
+                            <option value="{{ $client->id }}" @selected(old('user_id', request()->query('client')) == $client->id)>
                                 {{ $client->name }} ({{ $client->email }})
                             </option>
                         @endforeach

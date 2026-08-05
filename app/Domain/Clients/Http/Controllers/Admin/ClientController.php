@@ -33,7 +33,7 @@ class ClientController extends Controller
     {
         $data = $request->validated();
 
-        User::create([
+        $client = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
@@ -42,7 +42,11 @@ class ClientController extends Controller
             'email_verified_at' => now(),
         ]);
 
-        return redirect()->route('admin.clients.index')->with('status', 'Cliente criado.');
+        // Cliente sem hospedagem não serve pra nada nesse painel — manda
+        // o admin direto criar a conta dele, já pré-selecionado.
+        return redirect()
+            ->route('admin.hosting-accounts.create', ['client' => $client->id])
+            ->with('status', 'Cliente criado — agora crie a hospedagem dele.');
     }
 
     public function edit(User $client)

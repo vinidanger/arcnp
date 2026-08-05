@@ -39,7 +39,7 @@ class HostingAccountController extends Controller
     {
         $this->authorize('create', HostingAccount::class);
 
-        $clients = User::where('type', 'client')->orderBy('name')->get();
+        $clients = User::where('type', 'client')->whereDoesntHave('hostingAccounts')->orderBy('name')->get();
         $servers = Server::orderBy('name')->get();
         $plans = Plan::where('is_active', true)->orderBy('name')->get();
 
@@ -65,6 +65,8 @@ class HostingAccountController extends Controller
         if ($account->status !== 'active') {
             return $redirect->with('error', 'Falha ao provisionar — veja o erro abaixo.');
         }
+
+        $redirect = $redirect->with('plain_ssh_password', $account->ssh_password);
 
         if ($createDatabase) {
             try {

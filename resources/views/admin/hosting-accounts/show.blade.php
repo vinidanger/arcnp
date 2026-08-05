@@ -88,6 +88,15 @@
         </div>
     @endif
 
+    @if (session('plain_ssh_password'))
+        <div class="alert alert-warning">
+            <strong>{{ __('Credenciais de acesso do cliente — copie agora, não aparecem de novo.') }}</strong>
+            <p class="small mb-2">{{ __('Essa é a senha que o cliente usa pra entrar no painel (login com o usuário abaixo) e também a senha de SSH.') }}</p>
+            <pre class="mb-0 bg-body-secondary p-2 rounded border small">USUÁRIO={{ $account->linux_username }}
+SENHA={{ session('plain_ssh_password') }}</pre>
+        </div>
+    @endif
+
     @if (session('plain_db_password'))
         <div class="alert alert-warning">
             <strong>{{ __('Credenciais do banco de dados — copie agora, não aparecem de novo.') }}</strong>

@@ -7,6 +7,7 @@ use App\Domain\Support\Models\Ticket;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -78,6 +79,16 @@ class User extends Authenticatable
     public function hostingAccounts(): HasMany
     {
         return $this->hasMany(HostingAccount::class);
+    }
+
+    /**
+     * Cada cliente tem no máximo uma hospedagem (unique(user_id) em
+     * hosting_accounts) — este é o acessor usado pelo login e pela
+     * navegação client-side, que assumem sempre uma conta só.
+     */
+    public function hostingAccount(): HasOne
+    {
+        return $this->hasOne(HostingAccount::class);
     }
 
     public function tickets(): HasMany

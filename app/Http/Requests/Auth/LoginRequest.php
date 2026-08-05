@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Domain\Hosting\Models\HostingAccount;
+use App\Domain\Hosting\Services\SshAccessService;
 use App\Models\Setting;
+use App\Models\User;
 use App\Rules\Recaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -30,7 +33,10 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'email' => ['required', 'string', 'email'],
+            // "login" aceita e-mail (admin, ou cliente sem hospedagem
+            // ainda) OU o usuário Linux da hospedagem (cliente normal,
+            // estilo cPanel/DirectAdmin) — por isso não tem regra "email".
+            'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ];
 
@@ -52,15 +58,65 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $ok = str_contains($this->string('login'), '@')
+            ? $this->attemptEmailLogin()
+            : $this->attemptUsernameLogin();
+
+        if (! $ok) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'login' => trans('auth.failed'),
             ]);
         }
 
         RateLimiter::clear($this->throttleKey());
+    }
+
+    /**
+     * Caminho padrão do Breeze (admin, ou cliente que ainda não tem
+     * hospedagem provisionada — só até lá o e-mail funciona; depois que a
+     * hospedagem existe, o login "de verdade" passa a ser por username,
+     * ver attemptUsernameLogin()).
+     */
+    private function attemptEmailLogin(): bool
+    {
+        $user = User::where('email', $this->string('login'))->first();
+
+        if ($user && $user->isClient() && $user->hostingAccount) {
+            // Depois que a hospedagem existe, a senha de verdade é a de
+            // SSH (ver attemptUsernameLogin) — users.password fica
+            // desatualizada assim que o cliente trocar a senha pelo
+            // perfil, então não pode continuar valendo como login.
+            return false;
+        }
+
+        return Auth::attempt(['email' => $this->string('login'), 'password' => $this->string('password')], $this->boolean('remember'));
+    }
+
+    /**
+     * Login por usuário da hospedagem (linux_username) + senha de SSH —
+     * não dá pra usar Auth::attempt() aqui porque o provider padrão do
+     * Laravel sempre confere a senha contra users.password; a credencial
+     * mora em hosting_accounts.ssh_password.
+     */
+    private function attemptUsernameLogin(): bool
+    {
+        $account = HostingAccount::where('linux_username', $this->string('login'))->first();
+
+        if (! $account || ! SshAccessService::verifyPassword($account, $this->string('password'))) {
+            return false;
+        }
+
+        $client = $account->client;
+
+        if (! $client || ! $client->isClient() || $client->status !== 'active') {
+            return false;
+        }
+
+        Auth::login($client, $this->boolean('remember'));
+
+        return true;
     }
 
     /**
@@ -79,7 +135,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'login' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -91,6 +147,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('login'))).'|'.$this->ip();
     }
 }

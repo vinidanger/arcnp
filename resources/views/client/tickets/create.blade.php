@@ -22,16 +22,6 @@
                     <x-input-error :messages="$errors->get('priority')" class="mt-2" />
                 </div>
                 <div class="mb-3">
-                    <x-input-label for="hosting_account_id" value="{{ __('Conta de hospedagem (opcional)') }}" />
-                    <select id="hosting_account_id" name="hosting_account_id" class="form-select">
-                        <option value="">{{ __('Não relacionado a uma conta específica') }}</option>
-                        @foreach ($accounts as $account)
-                            <option value="{{ $account->id }}" @selected((string) old('hosting_account_id') === (string) $account->id)>{{ $account->primary_domain }}</option>
-                        @endforeach
-                    </select>
-                    <x-input-error :messages="$errors->get('hosting_account_id')" class="mt-2" />
-                </div>
-                <div class="mb-3">
                     <x-input-label for="body" value="{{ __('Mensagem') }}" />
                     <textarea id="body" name="body" rows="6" class="form-control" required>{{ old('body') }}</textarea>
                     <x-input-error :messages="$errors->get('body')" class="mt-2" />

@@ -41,6 +41,7 @@ class HostingAccountProvisioningService
         private SiteRedirectService $siteRedirects,
         private HotlinkProtectionService $hotlinkProtection,
         private MimeTypeService $mimeTypes,
+        private SshAccessService $ssh,
     ) {
     }
 
@@ -56,6 +57,17 @@ class HostingAccountProvisioningService
         try {
             $this->runStep($server, 'linux.create_user', ['username' => $username]);
             $completed[] = 'user';
+
+            // Senha de SSH gerada já na criação — desde a mudança pra
+            // login por usuário da hospedagem, essa é a MESMA credencial
+            // usada pra entrar no painel, então precisa existir desde já
+            // (não só quando o SSH é ligado manualmente pela primeira
+            // vez). ssh_enabled continua false por padrão — só a senha
+            // passa a existir, o acesso por shell continua bloqueado no
+            // servidor até ser liberado explicitamente. Falha aqui aborta
+            // a provisão inteira (não é best-effort): sem essa senha o
+            // cliente não consegue nem entrar no painel.
+            $this->ssh->setPassword($account, Str::password(20));
 
             $this->runStep($server, 'php.create_pool', ['username' => $username, 'php_version' => $phpVersion]);
             $completed[] = 'pool';

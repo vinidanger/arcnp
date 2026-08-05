@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Domain\Hosting\Services\SshAccessService;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
@@ -29,7 +30,7 @@ class NewPasswordController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, SshAccessService $ssh): RedirectResponse
     {
         $request->validate([
             'token' => ['required'],
@@ -42,11 +43,25 @@ class NewPasswordController extends Controller
         // database. Otherwise we will parse the error and return the response.
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user) use ($request) {
-                $user->forceFill([
-                    'password' => Hash::make($request->password),
-                    'remember_token' => Str::random(60),
-                ])->save();
+            function (User $user) use ($request, $ssh) {
+                // Cliente com hospedagem já provisionada: a credencial de
+                // login de verdade é a senha de SSH, não users.password
+                // (ver LoginRequest::attemptEmailLogin — depois que a
+                // hospedagem existe, login por e-mail para de funcionar,
+                // então resetar users.password aqui não adiantaria nada).
+                // Sem hospedagem ainda, o e-mail continua sendo o login
+                // válido, então reseta users.password normalmente.
+                $account = $user->isClient() ? $user->hostingAccount : null;
+
+                if ($account) {
+                    $ssh->setPassword($account, $request->password);
+                } else {
+                    $user->forceFill([
+                        'password' => Hash::make($request->password),
+                    ])->save();
+                }
+
+                $user->forceFill(['remember_token' => Str::random(60)])->save();
 
                 event(new PasswordReset($user));
             }

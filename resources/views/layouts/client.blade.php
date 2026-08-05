@@ -24,16 +24,59 @@
                     <span class="sidebar-label">{{ __('Retrair menu') }}</span>
                 </button>
 
-                <nav class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-                    <div class="app-sidebar-section sidebar-label">{{ __('Geral') }}</div>
-                    <a href="{{ route('client.dashboard') }}" class="nav-link {{ request()->routeIs('client.dashboard') ? 'active' : '' }}" title="{{ __('Dashboard') }}">
-                        <i class="bi bi-speedometer2"></i> <span class="sidebar-label">{{ __('Dashboard') }}</span>
-                    </a>
+                @php
+                    // Mesma fonte usada pelo back-link do header, logo
+                    // abaixo — na maioria das páginas (as ~80 rotas
+                    // aninhadas em hosting-accounts/{hosting_account}/...)
+                    // já vem pronto da própria rota, sem query extra.
+                    // Só cai pro fallback nas poucas páginas "soltas"
+                    // (chamados, a home de espera).
+                    $navAccount = request()->route('hosting_account') ?? auth()->user()->hostingAccount;
 
-                    <div class="app-sidebar-section sidebar-label">{{ __('Hospedagem') }}</div>
-                    <a href="{{ route('client.hosting-accounts.index') }}" class="nav-link {{ request()->routeIs('client.hosting-accounts.*') ? 'active' : '' }}" title="{{ __('Minhas hospedagens') }}">
-                        <i class="bi bi-hdd-stack"></i> <span class="sidebar-label">{{ __('Minhas hospedagens') }}</span>
-                    </a>
+                    $navItems = [
+                        'Site' => [
+                            ['files.index', 'bi-folder2-open', 'Arquivos'],
+                            ['php.index', 'bi-filetype-php', 'PHP'],
+                            ['protected-folders.index', 'bi-shield-lock', 'Proteção de pasta'],
+                            ['redirects.index', 'bi-signpost-split', 'Redirecionamentos'],
+                            ['hotlink-protection.index', 'bi-link-45deg', 'Proteção Hotlink'],
+                            ['logs.index', 'bi-file-text', 'Logs'],
+                            ['apps.index', 'bi-cpu', 'Apps'],
+                            ['installer.index', 'bi-box-seam', 'Instalador'],
+                            ['mime-types.index', 'bi-file-earmark-code', 'MIME Types'],
+                        ],
+                        'Domínio' => [
+                            ['dns.index', 'bi-globe2', 'DNS'],
+                            ['mail.index', 'bi-envelope', 'E-mail'],
+                            ['mail-log.index', 'bi-envelope-paper', 'Rastrear e-mails'],
+                        ],
+                        'Avançado' => [
+                            ['ssh.index', 'bi-terminal', 'SSH'],
+                            ['cron.index', 'bi-clock-history', 'Cron'],
+                            ['ftp.index', 'bi-hdd-network', 'FTP'],
+                            ['resources.index', 'bi-speedometer2', 'Recursos'],
+                        ],
+                    ];
+                @endphp
+
+                <nav class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+                    @foreach ($navItems as $section => $items)
+                        <div class="app-sidebar-section sidebar-label">{{ __($section) }}</div>
+                        @foreach ($items as [$routeSuffix, $icon, $label])
+                            @php $routeName = 'client.hosting-accounts.'.$routeSuffix; @endphp
+                            @if ($navAccount)
+                                <a href="{{ route($routeName, $navAccount) }}" class="nav-link {{ request()->routeIs('client.hosting-accounts.'.explode('.', $routeSuffix)[0].'.*') ? 'active' : '' }}" title="{{ __($label) }}">
+                                    <i class="bi {{ $icon }}"></i> <span class="sidebar-label">{{ __($label) }}</span>
+                                </a>
+                            @else
+                                <span class="nav-link text-secondary" style="opacity: .5;" title="{{ __('Disponível assim que sua hospedagem for provisionada.') }}">
+                                    <i class="bi {{ $icon }}"></i> <span class="sidebar-label">{{ __($label) }}</span>
+                                </span>
+                            @endif
+                        @endforeach
+                    @endforeach
+
+                    <div class="app-sidebar-section sidebar-label">{{ __('Suporte') }}</div>
                     <a href="{{ route('client.tickets.index') }}" class="nav-link {{ request()->routeIs('client.tickets.*') ? 'active' : '' }}" title="{{ __('Chamados') }}">
                         <i class="bi bi-life-preserver"></i> <span class="sidebar-label">{{ __('Chamados') }}</span>
                     </a>
@@ -46,9 +89,8 @@
                 <header class="border-b border-line bg-panel">
                     <div class="flex items-center justify-between gap-3 px-4 md:px-6 py-3">
                         <div class="flex-1 min-w-0">
-                            {{-- Ver comentário equivalente em layouts/admin.blade.php — lido do
-                                 parâmetro da rota, não de $account da view. --}}
-                            @php $navAccount = request()->route('hosting_account'); @endphp
+                            {{-- $navAccount já foi resolvido lá em cima, antes da sidebar
+                                 (mesma fonte, reaproveitada aqui pro back-link). --}}
                             @if ($navAccount instanceof \App\Domain\Hosting\Models\HostingAccount && ! request()->routeIs('*.hosting-accounts.show'))
                                 <a href="{{ route('client.hosting-accounts.show', $navAccount) }}"
                                    class="inline-flex items-center gap-1 text-sm text-text-dim hover:text-accent no-underline mb-1">

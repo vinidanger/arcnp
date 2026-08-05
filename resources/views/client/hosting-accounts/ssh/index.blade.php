@@ -36,7 +36,7 @@
                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText(document.getElementById('ssh-command').textContent.trim()); this.textContent='{{ __('Copiado!') }}'; setTimeout(() => this.textContent='{{ __('Copiar') }}', 1500);">{{ __('Copiar') }}</button>
             </div>
             @unless ($account->ssh_enabled)
-                <p class="small text-secondary mt-2 mb-0">{{ __('Libere o acesso abaixo pra esses dados funcionarem.') }}</p>
+                <p class="small text-secondary mt-2 mb-0">{{ __('Libere o acesso abaixo pra esses dados funcionarem — a senha já é a mesma que você usa pra entrar no painel.') }}</p>
             @endunless
         </div>
     </div>
@@ -47,7 +47,7 @@
                 <div>
                     <h2 class="h6 mb-1">{{ __('Shell de login') }}</h2>
                     <p class="small text-secondary mb-0">
-                        {{ __('Login por senha e por chave pública, ambos liberados junto. Sem chave nem senha gerada, ligar isso não dá acesso a ninguém.') }}
+                        {{ __('Login por senha (a mesma do seu login no painel — troque em Perfil) e por chave pública, ambos liberados junto.') }}
                     </p>
                 </div>
                 <div class="d-flex gap-2">
@@ -75,6 +75,7 @@
             @if ($account->ssh_enabled)
                 <hr>
                 <h3 class="h6">{{ __('Definir minha senha') }}</h3>
+                <p class="small text-secondary">{{ __('Mesma senha do login no painel — trocar aqui ou em Perfil dá no mesmo.') }}</p>
                 <form method="POST" action="{{ route('client.hosting-accounts.ssh.password.update', $account) }}" class="row g-2 align-items-end">
                     @csrf
                     <div class="col-auto">

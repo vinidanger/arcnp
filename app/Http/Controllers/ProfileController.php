@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Rules\CurrentPasswordOrSsh;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,14 +45,24 @@ class ProfileController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
+            'password' => ['required', new CurrentPasswordOrSsh],
         ]);
 
         $user = $request->user();
 
-        Auth::logout();
+        try {
+            $user->delete();
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return back()->withErrors([
+                    'password' => 'Não é possível excluir: ainda existe uma hospedagem vinculada a esta conta.',
+                ], 'userDeletion');
+            }
 
-        $user->delete();
+            throw $e;
+        }
+
+        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -40,6 +40,21 @@ class SshAccessService
         return null;
     }
 
+    /**
+     * Usado tanto pelo login (LoginRequest) quanto pela regra de
+     * "senha atual" (CurrentPasswordOrSsh) — ssh_password é `encrypted`
+     * (reversível, precisa continuar em texto puro pro Agent), não
+     * `hashed`, então a comparação é feita direto, não via Hash::check().
+     */
+    public static function verifyPassword(HostingAccount $account, string $password): bool
+    {
+        if (! $account->ssh_password) {
+            return false;
+        }
+
+        return hash_equals((string) $account->ssh_password, $password);
+    }
+
     public function regeneratePassword(HostingAccount $account): string
     {
         $password = Str::password(20);

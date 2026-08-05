@@ -7,28 +7,21 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    /**
+     * Cliente sempre tem no máximo uma hospedagem — o "dashboard" É a
+     * hospedagem dele, sem lista/seletor no meio (estilo cPanel/
+     * DirectAdmin). Se ele ainda não tem conta (janela entre o admin
+     * criar o usuário e a hospedagem ser provisionada), mostra uma
+     * página de espera em vez de redirecionar pra lugar nenhum.
+     */
     public function __invoke()
     {
-        $accounts = Auth::user()->hostingAccounts()->with(['plan', 'server'])->latest()->get();
+        $account = Auth::user()->hostingAccount;
 
-        $stats = [
-            'accounts_total' => $accounts->count(),
-            'accounts_active' => $accounts->where('status', 'active')->count(),
-            'disk_usage_mb' => (int) $accounts->sum('disk_usage_mb'),
-            'disk_quota_mb' => (int) $accounts->sum(fn ($a) => $a->plan->disk_quota_mb ?? 0),
-        ];
+        if (! $account) {
+            return view('client.dashboard-empty');
+        }
 
-        $attentionAccounts = Auth::user()->hostingAccounts()
-            ->with('plan')
-            ->needsAttention()
-            ->latest()
-            ->take(6)
-            ->get();
-
-        return view('client.dashboard', [
-            'stats' => $stats,
-            'accounts' => $accounts->take(5),
-            'attentionAccounts' => $attentionAccounts,
-        ]);
+        return redirect()->route('client.hosting-accounts.show', $account);
     }
 }
