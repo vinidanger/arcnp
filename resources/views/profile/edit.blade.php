@@ -17,6 +17,16 @@
             </div>
         </div>
 
+        @if ($user->isClient())
+            <div class="card">
+                <div class="card-body">
+                    <div style="max-width: 32rem;">
+                        @include('profile.partials.update-template-form')
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="card">
             <div class="card-body">
                 <div style="max-width: 32rem;">

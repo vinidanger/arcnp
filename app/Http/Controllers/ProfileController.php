@@ -40,6 +40,25 @@ class ProfileController extends Controller
     }
 
     /**
+     * Troca o template visual do painel — só cliente (admin nunca vê
+     * essa tela mudar, ver plano). Revalida "não travado" no servidor
+     * também, não confia só em esconder o campo na view.
+     */
+    public function updateTemplate(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->isClient(), 404);
+        abort_if($request->user()->ui_template_locked, 403, 'Seu administrador definiu o template do painel para sua conta.');
+
+        $data = $request->validate([
+            'ui_template' => ['required', 'in:default,cpanel'],
+        ]);
+
+        $request->user()->update(['ui_template' => $data['ui_template']]);
+
+        return Redirect::route('profile.edit')->with('status', 'template-updated');
+    }
+
+    /**
      * Delete the user's account.
      */
     public function destroy(Request $request): RedirectResponse

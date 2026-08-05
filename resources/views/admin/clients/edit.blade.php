@@ -30,6 +30,23 @@
                     <x-input-error :messages="$errors->get('status')" class="mt-2" />
                 </div>
 
+                <div class="mb-3">
+                    <x-input-label for="ui_template" value="{{ __('Template do painel do cliente') }}" />
+                    <select id="ui_template" name="ui_template" class="form-select" required>
+                        <option value="default" @selected(old('ui_template', $client->resolvedUiTemplate()) === 'default')>{{ __('Padrão') }}</option>
+                        <option value="cpanel" @selected(old('ui_template', $client->resolvedUiTemplate()) === 'cpanel')>{{ __('cPanel') }}</option>
+                    </select>
+                    <x-input-error :messages="$errors->get('ui_template')" class="mt-2" />
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="hidden" name="ui_template_locked" value="0">
+                        <input type="checkbox" class="form-check-input" id="ui_template_locked" name="ui_template_locked" value="1" @checked(old('ui_template_locked', $client->ui_template_locked))>
+                        <label class="form-check-label" for="ui_template_locked">{{ __('Travar (impede o cliente de trocar o template sozinho)') }}</label>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary">{{ __('Salvar') }}</button>
                 <a href="{{ route('admin.clients.index') }}" class="btn btn-outline-secondary">{{ __('Cancelar') }}</a>
             </form>

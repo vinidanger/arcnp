@@ -71,6 +71,8 @@ class ClientController extends Controller
             'name' => $data['name'],
             'email' => $data['email'] ?? null,
             'status' => $data['status'],
+            'ui_template' => $data['ui_template'],
+            'ui_template_locked' => $data['ui_template_locked'] ?? false,
         ]);
 
         return redirect()->route('admin.clients.index')->with('status', 'Cliente atualizado.');

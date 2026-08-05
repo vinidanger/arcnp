@@ -18,6 +18,8 @@ class UpdateClientRequest extends FormRequest
             // Só contato/referência, sem exigir unicidade — ver StoreClientRequest.
             'email' => ['nullable', 'string', 'email', 'max:255'],
             'status' => ['required', 'in:active,suspended'],
+            'ui_template' => ['required', 'in:default,cpanel'],
+            'ui_template_locked' => ['nullable', 'boolean'],
         ];
     }
 }
