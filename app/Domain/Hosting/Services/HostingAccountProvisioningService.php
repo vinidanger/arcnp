@@ -413,12 +413,48 @@ class HostingAccountProvisioningService
 
     public function updatePhpFpmSettings(HostingAccount $account, array $settings): void
     {
+        // Esse formulário não mexe em zend_extensions (fica numa tela
+        // própria, ver updateZendExtensions()) — preserva o que já
+        // estava salvo, senão salvar as configurações "normais" apagaria
+        // silenciosamente a extensão Zend escolhida (o valor ficaria
+        // errado em php_fpm_settings mesmo sem o unit ter mudado de
+        // verdade, e a próxima troca de versão de PHP reproduziria esse
+        // valor errado pro Agent).
+        $settings['zend_extensions'] = ($account->php_fpm_settings ?? [])['zend_extensions'] ?? [];
+
         $this->runStep($account->server, 'php.update_pool_settings', array_merge([
             'username' => $account->linux_username,
             'php_version' => $account->php_version,
         ], $this->formatPoolSettings($settings)));
 
         $account->update(['php_fpm_settings' => $settings]);
+    }
+
+    /**
+     * Muda só a extensão Zend (ex.: ioncube_loader) — precisa de uma
+     * Action própria no Agent (reinicia o processo, diferente do reload
+     * gracioso de updatePhpFpmSettings()), mas reaproveita os MESMOS
+     * settings já salvos pros outros tunables (memory_limit,
+     * extra_extensions etc.) não resetarem sem querer.
+     */
+    public function updateZendExtensions(HostingAccount $account, array $zendExtensions): void
+    {
+        // Conta pode nunca ter salvo os outros tunáveis ainda (settings
+        // vazio) — nesse caso não dá pra chamar formatPoolSettings()
+        // (espera todas as chaves preenchidas), então manda só
+        // zend_extensions e deixa os demais tunáveis caírem no padrão do
+        // Agent, mesmo padrão já usado em changePhpVersion().
+        $existing = $account->php_fpm_settings ?? [];
+        $formatted = $existing ? $this->formatPoolSettings($existing) : [];
+        $formatted['zend_extensions'] = implode(',', $zendExtensions);
+
+        $this->runStep($account->server, 'php.update_zend_extensions', array_merge([
+            'username' => $account->linux_username,
+            'php_version' => $account->php_version,
+        ], $formatted));
+
+        $existing['zend_extensions'] = $zendExtensions;
+        $account->update(['php_fpm_settings' => $existing]);
     }
 
     /**
@@ -442,6 +478,7 @@ class HostingAccountProvisioningService
             'short_open_tag' => ($settings['short_open_tag'] ?? false) ? 'On' : 'Off',
             'disable_functions' => implode(',', $settings['disable_functions'] ?? []),
             'extra_extensions' => implode(',', $settings['extra_extensions'] ?? []),
+            'zend_extensions' => implode(',', $settings['zend_extensions'] ?? []),
         ];
     }
 

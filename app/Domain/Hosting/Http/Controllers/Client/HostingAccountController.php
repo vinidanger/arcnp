@@ -258,7 +258,7 @@ class HostingAccountController extends Controller
         $request->merge(['public_path' => trim((string) $request->input('public_path', ''), " /\t\n\r\0\x0B")]);
 
         $data = $request->validate([
-            'public_path' => ['nullable', 'string', 'regex:/^[a-z0-9][a-z0-9_-]{0,63}$/i'],
+            'public_path' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9][a-z0-9_-]*(\/[a-z0-9][a-z0-9_-]*)*$/i'],
         ]);
 
         try {
@@ -279,7 +279,7 @@ class HostingAccountController extends Controller
         $request->merge(['public_path' => trim((string) $request->input('public_path', ''), " /\t\n\r\0\x0B")]);
 
         $data = $request->validate([
-            'public_path' => ['nullable', 'string', 'regex:/^[a-z0-9][a-z0-9_-]{0,63}$/i'],
+            'public_path' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9][a-z0-9_-]*(\/[a-z0-9][a-z0-9_-]*)*$/i'],
         ]);
 
         try {

@@ -134,6 +134,8 @@ Route::post('hosting-accounts/{hosting_account}/php/version', [PhpSettingsContro
     ->name('hosting-accounts.php.version.update');
 Route::post('hosting-accounts/{hosting_account}/php/settings', [PhpSettingsController::class, 'updateSettings'])
     ->name('hosting-accounts.php.settings.update');
+Route::post('hosting-accounts/{hosting_account}/php/zend-extensions', [PhpSettingsController::class, 'updateZendExtensions'])
+    ->name('hosting-accounts.php.zend-extensions.update');
 
 Route::get('hosting-accounts/{hosting_account}/resources', [ResourceLimitsController::class, 'index'])
     ->name('hosting-accounts.resources.index');

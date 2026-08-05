@@ -170,5 +170,47 @@
                 </form>
             </div>
         </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h2 class="h6">{{ __('Extensões Zend') }}</h2>
+                <p class="small text-secondary">{{ __('zend_extension (ex.: ioncube_loader, opcache) carrega no boot do processo PHP dessa conta — diferente de uma extensão comum, ativar/desativar reinicia o PHP-FPM dela.') }}</p>
+
+                <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Já ativadas no servidor') }}</div>
+                @if (empty($activeZendExtensions))
+                    <p class="small text-secondary mb-3">{{ __('Nenhuma informação disponível.') }}</p>
+                @else
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        @foreach ($activeZendExtensions as $extension)
+                            <span class="badge text-bg-light border"><code>{{ $extension }}</code></span>
+                        @endforeach
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('admin.hosting-accounts.php.zend-extensions.update', $account) }}" onsubmit="return confirm('Isso reinicia o PHP dessa conta — o site fica fora do ar por um instante. Continuar?')">
+                    @csrf
+
+                    <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Disponíveis por conta') }}</div>
+                    <p class="small text-secondary">{{ __('Ativa a extensão Zend só pra essa conta (isolamento real — não afeta as demais).') }}</p>
+                    @if (empty($availableZendExtensions))
+                        <p class="small text-secondary mb-3">{{ __('Nenhuma extensão Zend disponível pra ativar por conta nessa versão de PHP.') }}</p>
+                    @else
+                        <div class="row g-2 mb-3">
+                            @foreach ($availableZendExtensions as $extension)
+                                <div class="col-6 col-md-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="zend_extensions_{{ $extension }}" name="zend_extensions[]" value="{{ $extension }}"
+                                               @checked(in_array($extension, old('zend_extensions', $s['zend_extensions'] ?? []), true))>
+                                        <label class="form-check-label" for="zend_extensions_{{ $extension }}"><code>{{ $extension }}</code></label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <button type="submit" class="btn btn-sm btn-primary">{{ __('Salvar') }}</button>
+                    @endif
+                </form>
+            </div>
+        </div>
     @endif
 </x-admin-layout>

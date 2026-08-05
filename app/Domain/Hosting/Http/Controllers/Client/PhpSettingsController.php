@@ -22,6 +22,8 @@ class PhpSettingsController extends Controller
             'account' => $hosting_account,
             'availableExtensions' => $extensions['available'],
             'activeExtensions' => $extensions['active'],
+            'availableZendExtensions' => $extensions['available_zend'],
+            'activeZendExtensions' => $extensions['active_zend'],
         ]);
     }
 
@@ -30,7 +32,7 @@ class PhpSettingsController extends Controller
      * aqui porque os dois controllers já são espelhados ponto a ponto
      * no resto do projeto (mesmo padrão adotado em toda a sessão).
      *
-     * @return array{available: list<string>, active: list<string>}
+     * @return array{available: list<string>, active: list<string>, available_zend: list<string>, active_zend: list<string>}
      */
     private function fetchExtensionsInfo(HostingAccount $hosting_account, AgentHttpClient $client): array
     {
@@ -39,7 +41,7 @@ class PhpSettingsController extends Controller
         ]);
 
         if ($job->status !== 'completed') {
-            return ['available' => [], 'active' => []];
+            return ['available' => [], 'active' => [], 'available_zend' => [], 'active_zend' => []];
         }
 
         $extensions = $job->result['extensions'] ?? [];
@@ -52,6 +54,14 @@ class PhpSettingsController extends Controller
             'active' => array_values(array_map(
                 fn (array $ext) => $ext['name'],
                 array_filter($extensions, fn (array $ext) => $ext['enabled'])
+            )),
+            'available_zend' => array_values(array_map(
+                fn (array $ext) => $ext['name'],
+                array_filter($extensions, fn (array $ext) => $ext['type'] === 'zend' && ! $ext['enabled'])
+            )),
+            'active_zend' => array_values(array_map(
+                fn (array $ext) => $ext['name'],
+                array_filter($extensions, fn (array $ext) => $ext['type'] === 'zend' && $ext['enabled'])
             )),
         ];
     }

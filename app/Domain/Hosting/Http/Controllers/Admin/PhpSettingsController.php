@@ -22,6 +22,8 @@ class PhpSettingsController extends Controller
             'account' => $hosting_account,
             'availableExtensions' => $extensions['available'],
             'activeExtensions' => $extensions['active'],
+            'availableZendExtensions' => $extensions['available_zend'],
+            'activeZendExtensions' => $extensions['active_zend'],
         ]);
     }
 
@@ -32,11 +34,15 @@ class PhpSettingsController extends Controller
      * ainda não estão ativas pra todo mundo. "active": as que JÁ estão
      * ativas a nível de servidor (qualquer tipo, inclusive zend) — só
      * informativo, a conta já tem acesso sem precisar de opt-in, não dá
-     * pra desativar por conta (afetaria todo o servidor). Consulta ao
-     * vivo, nunca cacheada — a lista muda conforme o que o admin
-     * instala no servidor.
+     * pra desativar por conta (afetaria todo o servidor). "available_zend"/
+     * "active_zend": mesma lógica, só que pro subconjunto zend_extension
+     * (ioncube_loader etc.) — essas SIM podem ser opt-in por conta desde
+     * que cada conta ganhou seu próprio processo mestre de PHP-FPM, ver
+     * UpdateZendExtensionsAction no Agent. Tudo filtrado da MESMA resposta
+     * já buscada, sem chamada nova ao Agent. Consulta ao vivo, nunca
+     * cacheada — a lista muda conforme o que o admin instala no servidor.
      *
-     * @return array{available: list<string>, active: list<string>}
+     * @return array{available: list<string>, active: list<string>, available_zend: list<string>, active_zend: list<string>}
      */
     private function fetchExtensionsInfo(HostingAccount $hosting_account, AgentHttpClient $client): array
     {
@@ -45,7 +51,7 @@ class PhpSettingsController extends Controller
         ]);
 
         if ($job->status !== 'completed') {
-            return ['available' => [], 'active' => []];
+            return ['available' => [], 'active' => [], 'available_zend' => [], 'active_zend' => []];
         }
 
         $extensions = $job->result['extensions'] ?? [];
@@ -58,6 +64,14 @@ class PhpSettingsController extends Controller
             'active' => array_values(array_map(
                 fn (array $ext) => $ext['name'],
                 array_filter($extensions, fn (array $ext) => $ext['enabled'])
+            )),
+            'available_zend' => array_values(array_map(
+                fn (array $ext) => $ext['name'],
+                array_filter($extensions, fn (array $ext) => $ext['type'] === 'zend' && ! $ext['enabled'])
+            )),
+            'active_zend' => array_values(array_map(
+                fn (array $ext) => $ext['name'],
+                array_filter($extensions, fn (array $ext) => $ext['type'] === 'zend' && $ext['enabled'])
             )),
         ];
     }
@@ -120,6 +134,28 @@ class PhpSettingsController extends Controller
             return back()->with('status', 'Configurações de PHP atualizadas.');
         } catch (Throwable $e) {
             return back()->with('error', 'Falha ao atualizar configurações de PHP: '.$e->getMessage());
+        }
+    }
+
+    public function updateZendExtensions(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning, AgentHttpClient $client)
+    {
+        $this->authorize('update', $hosting_account);
+
+        if ($hosting_account->status !== 'active') {
+            return back()->with('error', 'A conta precisa estar ativa para ajustar extensões Zend.');
+        }
+
+        $data = $request->validate([
+            'zend_extensions' => ['nullable', 'array'],
+            'zend_extensions.*' => [Rule::in($this->fetchExtensionsInfo($hosting_account, $client)['available_zend'])],
+        ]);
+
+        try {
+            $provisioning->updateZendExtensions($hosting_account, $data['zend_extensions'] ?? []);
+
+            return back()->with('status', 'Extensões Zend atualizadas. O PHP dessa conta foi reiniciado.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao atualizar extensões Zend: '.$e->getMessage());
         }
     }
 }
