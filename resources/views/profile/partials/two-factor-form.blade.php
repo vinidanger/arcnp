@@ -14,7 +14,7 @@
         <div class="alert alert-warning">
             <strong>{{ __('Códigos de recuperação — anote agora, não aparecem de novo.') }}</strong>
             <p class="small mb-2">{{ __('Use um desses códigos pra entrar se perder acesso ao app autenticador. Cada um só funciona uma vez.') }}</p>
-            <pre class="mb-0 bg-white p-2 rounded border small">{{ implode("\n", session('two_factor_recovery_codes')) }}</pre>
+            <pre class="mb-0 bg-body-secondary p-2 rounded border small">{{ implode("\n", session('two_factor_recovery_codes')) }}</pre>
         </div>
     @endif
 

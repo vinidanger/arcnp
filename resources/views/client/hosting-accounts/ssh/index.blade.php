@@ -16,7 +16,7 @@
     @if (session('plain_ssh_password'))
         <div class="alert alert-warning">
             <strong>{{ __('Senha SSH — copie agora, não aparece de novo.') }}</strong>
-            <pre class="mb-0 mt-2 bg-white p-2 rounded border small">{{ session('plain_ssh_password') }}</pre>
+            <pre class="mb-0 mt-2 bg-body-secondary p-2 rounded border small">{{ session('plain_ssh_password') }}</pre>
         </div>
     @endif
 
@@ -32,7 +32,7 @@
                 <dd class="col-10"><code>{{ $account->linux_username }}</code></dd>
             </dl>
             <div class="d-flex gap-2 align-items-start">
-                <pre id="ssh-command" class="mb-0 bg-light p-2 rounded border small flex-grow-1">ssh {{ $account->linux_username.'@'.$sshHost }} -p 22</pre>
+                <pre id="ssh-command" class="mb-0 bg-body-secondary p-2 rounded border small flex-grow-1">ssh {{ $account->linux_username.'@'.$sshHost }} -p 22</pre>
                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText(document.getElementById('ssh-command').textContent.trim()); this.textContent='{{ __('Copiado!') }}'; setTimeout(() => this.textContent='{{ __('Copiar') }}', 1500);">{{ __('Copiar') }}</button>
             </div>
             @unless ($account->ssh_enabled)

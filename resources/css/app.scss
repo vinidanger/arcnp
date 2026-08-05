@@ -86,7 +86,21 @@ body {
     border-radius: 50rem;
 }
 
-@each $name, $value in (primary: $primary, secondary: $secondary, success: $success, danger: $danger, warning: $warning, info: $info) {
+// "light" entra na mesma lista (cor cinza neutra) — sem isso
+// `text-bg-light` cai no padrão cru do Bootstrap, que não segue esse
+// estilo "subtle" e mal contrasta com o fundo escuro do tema dark
+// (ficava quase branco sobre fundo escuro).
+$badge-subtle-colors: (
+    primary: $primary,
+    secondary: $secondary,
+    success: $success,
+    danger: $danger,
+    warning: $warning,
+    info: $info,
+    light: $secondary,
+);
+
+@each $name, $value in $badge-subtle-colors {
     .text-bg-#{$name} {
         background-color: rgba($value, 0.12) !important;
         color: $value !important;
@@ -94,7 +108,7 @@ body {
 }
 
 [data-bs-theme="dark"] {
-    @each $name, $value in (primary: $primary, secondary: $secondary, success: $success, danger: $danger, warning: $warning, info: $info) {
+    @each $name, $value in $badge-subtle-colors {
         .text-bg-#{$name} {
             background-color: rgba($value, 0.2) !important;
             color: mix($value, white, 70%) !important;

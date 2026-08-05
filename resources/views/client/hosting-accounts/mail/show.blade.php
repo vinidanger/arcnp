@@ -17,7 +17,7 @@
     @if (session('plain_mailbox_password'))
         <div class="alert alert-warning">
             <strong>{{ __('Senha da caixa — copie agora, não aparece de novo.') }}</strong>
-            <pre class="mb-0 mt-2 bg-white p-2 rounded border small">{{ session('plain_mailbox_password') }}</pre>
+            <pre class="mb-0 mt-2 bg-body-secondary p-2 rounded border small">{{ session('plain_mailbox_password') }}</pre>
         </div>
     @endif
 

@@ -95,7 +95,13 @@
       "Bash(php -l app/Domain/Hosting/Http/Controllers/Client/ResourceLimitsController.php)",
       "Bash(grep -n '^@php\\\\|$account->\\\\|$recentJobs\\\\|$metricSnapshots\\\\|$account ??' resources/views/client/hosting-accounts/show.blade.php)",
       "Bash(php -l app/Console/Commands/MigratePhpFpmToPerAccountCommand.php)",
-      "Bash(php -l app/Actions/Web/CreateHostedAppAction.php)"
+      "Bash(php -l app/Actions/Web/CreateHostedAppAction.php)",
+      "Bash(node -e \"require\\('fs'\\).readFileSync\\('resources/js/code-editor.js','utf8'\\)\")",
+      "Bash(node_modules/.bin/esbuild resources/js/code-editor.js --bundle --format=esm --outfile=/tmp/code-editor-check.js)",
+      "Bash(grep -n 'spfRecordValue\\\\|@php\\\\|$dnsZone\\\\|$zone' resources/views/admin/hosting-accounts/mail/show.blade.php)",
+      "Bash(node_modules/.bin/vite build *)",
+      "Bash(node -e ' *)",
+      "Bash(node_modules/.bin/sass --load-path=node_modules resources/css/app.scss /tmp/app-check.css)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

@@ -28,7 +28,7 @@
     @if (session('plain_secret'))
         <div class="alert alert-warning">
             <strong>{{ __('Credenciais de pareamento — copie agora, não aparecem de novo.') }}</strong>
-            <pre class="mb-0 mt-2 bg-white p-2 rounded border small">AGENT_SERVER_ID={{ $server->currentCredential->agent_uuid }}
+            <pre class="mb-0 mt-2 bg-body-secondary p-2 rounded border small">AGENT_SERVER_ID={{ $server->currentCredential->agent_uuid }}
 AGENT_SHARED_SECRET={{ session('plain_secret') }}
 AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
         </div>

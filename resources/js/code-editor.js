@@ -1,7 +1,7 @@
 import { EditorView, basicSetup } from 'codemirror';
 import { keymap } from '@codemirror/view';
 import { Compartment } from '@codemirror/state';
-import { indentWithTab, copyLineDown, copyLineUp } from '@codemirror/commands';
+import { indentWithTab, copyLineDown, copyLineUp, toggleComment } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { php } from '@codemirror/lang-php';
@@ -77,6 +77,23 @@ document.querySelectorAll('textarea[data-code-editor]').forEach((textarea) => {
             indentWithTab,
             { key: 'Shift-Alt-ArrowDown', run: copyLineDown },
             { key: 'Shift-Alt-ArrowUp', run: copyLineUp },
+            { key: 'Mod-/', run: toggleComment },
+            // Mod- = Cmd no Mac, Ctrl em todo o resto (convenção do
+            // próprio CodeMirror) — preventDefault evita o diálogo
+            // nativo "Salvar página" do navegador disparando junto.
+            // requestSubmit() (não submit()) porque o listener de
+            // 'submit' logo abaixo é quem sincroniza o conteúdo do
+            // editor de volta pro <textarea> antes de enviar — .submit()
+            // pula esse listener.
+            {
+                key: 'Mod-s',
+                preventDefault: true,
+                run: () => {
+                    textarea.closest('form')?.requestSubmit();
+
+                    return true;
+                },
+            },
         ]),
         EditorView.lineWrapping,
         EditorView.updateListener.of((update) => {

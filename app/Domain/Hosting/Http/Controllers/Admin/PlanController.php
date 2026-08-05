@@ -3,8 +3,10 @@
 namespace App\Domain\Hosting\Http\Controllers\Admin;
 
 use App\Domain\Hosting\Models\Plan;
+use App\Domain\Hosting\Services\HostingAccountProvisioningService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Throwable;
 
 class PlanController extends Controller
 {
@@ -34,13 +36,43 @@ class PlanController extends Controller
         return view('admin.plans.edit', compact('plan'));
     }
 
-    public function update(Request $request, Plan $plan)
+    public function update(Request $request, Plan $plan, HostingAccountProvisioningService $provisioning)
     {
         $data = $this->validated($request);
 
         $plan->update($data);
 
-        return redirect()->route('admin.plans.index')->with('status', 'Plano atualizado.');
+        // Sem isso, o admin precisaria abrir "Recursos" de cada conta do
+        // plano e clicar "Reaplicar limites" uma por uma — inviável com
+        // mais de umas poucas contas. Síncrono (mesmo padrão de
+        // RefreshDiskUsageCommand: loop com try/catch por conta, uma
+        // falha isolada não trava as demais nem impede o plano de salvar)
+        // porque este projeto não roda worker de fila nenhum — só
+        // aceitável aqui porque essa ação já é rara (editar plano, não
+        // toda hora) e cada chamada ao Agent costuma ser rápida.
+        $accounts = $plan->hostingAccounts()->where('status', 'active')->get();
+        $failed = 0;
+
+        foreach ($accounts as $account) {
+            try {
+                $provisioning->syncResourceLimits($account);
+            } catch (Throwable $e) {
+                $failed++;
+                logger()->warning('Falha ao reaplicar limites após edição de plano', [
+                    'plan_id' => $plan->id,
+                    'hosting_account_id' => $account->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $status = "Plano atualizado. Limites reaplicados em {$accounts->count()} conta(s).";
+
+        if ($failed > 0) {
+            $status .= " {$failed} falharam (veja o log) — pode reaplicar manualmente pela tela \"Recursos\" de cada uma.";
+        }
+
+        return redirect()->route('admin.plans.index')->with('status', $status);
     }
 
     public function destroy(Plan $plan)

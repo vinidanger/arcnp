@@ -43,7 +43,7 @@
     @if (session('plain_db_password'))
         <div class="alert alert-warning">
             <strong>{{ __('Credenciais do banco de dados — copie agora, não aparecem de novo.') }}</strong>
-            <pre class="mb-0 mt-2 bg-white p-2 rounded border small">DB_DATABASE={{ session('plain_db_name') }}
+            <pre class="mb-0 mt-2 bg-body-secondary p-2 rounded border small">DB_DATABASE={{ session('plain_db_name') }}
 DB_USERNAME={{ session('plain_db_username') }}
 DB_PASSWORD={{ session('plain_db_password') }}</pre>
         </div>
