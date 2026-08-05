@@ -19,7 +19,7 @@
 
 <div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Cotas da conta') }}</div>
 <p class="small text-secondary mb-3">{{ __('Limites de quantidade — aplicados na hora de criar recursos (banco, domínio, etc.), verificados pelo Painel.') }}</p>
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-3">
     <div class="col-6 col-md-3">
         <x-input-label for="disk_quota_mb" value="{{ __('Disco (MB)') }}" />
         <x-text-input id="disk_quota_mb" name="disk_quota_mb" type="number" :value="old('disk_quota_mb', $plan?->disk_quota_mb)" required />
@@ -38,16 +38,19 @@
         <x-text-input id="max_addon_domains" name="max_addon_domains" type="number" :value="old('max_addon_domains', $plan?->max_addon_domains ?? 0)" required />
         <x-input-error :messages="$errors->get('max_addon_domains')" class="mt-2" />
     </div>
-    <div class="col-6 col-md-3">
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4">
         <x-input-label for="max_cron_jobs" value="{{ __('Máx. tarefas cron') }}" />
         <x-text-input id="max_cron_jobs" name="max_cron_jobs" type="number" :value="old('max_cron_jobs', $plan?->max_cron_jobs ?? 0)" required />
         <x-input-error :messages="$errors->get('max_cron_jobs')" class="mt-2" />
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-4">
         <x-input-label for="max_email_accounts" value="{{ __('Máx. contas de e-mail') }}" />
         <x-text-input id="max_email_accounts" name="max_email_accounts" type="number" :value="old('max_email_accounts', $plan?->max_email_accounts ?? 0)" required />
         <x-input-error :messages="$errors->get('max_email_accounts')" class="mt-2" />
-    <div class="col-6 col-md-3">
+    </div>
+    <div class="col-6 col-md-4">
         <x-input-label for="max_backups" value="{{ __('Máx. backups') }}" />
         <x-text-input id="max_backups" name="max_backups" type="number" :value="old('max_backups', $plan?->max_backups ?? 5)" required />
         <x-input-error :messages="$errors->get('max_backups')" class="mt-2" />
