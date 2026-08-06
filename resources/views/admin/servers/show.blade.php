@@ -192,10 +192,14 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
                                         'inactive' => 'secondary',
                                         default => 'danger',
                                     };
+                                    $version = $info['service_versions'][$service] ?? null;
                                 @endphp
                                 <div class="col-6">
                                     <div class="d-flex justify-content-between align-items-center border rounded-3 p-2 small">
-                                        <code>{{ $service }}</code>
+                                        <div>
+                                            <code>{{ $service }}</code>
+                                            <div class="text-secondary">{{ $version ?? '—' }}</div>
+                                        </div>
                                         <span class="badge text-bg-{{ $serviceBadge }}">{{ $status }}</span>
                                     </div>
                                 </div>
