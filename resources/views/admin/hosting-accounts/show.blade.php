@@ -333,6 +333,12 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 <div class="fw-semibold small">{{ __('MIME Types') }}</div>
                             </a>
                         </div>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ route('admin.hosting-accounts.malware.index', $account) }}" class="quick-link-card">
+                                <span class="quick-link-icon"><i class="bi bi-bug"></i></span>
+                                <div class="fw-semibold small">{{ __('Malware') }}</div>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
