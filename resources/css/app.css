@@ -524,6 +524,27 @@ html.sidebar-collapsed #sidebar-toggle i {
     display: none;
 }
 
+/* Mesmas duas regras acima, só que reagindo ao atributo que
+   theme-init.blade.php grava no <html> ANTES do primeiro paint (lido
+   de localStorage) — evita o "pisca aberto, fecha" que a versão
+   só-JS (classList em DOMContentLoaded) causava, já que aquela só
+   rodava depois do HTML inteiro já ter sido pintado uma vez aberto.
+   Lista fixa (só 4 categorias existem na página "Tools" hoje, ver
+   client/hosting-accounts/show.blade.php). */
+html[data-cpanel-collapsed~="site"] .cpanel-category[data-category="site"] .cpanel-category-chevron,
+html[data-cpanel-collapsed~="dominio"] .cpanel-category[data-category="dominio"] .cpanel-category-chevron,
+html[data-cpanel-collapsed~="avancado"] .cpanel-category[data-category="avancado"] .cpanel-category-chevron,
+html[data-cpanel-collapsed~="conta"] .cpanel-category[data-category="conta"] .cpanel-category-chevron {
+    transform: rotate(-90deg);
+}
+
+html[data-cpanel-collapsed~="site"] .cpanel-category[data-category="site"] .cpanel-tool-grid,
+html[data-cpanel-collapsed~="dominio"] .cpanel-category[data-category="dominio"] .cpanel-tool-grid,
+html[data-cpanel-collapsed~="avancado"] .cpanel-category[data-category="avancado"] .cpanel-tool-grid,
+html[data-cpanel-collapsed~="conta"] .cpanel-category[data-category="conta"] .cpanel-tool-grid {
+    display: none;
+}
+
 .cpanel-tool-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
