@@ -85,3 +85,19 @@
         <div class="form-text">{{ __('1 a 10000, padrão 100. Prioridade relativa, não é banda fixa.') }}</div>
     </div>
 </div>
+
+<div class="mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Banco de dados') }}</div>
+<p class="small text-secondary mb-3">{{ __('Aplicado em cada usuário MySQL da conta (WITH MAX_USER_CONNECTIONS/MAX_QUERIES_PER_HOUR) — vazio = sem limite.') }}</p>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <x-input-label for="max_db_connections" value="{{ __('Máx. conexões simultâneas') }}" />
+        <x-text-input id="max_db_connections" name="max_db_connections" type="number" :value="old('max_db_connections', $plan?->max_db_connections)" />
+        <x-input-error :messages="$errors->get('max_db_connections')" class="mt-2" />
+        <div class="form-text">{{ __('Por usuário MySQL — uma conta com vários bancos aplica em cada um.') }}</div>
+    </div>
+    <div class="col-6 col-md-3">
+        <x-input-label for="max_db_queries_per_hour" value="{{ __('Máx. queries por hora') }}" />
+        <x-text-input id="max_db_queries_per_hour" name="max_db_queries_per_hour" type="number" :value="old('max_db_queries_per_hour', $plan?->max_db_queries_per_hour)" />
+        <x-input-error :messages="$errors->get('max_db_queries_per_hour')" class="mt-2" />
+    </div>
+</div>

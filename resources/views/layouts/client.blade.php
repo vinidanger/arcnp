@@ -87,6 +87,7 @@
                                 ['protected-folders.index', 'bi-shield-lock', 'Proteção de pasta'],
                                 ['redirects.index', 'bi-signpost-split', 'Redirecionamentos'],
                                 ['hotlink-protection.index', 'bi-link-45deg', 'Proteção Hotlink'],
+                                ['malware.index', 'bi-bug', 'Malware'],
                                 ['logs.index', 'bi-file-text', 'Logs'],
                                 ['apps.index', 'bi-cpu', 'Apps'],
                                 ['installer.index', 'bi-box-seam', 'Instalador'],

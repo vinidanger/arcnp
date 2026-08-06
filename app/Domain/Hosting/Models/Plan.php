@@ -20,6 +20,8 @@ class Plan extends Model
         'max_processes',
         'memory_limit_mb',
         'io_weight',
+        'max_db_connections',
+        'max_db_queries_per_hour',
         'is_active',
     ];
 

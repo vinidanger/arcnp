@@ -22,7 +22,7 @@ class HostedAppService
 
     public function create(HostingAccount $account, string $domain, string $runtime, string $entryFile): HostedApp
     {
-        [$location, $subdir, $sslActive] = $this->domainContext($account, $domain);
+        [$location, $subdir, $sslActive, $wafEnabled] = $this->domainContext($account, $domain);
 
         $port = (int) (HostedApp::where('server_id', $account->server_id)->max('port') ?? 19999) + 1;
 
@@ -45,6 +45,7 @@ class HostedAppService
                 'entry_file' => $entryFile,
                 'port' => $port,
                 'ssl_active' => $sslActive,
+                'waf_enabled' => $wafEnabled,
             ]);
 
             if ($job->status !== 'completed') {
@@ -61,7 +62,7 @@ class HostedAppService
     public function delete(HostedApp $app): void
     {
         $account = $app->hostingAccount;
-        [$location, $subdir, $sslActive] = $this->domainContext($account, $app->domain);
+        [$location, $subdir, $sslActive, $wafEnabled] = $this->domainContext($account, $app->domain);
 
         $job = $this->client->dispatch($app->server, 'app.delete', [
             'app_id' => $app->id,
@@ -71,6 +72,7 @@ class HostedAppService
             'subdir' => $subdir,
             'php_version' => $account->php_version,
             'ssl_active' => $sslActive,
+            'waf_enabled' => $wafEnabled,
         ]);
 
         if ($job->status !== 'completed') {
@@ -105,12 +107,12 @@ class HostedAppService
     }
 
     /**
-     * @return array{0: ?string, 1: ?string, 2: bool} [location, subdir, ssl_active]
+     * @return array{0: ?string, 1: ?string, 2: bool, 3: bool} [location, subdir, ssl_active, waf_enabled]
      */
     private function domainContext(HostingAccount $account, string $domain): array
     {
         if ($domain === $account->primary_domain) {
-            return [null, null, $account->ssl_status === 'active'];
+            return [null, null, $account->ssl_status === 'active', $account->waf_enabled ?? false];
         }
 
         $addon = $account->domains()->where('domain', $domain)->firstOrFail();
@@ -119,6 +121,7 @@ class HostedAppService
             $addon->isOutsidePublicHtml() ? 'outside' : 'inside',
             $addon->subdirectory,
             $addon->ssl_status === 'active',
+            $addon->waf_enabled ?? false,
         ];
     }
 }

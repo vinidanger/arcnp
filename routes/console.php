@@ -13,3 +13,5 @@ Schedule::command('backups:run-scheduled')->hourly();
 Schedule::command('disk-usage:refresh')->hourly();
 Schedule::command('ssl:renew')->daily();
 Schedule::command('server-metrics:prune')->daily();
+Schedule::command('security:scan-accounts')->daily();
+Schedule::command('security:check-cms-versions')->daily();

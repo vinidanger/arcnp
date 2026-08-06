@@ -6,6 +6,7 @@ use App\Domain\Hosting\Http\Controllers\Client\DomainLogController;
 use App\Domain\Hosting\Http\Controllers\Client\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Client\FolderProtectionController;
 use App\Domain\Hosting\Http\Controllers\Client\AppInstallerController;
+use App\Domain\Hosting\Http\Controllers\Client\MalwareScanController;
 use App\Domain\Hosting\Http\Controllers\Client\FtpAccountController;
 use App\Domain\Hosting\Http\Controllers\Client\HostedAppController;
 use App\Domain\Hosting\Http\Controllers\Client\HostingAccountController;
@@ -23,6 +24,10 @@ use Illuminate\Support\Facades\Route;
 Route::resource('hosting-accounts', HostingAccountController::class)->only(['index', 'show']);
 Route::post('hosting-accounts/{hosting_account}/ssl', [HostingAccountController::class, 'issueSsl'])
     ->name('hosting-accounts.ssl.store');
+Route::post('hosting-accounts/{hosting_account}/waf', [HostingAccountController::class, 'updateWaf'])
+    ->name('hosting-accounts.waf.update');
+Route::post('hosting-accounts/{hosting_account}/domains/{domain}/waf', [HostingAccountController::class, 'updateDomainWaf'])
+    ->name('hosting-accounts.domains.waf.update');
 Route::get('hosting-accounts/{hosting_account}/domains', [HostingAccountController::class, 'domainsIndex'])
     ->name('hosting-accounts.domains.index');
 Route::get('hosting-accounts/{hosting_account}/databases', [HostingAccountController::class, 'databasesIndex'])
@@ -214,6 +219,15 @@ Route::post('hosting-accounts/{hosting_account}/installer/generic-zip', [AppInst
     ->name('hosting-accounts.installer.generic-zip');
 Route::delete('hosting-accounts/{hosting_account}/installer/{installation}', [AppInstallerController::class, 'destroy'])
     ->name('hosting-accounts.installer.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/malware', [MalwareScanController::class, 'index'])
+    ->name('hosting-accounts.malware.index');
+Route::post('hosting-accounts/{hosting_account}/malware', [MalwareScanController::class, 'store'])
+    ->name('hosting-accounts.malware.store');
+Route::post('hosting-accounts/{hosting_account}/malware/quarantine', [MalwareScanController::class, 'quarantine'])
+    ->name('hosting-accounts.malware.quarantine');
+Route::post('hosting-accounts/{hosting_account}/malware/restore', [MalwareScanController::class, 'restore'])
+    ->name('hosting-accounts.malware.restore');
 
 Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
 Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');

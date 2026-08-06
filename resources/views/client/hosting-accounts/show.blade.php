@@ -143,6 +143,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     ['route', 'client.hosting-accounts.protected-folders.index', 'bi-shield-lock', 'Proteção de pasta'],
                     ['route', 'client.hosting-accounts.hotlink-protection.index', 'bi-link-45deg', 'Proteção Hotlink'],
                     ['route', 'client.hosting-accounts.ssh.index', 'bi-terminal', 'SSH'],
+                    ['route', 'client.hosting-accounts.malware.index', 'bi-bug', 'Malware'],
                 ]],
                 'Software' => ['bi-box-seam', [
                     ['route', 'client.hosting-accounts.php.index', 'bi-filetype-php', 'PHP'],

@@ -22,6 +22,7 @@ class Domain extends Model
         'ssl_error',
         'ssl_issued_at',
         'ssl_expires_at',
+        'waf_enabled',
     ];
 
     protected function casts(): array
@@ -30,6 +31,7 @@ class Domain extends Model
             'php_fpm_settings' => 'array',
             'ssl_issued_at' => 'datetime',
             'ssl_expires_at' => 'datetime',
+            'waf_enabled' => 'boolean',
         ];
     }
 

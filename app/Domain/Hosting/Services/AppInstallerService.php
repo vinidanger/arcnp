@@ -5,6 +5,8 @@ namespace App\Domain\Hosting\Services;
 use App\Domain\Hosting\Models\AppInstallation;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Servers\Services\AgentHttpClient;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
@@ -134,6 +136,53 @@ class AppInstallerService
         }
 
         $installation->delete();
+    }
+
+    /**
+     * Consulta a versão do WordPress instalado contra a versão mais
+     * recente conhecida (Fase C, sinalização de CMS desatualizado) —
+     * síncrona, é só ler um arquivo (CheckWordPressVersionAction no
+     * Agent), diferente da instalação em si. Reaproveita
+     * resolveLocation() (mesma lógica que decide inside/outside
+     * public_html na instalação) pra montar o mesmo root/subdir que o
+     * Agent já entende.
+     */
+    public function checkVersion(AppInstallation $installation): void
+    {
+        $account = $installation->hostingAccount;
+        [$location, $subdir] = $this->resolveLocation($account, $installation->domain, $installation->path);
+        $root = $location === 'outside' ? $installation->domain : '';
+
+        $job = $this->client->dispatch($account->server, 'security.check_wordpress_version', [
+            'username' => $account->linux_username,
+            'root' => $root,
+            'dest_relpath' => $subdir ?? '',
+        ]);
+
+        if ($job->status !== 'completed') {
+            return;
+        }
+
+        $installation->update([
+            'detected_version' => $job->result['installed_version'] ?? null,
+            'latest_known_version' => $this->latestWordPressVersion(),
+            'version_checked_at' => now(),
+        ]);
+    }
+
+    /**
+     * Cacheado — sem isso, uma conta com várias instalações WP bateria
+     * na API do wordpress.org uma vez por instalação a cada rodada do
+     * comando agendado, sem necessidade (a versão mais recente é a
+     * mesma pra todo mundo).
+     */
+    public function latestWordPressVersion(): ?string
+    {
+        return Cache::remember('wordpress_latest_version', now()->addHours(6), function () {
+            $response = Http::timeout(10)->get('https://api.wordpress.org/core/version-check/1.7/');
+
+            return $response->successful() ? ($response->json('offers.0.version') ?? null) : null;
+        });
     }
 
     /**

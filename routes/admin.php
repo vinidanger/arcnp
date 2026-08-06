@@ -8,6 +8,7 @@ use App\Domain\Hosting\Http\Controllers\Admin\DomainLogController;
 use App\Domain\Hosting\Http\Controllers\Admin\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Admin\FolderProtectionController;
 use App\Domain\Hosting\Http\Controllers\Admin\AppInstallerController;
+use App\Domain\Hosting\Http\Controllers\Admin\MalwareScanController;
 use App\Domain\Hosting\Http\Controllers\Admin\FtpAccountController;
 use App\Domain\Hosting\Http\Controllers\Admin\HostedAppController;
 use App\Domain\Hosting\Http\Controllers\Admin\HotlinkProtectionController;
@@ -21,6 +22,7 @@ use App\Domain\Hosting\Http\Controllers\Admin\PlanController;
 use App\Domain\Hosting\Http\Controllers\Admin\SiteRedirectController;
 use App\Domain\Hosting\Http\Controllers\Admin\SshAccessController;
 use App\Domain\Servers\Http\Controllers\Admin\PhpExtensionController;
+use App\Domain\Servers\Http\Controllers\Admin\SecurityController;
 use App\Domain\Servers\Http\Controllers\Admin\ServerController;
 use App\Domain\Support\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\AnnouncementController;
@@ -48,6 +50,10 @@ Route::get('servers/{server}/php-extensions', [PhpExtensionController::class, 'i
     ->name('servers.php-extensions.index');
 Route::post('servers/{server}/php-extensions/toggle', [PhpExtensionController::class, 'toggle'])
     ->name('servers.php-extensions.toggle');
+Route::get('servers/{server}/security', [SecurityController::class, 'index'])
+    ->name('servers.security.index');
+Route::post('servers/{server}/security/unban', [SecurityController::class, 'unban'])
+    ->name('servers.security.unban');
 
 Route::resource('plans', PlanController::class)->except(['show']);
 
@@ -66,6 +72,10 @@ Route::get('hosting-accounts/{hosting_account}/databases/{database}/phpmyadmin',
     ->name('hosting-accounts.databases.phpmyadmin');
 Route::post('hosting-accounts/{hosting_account}/ssl', [HostingAccountController::class, 'issueSsl'])
     ->name('hosting-accounts.ssl.store');
+Route::post('hosting-accounts/{hosting_account}/waf', [HostingAccountController::class, 'updateWaf'])
+    ->name('hosting-accounts.waf.update');
+Route::post('hosting-accounts/{hosting_account}/domains/{domain}/waf', [HostingAccountController::class, 'updateDomainWaf'])
+    ->name('hosting-accounts.domains.waf.update');
 Route::post('hosting-accounts/{hosting_account}/domains', [HostingAccountController::class, 'storeDomain'])
     ->name('hosting-accounts.domains.store');
 Route::delete('hosting-accounts/{hosting_account}/domains/{domain}', [HostingAccountController::class, 'destroyDomain'])
@@ -245,6 +255,15 @@ Route::post('hosting-accounts/{hosting_account}/installer/generic-zip', [AppInst
     ->name('hosting-accounts.installer.generic-zip');
 Route::delete('hosting-accounts/{hosting_account}/installer/{installation}', [AppInstallerController::class, 'destroy'])
     ->name('hosting-accounts.installer.destroy');
+
+Route::get('hosting-accounts/{hosting_account}/malware', [MalwareScanController::class, 'index'])
+    ->name('hosting-accounts.malware.index');
+Route::post('hosting-accounts/{hosting_account}/malware', [MalwareScanController::class, 'store'])
+    ->name('hosting-accounts.malware.store');
+Route::post('hosting-accounts/{hosting_account}/malware/quarantine', [MalwareScanController::class, 'quarantine'])
+    ->name('hosting-accounts.malware.quarantine');
+Route::post('hosting-accounts/{hosting_account}/malware/restore', [MalwareScanController::class, 'restore'])
+    ->name('hosting-accounts.malware.restore');
 
 Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
 Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');

@@ -6,6 +6,7 @@ use App\Domain\Hosting\Models\AppInstallation;
 use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\HostingBackup;
+use App\Domain\Hosting\Models\MalwareScan;
 use App\Domain\Hosting\Services\FolderProtectionService;
 use App\Domain\Hosting\Services\HostingAccountProvisioningService;
 use App\Domain\Hosting\Services\HotlinkProtectionService;
@@ -16,6 +17,7 @@ use App\Domain\Servers\Models\AgentJob;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Notifications\AgentTaskFailedNotification;
+use App\Notifications\MalwareFoundNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
@@ -67,6 +69,10 @@ class AgentWebhookController extends Controller
 
         if ($job->action === 'app.install_wordpress') {
             $this->applyAppInstallResult($job);
+        }
+
+        if ($job->action === 'security.scan_account') {
+            $this->applyMalwareScanResult($job);
         }
 
         if ($job->action === 'ssl.renew_all' && $job->status === 'completed') {
@@ -236,6 +242,45 @@ class AgentWebhookController extends Controller
                 app(HostingAccountProvisioningService::class)->deleteDatabase($installation->database);
                 $installation->update(['database_id' => null]);
             }
+        }
+    }
+
+    /**
+     * Usa o id do MalwareScan embutido no payload original do dispatch
+     * (mesmo padrão de applyBackupResult()/backup_id). Se encontrou
+     * algo, notifica admins + dono da conta — diferente de
+     * notifyAdminsOfFailure() (só admin, só falha de execução), aqui é
+     * sempre relevante pro cliente saber também.
+     */
+    private function applyMalwareScanResult(AgentJob $job): void
+    {
+        $scanId = $job->payload['scan_id'] ?? null;
+
+        if (! $scanId) {
+            return;
+        }
+
+        $scan = MalwareScan::find($scanId);
+
+        if (! $scan) {
+            return;
+        }
+
+        if ($job->status === 'completed') {
+            $scan->update(['status' => 'completed', 'infected_files' => $job->result['infected_files'] ?? [], 'completed_at' => now()]);
+
+            if ($scan->hasInfectedFiles()) {
+                $account = $scan->hostingAccount;
+                $recipients = User::where('type', 'admin')->get();
+
+                if ($account->client) {
+                    $recipients->push($account->client);
+                }
+
+                Notification::send($recipients, new MalwareFoundNotification($scan));
+            }
+        } elseif ($job->status === 'failed') {
+            $scan->update(['status' => 'failed', 'error' => $job->error, 'completed_at' => now()]);
         }
     }
 

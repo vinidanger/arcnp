@@ -17,13 +17,24 @@ class AppInstallation extends Model
         'admin_username',
         'error',
         'installed_at',
+        'detected_version',
+        'latest_known_version',
+        'version_checked_at',
     ];
 
     protected function casts(): array
     {
         return [
             'installed_at' => 'datetime',
+            'version_checked_at' => 'datetime',
         ];
+    }
+
+    public function isOutdated(): bool
+    {
+        return $this->detected_version !== null
+            && $this->latest_known_version !== null
+            && version_compare($this->detected_version, $this->latest_known_version, '<');
     }
 
     public function hostingAccount(): BelongsTo

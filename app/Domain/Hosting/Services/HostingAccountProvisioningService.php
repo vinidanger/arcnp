@@ -72,7 +72,7 @@ class HostingAccountProvisioningService
             $this->syncPhpPools($account);
             $completed[] = 'pool';
 
-            $this->runStep($server, 'web.create_vhost', ['username' => $username, 'domain' => $domain, 'php_version' => $phpVersion, 'public_path' => $account->public_path]);
+            $this->runStep($server, 'web.create_vhost', ['username' => $username, 'domain' => $domain, 'php_version' => $phpVersion, 'public_path' => $account->public_path, 'waf_enabled' => $account->waf_enabled ?? false]);
             $completed[] = 'vhost';
 
             $account->update(['status' => 'active', 'last_provision_error' => null]);
@@ -162,6 +162,7 @@ class HostingAccountProvisioningService
                 'location' => $outside ? 'outside' : 'inside',
                 'subdir' => $subdir,
                 'php_version' => $domain->php_version,
+                'waf_enabled' => $domain->waf_enabled ?? false,
             ]);
 
             $domain->update(['status' => 'active']);
@@ -227,6 +228,8 @@ class HostingAccountProvisioningService
             'db_password' => $dbPassword,
         ]);
 
+        $this->applyDatabaseUserLimits($account->server, $dbUsername, $account->plan->max_db_connections, $account->plan->max_db_queries_per_hour);
+
         return $account->databases()->create([
             'db_name' => $dbName,
             'db_username' => $dbUsername,
@@ -255,6 +258,8 @@ class HostingAccountProvisioningService
             'db_username' => $account->linux_username,
             'db_password' => $dbPassword,
         ]);
+
+        $this->applyDatabaseUserLimits($account->server, $account->linux_username, $account->plan->max_db_connections, $account->plan->max_db_queries_per_hour);
 
         $account->update([
             'db_master_username' => $account->linux_username,
@@ -292,6 +297,7 @@ class HostingAccountProvisioningService
             'subdir' => $domain?->subdirectory,
             'php_version' => $domain ? $domain->php_version : $account->php_version,
             'public_path' => $domain ? $domain->public_path : $account->public_path,
+            'waf_enabled' => ($domain ? $domain->waf_enabled : $account->waf_enabled) ?? false,
         ]);
 
         if ($domain) {
@@ -314,6 +320,7 @@ class HostingAccountProvisioningService
             'php_version' => $account->php_version,
             'ssl_active' => $account->ssl_status === 'active',
             'public_path' => $publicPath,
+            'waf_enabled' => $account->waf_enabled ?? false,
         ]);
 
         $account->update(['public_path' => $publicPath]);
@@ -334,9 +341,36 @@ class HostingAccountProvisioningService
             'php_version' => $domain->php_version,
             'ssl_active' => $domain->ssl_status === 'active',
             'public_path' => $publicPath,
+            'waf_enabled' => $domain->waf_enabled ?? false,
         ]);
 
         $domain->update(['public_path' => $publicPath]);
+    }
+
+    /**
+     * Liga/desliga o WAF (ModSecurity + OWASP CRS, ver seção 47 do
+     * deploy/README.md do Agent) pra um domínio específico — reescreve
+     * o vhost preservando tudo mais (SSL, versão de PHP, public_path).
+     * $domain null = domínio principal da conta.
+     */
+    public function updateWafEnabled(HostingAccount $account, ?Domain $domain, bool $enabled): void
+    {
+        $this->runStep($account->server, 'web.update_document_root', [
+            'username' => $account->linux_username,
+            'domain' => $domain ? $domain->domain : $account->primary_domain,
+            'location' => $domain?->isOutsidePublicHtml() ? 'outside' : 'inside',
+            'subdir' => $domain?->subdirectory,
+            'php_version' => $domain ? $domain->php_version : $account->php_version,
+            'ssl_active' => ($domain ? $domain->ssl_status : $account->ssl_status) === 'active',
+            'public_path' => $domain ? $domain->public_path : $account->public_path,
+            'waf_enabled' => $enabled,
+        ]);
+
+        if ($domain) {
+            $domain->update(['waf_enabled' => $enabled]);
+        } else {
+            $account->update(['waf_enabled' => $enabled]);
+        }
     }
 
     /**
@@ -474,6 +508,7 @@ class HostingAccountProvisioningService
                 'php_version' => $account->php_version,
                 'ssl_active' => $account->ssl_status === 'active',
                 'public_path' => $account->public_path,
+                'waf_enabled' => $account->waf_enabled ?? false,
             ]);
             // Reescrever o vhost do zero (stub) apaga qualquer bloco
             // customizado injetado nele — reinjeta os que existirem.
@@ -496,6 +531,7 @@ class HostingAccountProvisioningService
                 'php_version' => $domain->php_version,
                 'ssl_active' => $domain->ssl_status === 'active',
                 'public_path' => $domain->public_path,
+                'waf_enabled' => $domain->waf_enabled ?? false,
             ]);
             $this->folderProtections->resyncIfNeeded($account, $domain->domain);
             $this->siteRedirects->resyncIfNeeded($account, $domain->domain);
@@ -631,6 +667,26 @@ class HostingAccountProvisioningService
         $this->runStep($account->server, 'disk.sync_quota', [
             'username' => $account->linux_username,
             'quota_mb' => $plan->disk_quota_mb ?? 0,
+        ]);
+
+        // Limite é por USUÁRIO MySQL, não por conta — uma conta com N
+        // bancos tem N usuários (mais o mestre, se já existir), então
+        // reaplica em todos, não só num lugar central.
+        foreach ($account->databases as $database) {
+            $this->applyDatabaseUserLimits($account->server, $database->db_username, $plan->max_db_connections, $plan->max_db_queries_per_hour);
+        }
+
+        if ($account->db_master_username) {
+            $this->applyDatabaseUserLimits($account->server, $account->db_master_username, $plan->max_db_connections, $plan->max_db_queries_per_hour);
+        }
+    }
+
+    private function applyDatabaseUserLimits(Server $server, string $dbUsername, ?int $maxConnections, ?int $maxQueriesPerHour): void
+    {
+        $this->runStep($server, 'database.set_user_limits', [
+            'db_username' => $dbUsername,
+            'max_connections' => $maxConnections ?? 0,
+            'max_queries_per_hour' => $maxQueriesPerHour ?? 0,
         ]);
     }
 

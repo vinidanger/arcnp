@@ -101,6 +101,8 @@ class PlanController extends Controller
             'max_processes' => ['nullable', 'integer', 'min:1'],
             'memory_limit_mb' => ['nullable', 'integer', 'min:64'],
             'io_weight' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            'max_db_connections' => ['nullable', 'integer', 'min:1'],
+            'max_db_queries_per_hour' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['boolean'],
         ]);
     }

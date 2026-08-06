@@ -35,6 +35,7 @@ class HostingAccount extends Model
         'ssh_password',
         'db_master_username',
         'db_master_password',
+        'waf_enabled',
     ];
 
     protected function casts(): array
@@ -49,6 +50,7 @@ class HostingAccount extends Model
             'ssh_enabled' => 'boolean',
             'ssh_password' => 'encrypted',
             'db_master_password' => 'encrypted',
+            'waf_enabled' => 'boolean',
         ];
     }
 
@@ -80,6 +82,11 @@ class HostingAccount extends Model
     public function backups(): HasMany
     {
         return $this->hasMany(HostingBackup::class)->latest();
+    }
+
+    public function malwareScans(): HasMany
+    {
+        return $this->hasMany(MalwareScan::class)->latest();
     }
 
     public function cronJobs(): HasMany

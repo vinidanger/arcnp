@@ -49,6 +49,14 @@
                         </td>
                         <td class="text-end">
                             <a href="{{ route('client.hosting-accounts.php.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>
+                            <form method="POST" action="{{ route('client.hosting-accounts.waf.update', $account) }}" class="d-inline"
+                                  onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
+                                @csrf
+                                <input type="hidden" name="enabled" value="{{ $account->waf_enabled ? '0' : '1' }}">
+                                <button type="submit" class="btn btn-sm btn-outline-{{ $account->waf_enabled ? 'success' : 'secondary' }}" title="{{ __('Proteção contra exploits web (ModSecurity)') }}">
+                                    {{ __('WAF') }}: {{ $account->waf_enabled ? __('ligado') : __('desligado') }}
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     @foreach ($account->domains as $domain)
@@ -87,6 +95,14 @@
                             </td>
                             <td class="text-end">
                                 <a href="{{ route('client.hosting-accounts.domains.php.index', [$account, $domain]) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>
+                                <form method="POST" action="{{ route('client.hosting-accounts.domains.waf.update', [$account, $domain]) }}" class="d-inline"
+                                      onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
+                                    @csrf
+                                    <input type="hidden" name="enabled" value="{{ $domain->waf_enabled ? '0' : '1' }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-{{ $domain->waf_enabled ? 'success' : 'secondary' }}" title="{{ __('Proteção contra exploits web (ModSecurity)') }}">
+                                        {{ __('WAF') }}: {{ $domain->waf_enabled ? __('ligado') : __('desligado') }}
+                                    </button>
+                                </form>
                                 <form method="POST" action="{{ route('client.hosting-accounts.domains.destroy', [$account, $domain]) }}"
                                       class="d-inline"
                                       onsubmit="return confirm('{{ __('Remove esse domínio. Continuar?') }}')">

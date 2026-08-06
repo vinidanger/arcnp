@@ -23,6 +23,8 @@ class PlanResource extends JsonResource
             'max_processes' => $this->max_processes,
             'memory_limit_mb' => $this->memory_limit_mb,
             'io_weight' => $this->io_weight,
+            'max_db_connections' => $this->max_db_connections,
+            'max_db_queries_per_hour' => $this->max_db_queries_per_hour,
         ];
     }
 }

@@ -181,6 +181,42 @@ class HostingAccountController extends Controller
         return back()->with('status', 'Emissão de certificado solicitada — deve levar alguns segundos. Atualize a página para ver o resultado.');
     }
 
+    /**
+     * WAF (ModSecurity + OWASP CRS) é opt-in por domínio — ver seção 47
+     * do deploy/README.md do Agent.
+     */
+    public function updateWaf(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $data = $request->validate(['enabled' => ['required', 'boolean']]);
+
+        try {
+            $provisioning->updateWafEnabled($hosting_account, null, $data['enabled']);
+
+            return back()->with('status', $data['enabled'] ? 'WAF ativado pro domínio principal.' : 'WAF desativado pro domínio principal.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao alterar o WAF: '.$e->getMessage());
+        }
+    }
+
+    public function updateDomainWaf(Request $request, HostingAccount $hosting_account, Domain $domain, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($domain->hosting_account_id === $hosting_account->id, 404);
+
+        $data = $request->validate(['enabled' => ['required', 'boolean']]);
+
+        try {
+            $provisioning->updateWafEnabled($hosting_account, $domain, $data['enabled']);
+
+            return back()->with('status', $data['enabled'] ? "WAF ativado pra {$domain->domain}." : "WAF desativado pra {$domain->domain}.");
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao alterar o WAF: '.$e->getMessage());
+        }
+    }
+
     public function suspend(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);

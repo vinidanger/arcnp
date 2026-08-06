@@ -12,6 +12,7 @@
                     <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Coletar agora') }}</button>
                 </form>
                 <a href="{{ route('admin.servers.php-extensions.index', $server) }}" class="btn btn-sm btn-outline-secondary">{{ __('Extensões PHP') }}</a>
+                <a href="{{ route('admin.servers.security.index', $server) }}" class="btn btn-sm btn-outline-secondary">{{ __('Segurança') }}</a>
                 <a href="{{ route('admin.servers.edit', $server) }}" class="btn btn-sm btn-outline-secondary">{{ __('Editar') }}</a>
                 <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirm-server-deletion">
                     {{ __('Excluir') }}

@@ -119,6 +119,11 @@
                                     };
                                 @endphp
                                 <span class="badge {{ $badge }}">{{ status_label($installation->status) }}</span>
+                                @if ($installation->isOutdated())
+                                    <span class="badge bg-warning text-dark" title="{{ __('Versão instalada') }}: {{ $installation->detected_version }} — {{ __('mais recente') }}: {{ $installation->latest_known_version }}">
+                                        {{ __('Desatualizado') }} ({{ $installation->detected_version }} → {{ $installation->latest_known_version }})
+                                    </span>
+                                @endif
                                 @if ($installation->status === 'failed' && $installation->error)
                                     <div class="small text-danger mt-1">{{ $installation->error }}</div>
                                 @endif
