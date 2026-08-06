@@ -1214,8 +1214,6 @@ dialog.app-modal::backdrop {
     .fw-bold { font-weight: 700; }
     .small { font-size: 0.82rem; }
     .fs-6 { font-size: 0.95rem; }
-    .w-100 { width: 100%; }
-    .h-100 { height: 100%; }
     .align-middle { vertical-align: middle; }
     .position-relative { position: relative; }
     .position-absolute { position: absolute; }
@@ -1265,6 +1263,20 @@ dialog.app-modal::backdrop {
 /* Espaçamento com valores do Bootstrap (escala 0/.25/.5/1/1.5/3rem) —
    fora de @layer de propósito, assim vence a utility equivalente do
    Tailwind (escala diferente) sem precisar de !important espalhado. */
+/* .w-100/.h-100 tiveram que sair do @layer components por um motivo
+   mais sério que os outros aqui: dentro de layer, "h-100" perdia pra
+   utility DINÂMICA que o próprio Tailwind v4 gera pra qualquer classe
+   "h-<número>" (interpretada como múltiplo da escala de espaçamento —
+   height: calc(var(--spacing) * 100), ou seja, 25rem fixos, não 100%).
+   O Tailwind sempre declara a ordem canônica dos layers
+   (theme/base/components/utilities) logo na importação, então
+   "components" NUNCA vence "utilities" nem escrevendo o bloco depois
+   no arquivo — só ficando fora de @layer mesmo resolve, como o resto
+   desta seção já faz. Foi isso que quebrava ".card.h-100" (2 cards lado
+   a lado, ex. admin/servers/show.blade.php) sem nenhum erro visível no
+   código — a classe "funcionava", só que virava outra coisa. */
+:where(.w-100) { width: 100%; }
+:where(.h-100) { height: 100%; }
 :where(.mb-0) { margin-bottom: 0; }
 :where(.mb-1) { margin-bottom: 0.25rem; }
 :where(.mb-2) { margin-bottom: 0.5rem; }

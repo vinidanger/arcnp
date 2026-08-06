@@ -109,7 +109,7 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
 
     <div class="row g-3 mt-3">
         <div class="col-md-6">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <h2 class="h6">{{ __('Hardware / SO') }}</h2>
@@ -177,7 +177,7 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
         </div>
 
         <div class="col-md-6">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-body">
                     <h2 class="h6">{{ __('Serviços') }}</h2>
 
@@ -192,14 +192,10 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
                                         'inactive' => 'secondary',
                                         default => 'danger',
                                     };
-                                    $version = $info['service_versions'][$service] ?? null;
                                 @endphp
                                 <div class="col-6">
                                     <div class="d-flex justify-content-between align-items-center border rounded-3 p-2 small">
-                                        <div>
-                                            <code>{{ $service }}</code>
-                                            <div class="text-secondary">{{ $version ?? '—' }}</div>
-                                        </div>
+                                        <code>{{ $service }}</code>
                                         <span class="badge text-bg-{{ $serviceBadge }}">{{ $status }}</span>
                                     </div>
                                 </div>
