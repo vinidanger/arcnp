@@ -153,6 +153,15 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             if ($account->ssh_enabled) {
                 $cpanelCategories['Avançado'][1][] = ['url', $account->server->terminalBaseUrl(), 'bi-terminal-fill', 'Terminal'];
             }
+
+            // phpMyAdmin é por banco (SSO exige saber qual), não um link
+            // genérico — aponta pro primeiro banco da conta quando existe
+            // algum; sem nenhum ainda, cai pra aba "Bancos de Dados" (onde
+            // dá pra criar um e usar o link de SSO de lá).
+            $firstDatabase = $account->databases->first();
+            $cpanelCategories['Bancos de Dados'][1][] = $firstDatabase
+                ? ['url', route('client.hosting-accounts.databases.phpmyadmin', [$account, $firstDatabase]), 'bi-box-arrow-up-right', 'phpMyAdmin']
+                : ['tab', '#tab-databases', 'bi-box-arrow-up-right', 'phpMyAdmin'];
         @endphp
 
         <div class="cpanel-page-title mb-3">{{ __('Tools') }}</div>
@@ -161,14 +170,11 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             <div class="col-lg-8 cpanel-tools-column">
                 @foreach ($cpanelCategories as $categoryName => [$categoryIcon, $tools])
                     <div class="cpanel-category" data-category="{{ \Illuminate\Support\Str::slug($categoryName) }}">
-                        <div class="cpanel-category-header">
-                            <span class="cpanel-category-drag-handle" draggable="true" title="{{ __('Arraste para reordenar') }}"><i class="bi bi-grip-vertical"></i></span>
-                            <button type="button" class="cpanel-category-toggle" data-cpanel-category-toggle>
-                                <span class="cpanel-category-icon"><i class="bi {{ $categoryIcon }}"></i></span>
-                                <span class="cpanel-category-title">{{ __($categoryName) }}</span>
-                                <i class="bi bi-chevron-up cpanel-category-chevron"></i>
-                            </button>
-                        </div>
+                        <button type="button" class="cpanel-category-header" draggable="true" data-cpanel-category-toggle>
+                            <span class="cpanel-category-icon"><i class="bi {{ $categoryIcon }}"></i></span>
+                            <span class="cpanel-category-title">{{ __($categoryName) }}</span>
+                            <i class="bi bi-chevron-up cpanel-category-chevron"></i>
+                        </button>
                         <div class="cpanel-tool-grid">
                             @foreach ($tools as [$type, $target, $icon, $label])
                                 @if ($type === 'route')

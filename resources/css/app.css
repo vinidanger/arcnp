@@ -481,36 +481,26 @@ html.sidebar-collapsed #sidebar-toggle i {
 .cpanel-category-header {
     display: flex;
     align-items: center;
-    width: 100%;
-}
-
-.cpanel-category-drag-handle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    align-self: stretch;
-    cursor: grab;
-    color: var(--color-text-faint);
-    flex-shrink: 0;
-}
-
-.cpanel-category-drag-handle:active {
-    cursor: grabbing;
-}
-
-.cpanel-category-toggle {
-    display: flex;
-    align-items: center;
     gap: 0.75rem;
-    padding: 0.85rem 1.1rem 0.85rem 0.25rem;
+    padding: 0.85rem 1.1rem;
     cursor: pointer;
     border: none;
     background: transparent;
-    flex: 1;
-    min-width: 0;
+    width: 100%;
     text-align: left;
     font-family: var(--font-body);
+}
+
+/* Arrastável pela barra inteira (sem alcinha própria) — o cursor muda
+   pra "grab" só aqui, indicando a possibilidade de reordenar sem
+   precisar de um ícone extra. Os itens da grade abaixo (.cpanel-tool-item)
+   mantêm o cursor padrão de link. */
+.cpanel-category-header:hover {
+    cursor: grab;
+}
+
+.cpanel-category-header:active {
+    cursor: grabbing;
 }
 
 .cpanel-category.dragging {

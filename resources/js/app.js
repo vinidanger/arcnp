@@ -150,6 +150,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tabButtons.forEach((button) => {
         button.addEventListener('click', (event) => {
+            // Alguns desses botões são links reais pra essa mesma página
+            // (ex.: itens do menu lateral tipo "Bancos de Dados", que
+            // apontam pra cá com #tab-databases). Se o alvo não existe
+            // nesta página (o link foi clicado de outra tela), deixa o
+            // navegador seguir o href normal — a página de destino ativa
+            // a aba certa sozinha ao carregar (ver o bloco location.hash
+            // acima). Só intercepta quando dá pra trocar de aba na hora,
+            // porque um href só-com-hash pra ESTA MESMA página não recarrega
+            // (o navegador só muda a URL), e sem isso o clique não faria
+            // nada visível.
+            if (! document.querySelector(button.dataset.bsTarget)) {
+                return;
+            }
+
             event.preventDefault();
             activateTab(button);
             history.replaceState(null, '', button.dataset.bsTarget);
@@ -397,9 +411,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let dragging = null;
 
-    column.querySelectorAll('.cpanel-category-drag-handle').forEach((handle) => {
-        handle.addEventListener('dragstart', (event) => {
-            dragging = handle.closest('.cpanel-category');
+    column.querySelectorAll('.cpanel-category-header').forEach((header) => {
+        header.addEventListener('dragstart', (event) => {
+            dragging = header.closest('.cpanel-category');
 
             if (! dragging) {
                 return;
@@ -410,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
             event.dataTransfer.setData('text/plain', dragging.dataset.category || '');
         });
 
-        handle.addEventListener('dragend', () => {
+        header.addEventListener('dragend', () => {
             if (dragging) {
                 dragging.classList.remove('dragging');
             }
