@@ -270,9 +270,44 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
     const collapsedKey = (category) => `cpanelCategoryCollapsed:${category.dataset.category}`;
 
+    // Fonte única pra colapsar/expandir — mexe na classe (o que o CSS
+    // já usava) E no atributo data-cpanel-collapsed do <html> (o que
+    // theme-init.blade.php grava pra evitar o flash no próximo
+    // carregamento, ver ali). Sem manter os dois em sincronia aqui, uma
+    // categoria que nasceu colapsada (atributo presente) nunca
+    // conseguia ser reaberta: a classe saía do elemento, mas a regra
+    // CSS baseada no atributo continuava escondendo a grade.
+    const applyCollapsed = (category, collapsed) => {
+        category.classList.toggle('collapsed', collapsed);
+
+        const slug = category.dataset.category;
+
+        if (! slug) {
+            return;
+        }
+
+        const current = new Set((document.documentElement.getAttribute('data-cpanel-collapsed') || '').split(' ').filter(Boolean));
+
+        if (collapsed) {
+            current.add(slug);
+        } else {
+            current.delete(slug);
+        }
+
+        if (current.size) {
+            document.documentElement.setAttribute('data-cpanel-collapsed', Array.from(current).join(' '));
+        } else {
+            document.documentElement.removeAttribute('data-cpanel-collapsed');
+        }
+    };
+
+    // Sincroniza a classe com o que já está salvo — sem isso, o
+    // primeiro clique numa categoria que já nasceu colapsada (só via
+    // atributo, a classe nunca tinha sido aplicada no elemento) lia
+    // "collapsed" como false e tentava colapsar de novo em vez de abrir.
     document.querySelectorAll('.cpanel-category[data-category]').forEach((category) => {
         if (localStorage.getItem(collapsedKey(category)) === '1') {
-            category.classList.add('collapsed');
+            applyCollapsed(category, true);
         }
     });
 
@@ -284,7 +319,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const collapsed = category.classList.toggle('collapsed');
+            const collapsed = ! category.classList.contains('collapsed');
+            applyCollapsed(category, collapsed);
             localStorage.setItem(collapsedKey(category), collapsed ? '1' : '0');
         });
     });
@@ -310,9 +346,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (query === '') {
                 // Busca limpa — volta pra preferência salva em vez de
                 // forçar expandido.
-                category.classList.toggle('collapsed', localStorage.getItem(collapsedKey(category)) === '1');
+                applyCollapsed(category, localStorage.getItem(collapsedKey(category)) === '1');
             } else {
-                category.classList.toggle('collapsed', ! categoryHasMatch);
+                applyCollapsed(category, ! categoryHasMatch);
             }
 
             category.hidden = query !== '' && ! categoryHasMatch;
