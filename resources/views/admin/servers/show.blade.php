@@ -179,7 +179,7 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-body">
-                    <h2 class="h6">{{ __('Serviços') }}</h2>
+                    <h2 class="h6 mb-3">{{ __('Serviços') }}</h2>
 
                     @if (empty($info['services'] ?? []))
                         <p class="small text-secondary mb-0">{{ __('Nada coletado ainda — clique em "Coletar agora" no topo da página.') }}</p>
@@ -192,10 +192,14 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
                                         'inactive' => 'secondary',
                                         default => 'danger',
                                     };
+                                    $version = $info['service_versions'][$service] ?? null;
                                 @endphp
                                 <div class="col-6">
                                     <div class="d-flex justify-content-between align-items-center border rounded-3 p-2 small">
-                                        <code>{{ $service }}</code>
+                                        <div>
+                                            <code>{{ $service }}</code>
+                                            <div class="text-secondary">{{ $version ?? '—' }}</div>
+                                        </div>
                                         <span class="badge text-bg-{{ $serviceBadge }}">{{ $status }}</span>
                                     </div>
                                 </div>
