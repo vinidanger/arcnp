@@ -13,7 +13,7 @@
 
     <div class="row g-3 mb-3">
         <div class="col-md-6">
-            <div class="card h-100">
+            <div class="card">
                 <div class="card-body">
                     <h2 class="h6">{{ $catalog['wordpress']['name'] }}</h2>
                     <p class="small text-secondary">{{ __('Cria um banco de dados dedicado, baixa o WordPress e conclui a instalação com o usuário admin que você definir.') }}</p>
