@@ -9,11 +9,42 @@ use App\Domain\Hosting\Services\HostingAccountProvisioningService;
 use App\Domain\Hosting\Support\UsernameGenerator;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Throwable;
 
 class HostingAccountController extends Controller
 {
+    /**
+     * Listagem paginada — não existia antes (a API só permitia consultar
+     * por ID já conhecido). Filtros simples pra um painel externo montar
+     * a própria listagem sem precisar espelhar o banco inteiro.
+     */
+    public function index(Request $request)
+    {
+        $query = HostingAccount::query()->with(['client', 'plan', 'server']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
+        }
+
+        if ($request->filled('server_id')) {
+            $query->where('server_id', $request->integer('server_id'));
+        }
+
+        if ($request->filled('plan_id')) {
+            $query->where('plan_id', $request->integer('plan_id'));
+        }
+
+        if ($request->filled('search')) {
+            $query->where('primary_domain', 'like', '%'.$request->string('search').'%');
+        }
+
+        $perPage = min((int) $request->integer('per_page', 15), 100);
+
+        return HostingAccountResource::collection($query->latest()->paginate($perPage));
+    }
+
     /**
      * Cria um cliente novo e já provisiona a conta de hospedagem numa
      * chamada só — o caso de uso real é "outro painel vendeu um plano,

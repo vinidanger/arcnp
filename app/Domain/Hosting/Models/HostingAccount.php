@@ -3,6 +3,7 @@
 namespace App\Domain\Hosting\Models;
 
 use App\Domain\Servers\Models\Server;
+use App\Domain\Support\Models\Ticket;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -152,6 +153,11 @@ class HostingAccount extends Model
     public function appInstallations(): HasMany
     {
         return $this->hasMany(AppInstallation::class);
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class)->latest();
     }
 
     /**

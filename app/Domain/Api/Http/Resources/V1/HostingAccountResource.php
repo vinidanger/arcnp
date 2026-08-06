@@ -12,10 +12,15 @@ class HostingAccountResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'linux_username' => $this->linux_username,
             'primary_domain' => $this->primary_domain,
             'status' => $this->status,
             'php_version' => $this->php_version,
             'ssl_status' => $this->ssl_status,
+            'ssl_expires_at' => $this->ssl_expires_at,
+            'waf_enabled' => $this->waf_enabled,
+            'backup_frequency' => $this->backup_frequency,
+            'last_backup_at' => $this->last_backup_at,
             'disk_usage_mb' => $this->disk_usage_mb,
             'plan' => [
                 'id' => $this->plan?->id,

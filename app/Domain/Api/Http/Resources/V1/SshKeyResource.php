@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Domain\Api\Http\Resources\V1;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/** @mixin \App\Domain\Hosting\Models\SshKey */
+class SshKeyResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'public_key' => $this->public_key,
+        ];
+    }
+}
