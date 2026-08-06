@@ -1048,8 +1048,17 @@ dialog.app-modal::backdrop {
     .btn-close::before { content: "\00d7"; }
 
     /* ---- painéis (card) ---- */
-    .card { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 4px; }
-    .card-body { padding: 1.1rem 1.25rem; }
+    /* display:flex + flex-direction:column (igual ao Bootstrap de
+       verdade) — sem isso, ".card.h-100" (várias telas usam pra igualar
+       a altura de 2 cards lado a lado, ex. admin/servers/show.blade.php)
+       só fixava a altura do <div class="card"> sem dar pro conteúdo
+       nenhum jeito de crescer/se ajustar dentro dela, e o conteúdo do
+       card mais alto simplesmente vazava pra fora da borda. Pra um card
+       sozinho (sem h-100) isso não muda nada visualmente — uma coluna
+       flex com altura automática empilha os filhos exatamente igual a
+       um bloco normal. */
+    .card { display: flex; flex-direction: column; background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 4px; }
+    .card-body { flex: 1 1 auto; min-height: 0; padding: 1.1rem 1.25rem; }
     .card-header { padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--color-line); font-weight: 600; }
     .card-footer { padding: 0.85rem 1.25rem; border-top: 1px solid var(--color-line); }
 
