@@ -110,46 +110,74 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
         </div>
     @elseif ($uiTemplate === 'cpanel')
         @php
+            // Cada item é [tipo, alvo, ícone, rótulo]. Tipo "route" vira
+            // route($alvo, $account); "tab" dispara a mesma troca de aba que a
+            // barra de abas escondida já faz (data-bs-toggle, sem JS novo);
+            // "url" é link direto (externo, nova aba — caso do Terminal).
             $cpanelCategories = [
-                'Site' => ['bi-folder2-open', [
-                    ['client.hosting-accounts.files.index', 'bi-folder2-open', 'Arquivos'],
-                    ['client.hosting-accounts.php.index', 'bi-filetype-php', 'PHP'],
-                    ['client.hosting-accounts.protected-folders.index', 'bi-shield-lock', 'Proteção de pasta'],
-                    ['client.hosting-accounts.redirects.index', 'bi-signpost-split', 'Redirecionamentos'],
-                    ['client.hosting-accounts.hotlink-protection.index', 'bi-link-45deg', 'Proteção Hotlink'],
-                    ['client.hosting-accounts.logs.index', 'bi-file-text', 'Logs'],
-                    ['client.hosting-accounts.apps.index', 'bi-cpu', 'Apps'],
-                    ['client.hosting-accounts.installer.index', 'bi-box-seam', 'Instalador'],
-                    ['client.hosting-accounts.mime-types.index', 'bi-file-earmark-code', 'MIME Types'],
+                'E-mail' => ['bi-envelope', [
+                    ['route', 'client.hosting-accounts.mail.index', 'bi-envelope', 'E-mail'],
+                    ['route', 'client.hosting-accounts.mail-log.index', 'bi-envelope-paper', 'Rastrear e-mails'],
                 ]],
-                'Domínio' => ['bi-globe2', [
-                    ['client.hosting-accounts.dns.index', 'bi-globe2', 'DNS'],
-                    ['client.hosting-accounts.mail.index', 'bi-envelope', 'E-mail'],
-                    ['client.hosting-accounts.mail-log.index', 'bi-envelope-paper', 'Rastrear e-mails'],
+                'Domínios' => ['bi-globe2', [
+                    ['tab', '#tab-domains', 'bi-globe2', 'Domínios'],
+                    ['route', 'client.hosting-accounts.dns.index', 'bi-hdd-network', 'DNS'],
+                    ['route', 'client.hosting-accounts.redirects.index', 'bi-signpost-split', 'Redirecionamentos'],
+                ]],
+                'Arquivos' => ['bi-folder2-open', [
+                    ['route', 'client.hosting-accounts.files.index', 'bi-folder2-open', 'Arquivos'],
+                    ['tab', '#tab-backups', 'bi-archive', 'Backups'],
+                    ['route', 'client.hosting-accounts.mime-types.index', 'bi-file-earmark-code', 'MIME Types'],
+                ]],
+                'Bancos de Dados' => ['bi-database', [
+                    ['tab', '#tab-databases', 'bi-database', 'Bancos de Dados'],
+                ]],
+                'Segurança' => ['bi-shield-lock', [
+                    ['route', 'client.hosting-accounts.protected-folders.index', 'bi-shield-lock', 'Proteção de pasta'],
+                    ['route', 'client.hosting-accounts.hotlink-protection.index', 'bi-link-45deg', 'Proteção Hotlink'],
+                    ['route', 'client.hosting-accounts.ssh.index', 'bi-terminal', 'SSH'],
+                ]],
+                'Software' => ['bi-box-seam', [
+                    ['route', 'client.hosting-accounts.php.index', 'bi-filetype-php', 'PHP'],
+                    ['route', 'client.hosting-accounts.apps.index', 'bi-cpu', 'Apps'],
+                    ['route', 'client.hosting-accounts.installer.index', 'bi-box-seam', 'Instalador'],
                 ]],
                 'Avançado' => ['bi-gear', [
-                    ['client.hosting-accounts.ssh.index', 'bi-terminal', 'SSH'],
-                    ['client.hosting-accounts.cron.index', 'bi-clock-history', 'Cron'],
-                    ['client.hosting-accounts.ftp.index', 'bi-hdd-network', 'FTP'],
-                    ['client.hosting-accounts.resources.index', 'bi-speedometer2', 'Recursos'],
+                    ['route', 'client.hosting-accounts.logs.index', 'bi-file-text', 'Logs'],
+                    ['route', 'client.hosting-accounts.cron.index', 'bi-clock-history', 'Cron'],
+                    ['route', 'client.hosting-accounts.ftp.index', 'bi-hdd-network', 'FTP'],
+                    ['route', 'client.hosting-accounts.resources.index', 'bi-speedometer2', 'Recursos'],
                 ]],
             ];
+
+            if ($account->ssh_enabled) {
+                $cpanelCategories['Avançado'][1][] = ['url', $account->server->terminalBaseUrl(), 'bi-terminal-fill', 'Terminal'];
+            }
         @endphp
 
         <div class="cpanel-page-title mb-3">{{ __('Tools') }}</div>
 
         <div class="row g-3">
-            <div class="col-lg-8">
+            <div class="col-lg-8 cpanel-tools-column">
                 @foreach ($cpanelCategories as $categoryName => [$categoryIcon, $tools])
                     <div class="cpanel-category" data-category="{{ \Illuminate\Support\Str::slug($categoryName) }}">
-                        <button type="button" class="cpanel-category-header" data-cpanel-category-toggle>
-                            <span class="cpanel-category-icon"><i class="bi {{ $categoryIcon }}"></i></span>
-                            <span class="cpanel-category-title">{{ __($categoryName) }}</span>
-                            <i class="bi bi-chevron-up cpanel-category-chevron"></i>
-                        </button>
+                        <div class="cpanel-category-header">
+                            <span class="cpanel-category-drag-handle" draggable="true" title="{{ __('Arraste para reordenar') }}"><i class="bi bi-grip-vertical"></i></span>
+                            <button type="button" class="cpanel-category-toggle" data-cpanel-category-toggle>
+                                <span class="cpanel-category-icon"><i class="bi {{ $categoryIcon }}"></i></span>
+                                <span class="cpanel-category-title">{{ __($categoryName) }}</span>
+                                <i class="bi bi-chevron-up cpanel-category-chevron"></i>
+                            </button>
+                        </div>
                         <div class="cpanel-tool-grid">
-                            @foreach ($tools as [$routeName, $icon, $label])
-                                <a href="{{ route($routeName, $account) }}" class="cpanel-tool-item" data-tool-label="{{ __($label) }}">
+                            @foreach ($tools as [$type, $target, $icon, $label])
+                                @if ($type === 'route')
+                                    <a href="{{ route($target, $account) }}" class="cpanel-tool-item" data-tool-label="{{ __($label) }}">
+                                @elseif ($type === 'tab')
+                                    <a href="{{ $target }}" data-bs-toggle="tab" data-bs-target="{{ $target }}" class="cpanel-tool-item" data-tool-label="{{ __($label) }}">
+                                @else
+                                    <a href="{{ $target }}" target="_blank" rel="noopener" class="cpanel-tool-item" data-tool-label="{{ __($label) }}">
+                                @endif
                                     <span class="cpanel-tool-icon"><i class="bi {{ $icon }}"></i></span>
                                     <span class="cpanel-tool-label">{{ __($label) }}</span>
                                 </a>
@@ -157,34 +185,6 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         </div>
                     </div>
                 @endforeach
-
-                <div class="cpanel-category" data-category="conta">
-                    <button type="button" class="cpanel-category-header" data-cpanel-category-toggle>
-                        <span class="cpanel-category-icon"><i class="bi bi-hdd-stack"></i></span>
-                        <span class="cpanel-category-title">{{ __('Conta') }}</span>
-                        <i class="bi bi-chevron-up cpanel-category-chevron"></i>
-                    </button>
-                    <div class="cpanel-tool-grid">
-                        <a href="#tab-domains" data-bs-toggle="tab" data-bs-target="#tab-domains" class="cpanel-tool-item" data-tool-label="{{ __('Domínios') }}">
-                            <span class="cpanel-tool-icon"><i class="bi bi-globe2"></i></span>
-                            <span class="cpanel-tool-label">{{ __('Domínios') }}</span>
-                        </a>
-                        <a href="#tab-databases" data-bs-toggle="tab" data-bs-target="#tab-databases" class="cpanel-tool-item" data-tool-label="{{ __('Bancos de Dados') }}">
-                            <span class="cpanel-tool-icon"><i class="bi bi-database"></i></span>
-                            <span class="cpanel-tool-label">{{ __('Bancos de Dados') }}</span>
-                        </a>
-                        <a href="#tab-backups" data-bs-toggle="tab" data-bs-target="#tab-backups" class="cpanel-tool-item" data-tool-label="{{ __('Backups') }}">
-                            <span class="cpanel-tool-icon"><i class="bi bi-archive"></i></span>
-                            <span class="cpanel-tool-label">{{ __('Backups') }}</span>
-                        </a>
-                        @if ($account->ssh_enabled)
-                            <a href="{{ $account->server->terminalBaseUrl() }}" target="_blank" rel="noopener" class="cpanel-tool-item" data-tool-label="{{ __('Terminal') }}">
-                                <span class="cpanel-tool-icon"><i class="bi bi-terminal-fill"></i></span>
-                                <span class="cpanel-tool-label">{{ __('Terminal') }}</span>
-                            </a>
-                        @endif
-                    </div>
-                </div>
             </div>
 
             <div class="col-lg-4">

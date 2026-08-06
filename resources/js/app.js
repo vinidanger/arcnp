@@ -355,3 +355,88 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// ---------------------------------------------------------------------
+// Template "cPanel" — reordenar as categorias da página "Tools" por
+// arraste (só pela alcinha .cpanel-category-drag-handle, não o cabeçalho
+// inteiro, pra não brigar com o clique de colapsar/expandir). Ordem
+// persistida em localStorage (por navegador, mesmo padrão do resto do
+// template cPanel) e reaplicada no carregamento movendo os elementos já
+// existentes no DOM — sem re-render nenhum.
+// ---------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    const column = document.querySelector('.cpanel-tools-column');
+
+    if (! column) {
+        return;
+    }
+
+    const orderKey = 'cpanelCategoryOrder';
+
+    const saveOrder = () => {
+        const order = Array.from(column.querySelectorAll('.cpanel-category[data-category]'))
+            .map((category) => category.dataset.category);
+        localStorage.setItem(orderKey, JSON.stringify(order));
+    };
+
+    let savedOrder = [];
+    try {
+        savedOrder = JSON.parse(localStorage.getItem(orderKey) || '[]');
+    } catch (e) {
+        savedOrder = [];
+    }
+
+    if (Array.isArray(savedOrder)) {
+        savedOrder.forEach((slug) => {
+            const category = column.querySelector(`.cpanel-category[data-category="${slug}"]`);
+            if (category) {
+                column.appendChild(category);
+            }
+        });
+    }
+
+    let dragging = null;
+
+    column.querySelectorAll('.cpanel-category-drag-handle').forEach((handle) => {
+        handle.addEventListener('dragstart', (event) => {
+            dragging = handle.closest('.cpanel-category');
+
+            if (! dragging) {
+                return;
+            }
+
+            dragging.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', dragging.dataset.category || '');
+        });
+
+        handle.addEventListener('dragend', () => {
+            if (dragging) {
+                dragging.classList.remove('dragging');
+            }
+
+            dragging = null;
+            saveOrder();
+        });
+    });
+
+    column.addEventListener('dragover', (event) => {
+        if (! dragging) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const siblings = Array.from(column.querySelectorAll('.cpanel-category:not(.dragging)'));
+        const next = siblings.find((sibling) => {
+            const rect = sibling.getBoundingClientRect();
+            return event.clientY < rect.top + rect.height / 2;
+        });
+
+        if (next) {
+            column.insertBefore(dragging, next);
+        } else {
+            column.appendChild(dragging);
+        }
+    });
+});

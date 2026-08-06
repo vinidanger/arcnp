@@ -481,14 +481,40 @@ html.sidebar-collapsed #sidebar-toggle i {
 .cpanel-category-header {
     display: flex;
     align-items: center;
+    width: 100%;
+}
+
+.cpanel-category-drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    align-self: stretch;
+    cursor: grab;
+    color: var(--color-text-faint);
+    flex-shrink: 0;
+}
+
+.cpanel-category-drag-handle:active {
+    cursor: grabbing;
+}
+
+.cpanel-category-toggle {
+    display: flex;
+    align-items: center;
     gap: 0.75rem;
-    padding: 0.85rem 1.1rem;
+    padding: 0.85rem 1.1rem 0.85rem 0.25rem;
     cursor: pointer;
     border: none;
     background: transparent;
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     text-align: left;
     font-family: var(--font-body);
+}
+
+.cpanel-category.dragging {
+    opacity: 0.4;
 }
 
 .cpanel-category-icon {
@@ -529,19 +555,26 @@ html.sidebar-collapsed #sidebar-toggle i {
    de localStorage) — evita o "pisca aberto, fecha" que a versão
    só-JS (classList em DOMContentLoaded) causava, já que aquela só
    rodava depois do HTML inteiro já ter sido pintado uma vez aberto.
-   Lista fixa (só 4 categorias existem na página "Tools" hoje, ver
-   client/hosting-accounts/show.blade.php). */
-html[data-cpanel-collapsed~="site"] .cpanel-category[data-category="site"] .cpanel-category-chevron,
-html[data-cpanel-collapsed~="dominio"] .cpanel-category[data-category="dominio"] .cpanel-category-chevron,
-html[data-cpanel-collapsed~="avancado"] .cpanel-category[data-category="avancado"] .cpanel-category-chevron,
-html[data-cpanel-collapsed~="conta"] .cpanel-category[data-category="conta"] .cpanel-category-chevron {
+   Lista fixa (as 7 categorias da página "Tools", ver
+   client/hosting-accounts/show.blade.php — slugs conferidos via
+   Str::slug() no tinker). */
+html[data-cpanel-collapsed~="e-mail"] .cpanel-category[data-category="e-mail"] .cpanel-category-chevron,
+html[data-cpanel-collapsed~="dominios"] .cpanel-category[data-category="dominios"] .cpanel-category-chevron,
+html[data-cpanel-collapsed~="arquivos"] .cpanel-category[data-category="arquivos"] .cpanel-category-chevron,
+html[data-cpanel-collapsed~="bancos-de-dados"] .cpanel-category[data-category="bancos-de-dados"] .cpanel-category-chevron,
+html[data-cpanel-collapsed~="seguranca"] .cpanel-category[data-category="seguranca"] .cpanel-category-chevron,
+html[data-cpanel-collapsed~="software"] .cpanel-category[data-category="software"] .cpanel-category-chevron,
+html[data-cpanel-collapsed~="avancado"] .cpanel-category[data-category="avancado"] .cpanel-category-chevron {
     transform: rotate(-90deg);
 }
 
-html[data-cpanel-collapsed~="site"] .cpanel-category[data-category="site"] .cpanel-tool-grid,
-html[data-cpanel-collapsed~="dominio"] .cpanel-category[data-category="dominio"] .cpanel-tool-grid,
-html[data-cpanel-collapsed~="avancado"] .cpanel-category[data-category="avancado"] .cpanel-tool-grid,
-html[data-cpanel-collapsed~="conta"] .cpanel-category[data-category="conta"] .cpanel-tool-grid {
+html[data-cpanel-collapsed~="e-mail"] .cpanel-category[data-category="e-mail"] .cpanel-tool-grid,
+html[data-cpanel-collapsed~="dominios"] .cpanel-category[data-category="dominios"] .cpanel-tool-grid,
+html[data-cpanel-collapsed~="arquivos"] .cpanel-category[data-category="arquivos"] .cpanel-tool-grid,
+html[data-cpanel-collapsed~="bancos-de-dados"] .cpanel-category[data-category="bancos-de-dados"] .cpanel-tool-grid,
+html[data-cpanel-collapsed~="seguranca"] .cpanel-category[data-category="seguranca"] .cpanel-tool-grid,
+html[data-cpanel-collapsed~="software"] .cpanel-category[data-category="software"] .cpanel-tool-grid,
+html[data-cpanel-collapsed~="avancado"] .cpanel-category[data-category="avancado"] .cpanel-tool-grid {
     display: none;
 }
 
