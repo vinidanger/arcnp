@@ -257,6 +257,17 @@
     color: #fff;
 }
 
+/* Reset de <button> — o alternador de template do sidebar (client.blade.php)
+   reaproveita a classe .nav-link num <button> (precisa ser form/POST, não
+   link), que sem isso herdaria borda/fundo/fonte padrão do navegador. */
+.app-sidebar button.nav-link {
+    background: transparent;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    font: inherit;
+}
+
 .app-sidebar .nav-link.active {
     background-color: var(--color-accent-wash);
     color: #fff;
