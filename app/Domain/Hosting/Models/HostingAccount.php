@@ -89,6 +89,11 @@ class HostingAccount extends Model
         return $this->hasMany(MalwareScan::class)->latest();
     }
 
+    public function malwareIgnoredFiles(): HasMany
+    {
+        return $this->hasMany(MalwareIgnoredFile::class);
+    }
+
     public function cronJobs(): HasMany
     {
         return $this->hasMany(CronJob::class);

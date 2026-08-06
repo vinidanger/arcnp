@@ -264,6 +264,8 @@ Route::post('hosting-accounts/{hosting_account}/malware/quarantine', [MalwareSca
     ->name('hosting-accounts.malware.quarantine');
 Route::post('hosting-accounts/{hosting_account}/malware/restore', [MalwareScanController::class, 'restore'])
     ->name('hosting-accounts.malware.restore');
+Route::post('hosting-accounts/{hosting_account}/malware/ignore', [MalwareScanController::class, 'ignore'])
+    ->name('hosting-accounts.malware.ignore');
 
 Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
 Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');

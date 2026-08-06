@@ -10,6 +10,7 @@ use App\Domain\Hosting\Models\MalwareScan;
 use App\Domain\Hosting\Services\FolderProtectionService;
 use App\Domain\Hosting\Services\HostingAccountProvisioningService;
 use App\Domain\Hosting\Services\HotlinkProtectionService;
+use App\Domain\Hosting\Services\MalwareScanService;
 use App\Domain\Hosting\Services\MimeTypeService;
 use App\Domain\Hosting\Services\SiteRedirectService;
 use App\Domain\Servers\Models\AgentCredential;
@@ -267,9 +268,49 @@ class AgentWebhookController extends Controller
         }
 
         if ($job->status === 'completed') {
-            $scan->update(['status' => 'completed', 'infected_files' => $job->result['infected_files'] ?? [], 'completed_at' => now()]);
+            $infected = $job->result['infected_files'] ?? [];
 
-            if ($scan->hasInfectedFiles()) {
+            // Cruza contra o que já foi marcado como falso positivo
+            // pra essa conta (MalwareScanService::ignore()) — sem isso,
+            // um arquivo já revisado voltaria a ser quarentenado e
+            // notificado em toda varredura seguinte, já que o ClamAV
+            // continua detectando a mesma assinatura no mesmo lugar.
+            $ignoredPairs = $scan->hostingAccount->malwareIgnoredFiles()
+                ->get(['path', 'signature'])
+                ->map(fn ($f) => $f->path.'|'.$f->signature)
+                ->all();
+
+            foreach ($infected as $i => $file) {
+                if (in_array(($file['path'] ?? '').'|'.($file['signature'] ?? ''), $ignoredPairs, true)) {
+                    $infected[$i]['ignored'] = true;
+                }
+            }
+
+            $scan->update(['status' => 'completed', 'infected_files' => $infected, 'completed_at' => now()]);
+
+            if ($scan->hasActionableInfectedFiles()) {
+                $malwareScanService = app(MalwareScanService::class);
+
+                // Quarentena automática (mesmo comportamento padrão do
+                // Imunify360 real, que roda em cPanel/DirectAdmin) — como
+                // quarentena aqui é sempre reversível (move, não apaga),
+                // o risco de um falso positivo do ClamAV é bem menor do
+                // que deixar malware de verdade no ar até alguém revisar
+                // manualmente. Uma falha em UM arquivo não impede a
+                // quarentena dos outros nem o envio da notificação. Entradas
+                // já marcadas como falso positivo (acima) ficam de fora.
+                foreach ($scan->infected_files ?? [] as $file) {
+                    if (! empty($file['ignored'])) {
+                        continue;
+                    }
+
+                    try {
+                        $malwareScanService->quarantine($scan, $file['path']);
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
+
                 $account = $scan->hostingAccount;
                 $recipients = User::where('type', 'admin')->get();
 
