@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified', 'type:client'])->prefix('cliente')->name(
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/template', [ProfileController::class, 'editTemplate'])->name('profile.template.edit');
     Route::patch('/profile/template', [ProfileController::class, 'updateTemplate'])->name('profile.template.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 

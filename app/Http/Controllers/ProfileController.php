@@ -40,6 +40,17 @@ class ProfileController extends Controller
     }
 
     /**
+     * Página dedicada (link próprio no menu lateral do cliente, ver
+     * layouts/client.blade.php) — antes só existia embutido em Perfil.
+     */
+    public function editTemplate(Request $request): View
+    {
+        abort_unless($request->user()->isClient(), 404);
+
+        return view('profile.template', ['user' => $request->user()]);
+    }
+
+    /**
      * Troca o template visual do painel — só cliente (admin nunca vê
      * essa tela mudar, ver plano). Revalida "não travado" no servidor
      * também, não confia só em esconder o campo na view.
@@ -55,7 +66,7 @@ class ProfileController extends Controller
 
         $request->user()->update(['ui_template' => $data['ui_template']]);
 
-        return Redirect::route('profile.edit')->with('status', 'template-updated');
+        return Redirect::route('profile.template.edit')->with('status', 'template-updated');
     }
 
     /**

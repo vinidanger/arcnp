@@ -167,7 +167,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             // banco que já existe dentro da própria página de Bancos de
             // Dados (esse aqui é o atalho do topo, faz mais sentido
             // mostrar tudo já que não está no contexto de um banco só).
-            $cpanelCategories['Bancos de Dados'][1][] = ['url', route('client.hosting-accounts.databases.phpmyadmin-all', $account), 'bi-box-arrow-up-right', 'phpMyAdmin'];
+            $cpanelCategories['Bancos de Dados'][1][] = ['url', route('client.hosting-accounts.databases.phpmyadmin-all', $account), asset('storage/images/icons/phpmyadmin.png'), 'phpMyAdmin'];
         @endphp
 
         <div class="cpanel-page-title mb-3">{{ __('Tools') }}</div>
@@ -190,7 +190,13 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 @else
                                     <a href="{{ $target }}" target="_blank" rel="noopener" class="cpanel-tool-item" data-tool-label="{{ __($label) }}">
                                 @endif
-                                    <span class="cpanel-tool-icon"><i class="bi {{ $icon }}"></i></span>
+                                    <span class="cpanel-tool-icon">
+                                        @if (str_starts_with($icon, 'bi-'))
+                                            <i class="bi {{ $icon }}"></i>
+                                        @else
+                                            <img src="{{ $icon }}" alt="">
+                                        @endif
+                                    </span>
                                     <span class="cpanel-tool-label">{{ __($label) }}</span>
                                 </a>
                             @endforeach

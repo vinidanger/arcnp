@@ -6,7 +6,7 @@
                 <div class="d-flex gap-2">
                     @if ($account->databases->isNotEmpty())
                         <a href="{{ route('client.hosting-accounts.databases.phpmyadmin-all', $account) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-box-arrow-up-right"></i> {{ __('phpMyAdmin (todos os bancos)') }}
+                            <img src="{{ asset('storage/images/icons/phpmyadmin.png') }}" alt="" class="icon-img-sm"> {{ __('phpMyAdmin (todos os bancos)') }}
                         </a>
                     @endif
                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#add-database-modal">

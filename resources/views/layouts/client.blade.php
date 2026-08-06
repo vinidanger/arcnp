@@ -61,14 +61,9 @@
                         </a>
 
                         @unless (auth()->user()->ui_template_locked)
-                            <form method="POST" action="{{ route('profile.template.update') }}">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="ui_template" value="default">
-                                <button type="submit" class="nav-link" title="{{ __('Usar visual Padrão') }}">
-                                    <i class="bi bi-palette"></i> <span>{{ __('Usar visual Padrão') }}</span>
-                                </button>
-                            </form>
+                            <a href="{{ route('profile.template.edit') }}" class="nav-link {{ request()->routeIs('profile.template.*') ? 'active' : '' }}">
+                                <i class="bi bi-palette"></i> <span>{{ __('Template') }}</span>
+                            </a>
                         @endunless
                     </nav>
                 </aside>
@@ -134,14 +129,9 @@
                         </a>
 
                         @unless (auth()->user()->ui_template_locked)
-                            <form method="POST" action="{{ route('profile.template.update') }}">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="ui_template" value="cpanel">
-                                <button type="submit" class="nav-link" title="{{ __('Usar visual cPanel') }}">
-                                    <i class="bi bi-palette"></i> <span class="sidebar-label">{{ __('Usar visual cPanel') }}</span>
-                                </button>
-                            </form>
+                            <a href="{{ route('profile.template.edit') }}" class="nav-link {{ request()->routeIs('profile.template.*') ? 'active' : '' }}" title="{{ __('Template') }}">
+                                <i class="bi bi-palette"></i> <span class="sidebar-label">{{ __('Template') }}</span>
+                            </a>
                         @endunless
                     </nav>
 
