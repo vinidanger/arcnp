@@ -127,6 +127,18 @@
                                 @if ($installation->status === 'failed' && $installation->error)
                                     <div class="small text-danger mt-1">{{ $installation->error }}</div>
                                 @endif
+                                @if ($installation->catalog_slug === 'wordpress')
+                                    <div class="small text-secondary mt-1">
+                                        @if ($installation->detected_version)
+                                            {{ __('Versão') }}: {{ $installation->detected_version }}
+                                            @unless ($installation->isOutdated())
+                                                <span class="text-success">({{ __('atualizado') }})</span>
+                                            @endunless
+                                        @else
+                                            {{ __('Versão ainda não verificada.') }}
+                                        @endif
+                                    </div>
+                                @endif
                             </td>
                             <td class="text-end">
                                 @if ($installation->status === 'active' && $installation->catalog_slug === 'wordpress')
