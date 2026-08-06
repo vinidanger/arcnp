@@ -3,9 +3,16 @@
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 class="h6 mb-0">{{ __('Bancos de dados') }}</h2>
             @if ($account->status === 'active')
-                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#add-database-modal">
-                    <i class="bi bi-plus-lg"></i> {{ __('Criar banco de dados') }}
-                </button>
+                <div class="d-flex gap-2">
+                    @if ($account->databases->isNotEmpty())
+                        <a href="{{ route('client.hosting-accounts.databases.phpmyadmin-all', $account) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-box-arrow-up-right"></i> {{ __('phpMyAdmin (todos os bancos)') }}
+                        </a>
+                    @endif
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#add-database-modal">
+                        <i class="bi bi-plus-lg"></i> {{ __('Criar banco de dados') }}
+                    </button>
+                </div>
             @endif
         </div>
 

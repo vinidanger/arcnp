@@ -161,14 +161,13 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                 $cpanelCategories['Avançado'][1][] = ['url', $account->server->terminalBaseUrl(), 'bi-terminal-fill', 'Terminal'];
             }
 
-            // phpMyAdmin é por banco (SSO exige saber qual), não um link
-            // genérico — aponta pro primeiro banco da conta quando existe
-            // algum; sem nenhum ainda, cai pra aba "Bancos de Dados" (onde
-            // dá pra criar um e usar o link de SSO de lá).
-            $firstDatabase = $account->databases->first();
-            $cpanelCategories['Bancos de Dados'][1][] = $firstDatabase
-                ? ['url', route('client.hosting-accounts.databases.phpmyadmin', [$account, $firstDatabase]), 'bi-box-arrow-up-right', 'phpMyAdmin']
-                : ['route', 'client.hosting-accounts.databases.index', 'bi-box-arrow-up-right', 'phpMyAdmin'];
+            // SSO via o usuário "mestre" da conta (grant em curinga sobre
+            // todos os bancos, ver HostingAccountController::phpMyAdminSsoAll)
+            // — lista TODOS os bancos de uma vez, diferente do link por
+            // banco que já existe dentro da própria página de Bancos de
+            // Dados (esse aqui é o atalho do topo, faz mais sentido
+            // mostrar tudo já que não está no contexto de um banco só).
+            $cpanelCategories['Bancos de Dados'][1][] = ['url', route('client.hosting-accounts.databases.phpmyadmin-all', $account), 'bi-box-arrow-up-right', 'phpMyAdmin'];
         @endphp
 
         <div class="cpanel-page-title mb-3">{{ __('Tools') }}</div>

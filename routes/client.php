@@ -35,6 +35,8 @@ Route::delete('hosting-accounts/{hosting_account}/databases/{database}', [Hostin
     ->name('hosting-accounts.databases.destroy');
 Route::get('hosting-accounts/{hosting_account}/databases/{database}/phpmyadmin', [HostingAccountController::class, 'phpMyAdminSso'])
     ->name('hosting-accounts.databases.phpmyadmin');
+Route::get('hosting-accounts/{hosting_account}/databases/phpmyadmin', [HostingAccountController::class, 'phpMyAdminSsoAll'])
+    ->name('hosting-accounts.databases.phpmyadmin-all');
 Route::post('hosting-accounts/{hosting_account}/domains', [HostingAccountController::class, 'storeDomain'])
     ->name('hosting-accounts.domains.store');
 Route::delete('hosting-accounts/{hosting_account}/domains/{domain}', [HostingAccountController::class, 'destroyDomain'])

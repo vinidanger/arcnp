@@ -33,6 +33,8 @@ class HostingAccount extends Model
         'disk_alert_sent_at',
         'ssh_enabled',
         'ssh_password',
+        'db_master_username',
+        'db_master_password',
     ];
 
     protected function casts(): array
@@ -46,6 +48,7 @@ class HostingAccount extends Model
             'disk_alert_sent_at' => 'datetime',
             'ssh_enabled' => 'boolean',
             'ssh_password' => 'encrypted',
+            'db_master_password' => 'encrypted',
         ];
     }
 

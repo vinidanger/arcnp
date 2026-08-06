@@ -112,6 +112,12 @@ class HostingAccountProvisioningService
             $this->deleteDatabase($database);
         }
 
+        if ($account->db_master_username) {
+            $this->client->dispatch($account->server, 'database.delete_master_user', [
+                'db_username' => $account->db_master_username,
+            ]);
+        }
+
         foreach ($account->domains as $domain) {
             $this->removeDomain($domain);
         }
@@ -226,6 +232,36 @@ class HostingAccountProvisioningService
             'db_username' => $dbUsername,
             'db_password' => $dbPassword,
         ]);
+    }
+
+    /**
+     * Usuário MySQL "mestre" da conta — sem banco próprio, só um GRANT em
+     * curinga sobre "{linux_username}_%" (todos os bancos da conta).
+     * Criado sob demanda (não no provisionamento, pra não gerar um usuário
+     * MySQL extra em contas que nunca criam banco nenhum) — chamado no
+     * momento em que o cliente pede SSO pro phpMyAdmin "todos os bancos".
+     * Idempotente: se já existe, só devolve a conta como está.
+     */
+    public function ensureMasterDatabaseUser(HostingAccount $account): HostingAccount
+    {
+        if ($account->db_master_username && $account->db_master_password) {
+            return $account;
+        }
+
+        $dbPassword = Str::password(24);
+
+        $this->runStep($account->server, 'database.create_master_user', [
+            'db_prefix' => $account->linux_username,
+            'db_username' => $account->linux_username,
+            'db_password' => $dbPassword,
+        ]);
+
+        $account->update([
+            'db_master_username' => $account->linux_username,
+            'db_master_password' => $dbPassword,
+        ]);
+
+        return $account->fresh();
     }
 
     public function deleteDatabase(HostingDatabase $database): void
