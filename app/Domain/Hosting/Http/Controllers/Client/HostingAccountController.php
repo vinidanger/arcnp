@@ -46,6 +46,38 @@ class HostingAccountController extends Controller
         return view('client.hosting-accounts.show', ['account' => $hosting_account]);
     }
 
+    /**
+     * Página própria (template cPanel) pro que hoje é uma aba dentro de
+     * show() no template Padrão — mesmo conteúdo, via partial
+     * compartilhada (ver resources/views/client/hosting-accounts/partials).
+     */
+    public function domainsIndex(HostingAccount $hosting_account)
+    {
+        $this->authorize('view', $hosting_account);
+
+        $hosting_account->load(['domains']);
+
+        return view('client.hosting-accounts.domains.index', ['account' => $hosting_account]);
+    }
+
+    public function databasesIndex(HostingAccount $hosting_account)
+    {
+        $this->authorize('view', $hosting_account);
+
+        $hosting_account->load(['databases']);
+
+        return view('client.hosting-accounts.databases.index', ['account' => $hosting_account]);
+    }
+
+    public function backupsIndex(HostingAccount $hosting_account)
+    {
+        $this->authorize('view', $hosting_account);
+
+        $hosting_account->load(['plan', 'backups']);
+
+        return view('client.hosting-accounts.backups.index', ['account' => $hosting_account]);
+    }
+
     public function phpMyAdminSso(HostingAccount $hosting_account, HostingDatabase $database)
     {
         $this->authorize('update', $hosting_account);

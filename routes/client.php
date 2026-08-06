@@ -23,6 +23,12 @@ use Illuminate\Support\Facades\Route;
 Route::resource('hosting-accounts', HostingAccountController::class)->only(['index', 'show']);
 Route::post('hosting-accounts/{hosting_account}/ssl', [HostingAccountController::class, 'issueSsl'])
     ->name('hosting-accounts.ssl.store');
+Route::get('hosting-accounts/{hosting_account}/domains', [HostingAccountController::class, 'domainsIndex'])
+    ->name('hosting-accounts.domains.index');
+Route::get('hosting-accounts/{hosting_account}/databases', [HostingAccountController::class, 'databasesIndex'])
+    ->name('hosting-accounts.databases.index');
+Route::get('hosting-accounts/{hosting_account}/backups', [HostingAccountController::class, 'backupsIndex'])
+    ->name('hosting-accounts.backups.index');
 Route::post('hosting-accounts/{hosting_account}/databases', [HostingAccountController::class, 'createDatabase'])
     ->name('hosting-accounts.databases.store');
 Route::delete('hosting-accounts/{hosting_account}/databases/{database}', [HostingAccountController::class, 'deleteDatabase'])
