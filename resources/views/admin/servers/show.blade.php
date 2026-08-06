@@ -177,7 +177,7 @@ AGENT_PANEL_BASE_URL={{ url('/') }}</pre>
         </div>
 
         <div class="col-md-6">
-            <div class="card h-100">
+            <div class="card">
                 <div class="card-body">
                     <h2 class="h6">{{ __('Serviços') }}</h2>
 
