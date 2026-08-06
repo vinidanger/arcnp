@@ -43,6 +43,11 @@ class StatusLabel
         'low' => 'Baixa',
         'normal' => 'Normal',
         'high' => 'Alta',
+
+        // hosting_accounts.uptime_status / domains.uptime_status
+        'up' => 'No ar',
+        'down' => 'Fora do ar',
+        'unknown' => 'Ainda não checado',
     ];
 
     public static function translate(?string $value): string

@@ -26,6 +26,7 @@ use App\Domain\Servers\Http\Controllers\Admin\SecurityController;
 use App\Domain\Servers\Http\Controllers\Admin\ServerController;
 use App\Domain\Support\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,8 @@ Route::get('api-clients-docs', [ApiClientController::class, 'docs'])->name('api-
 
 Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
 Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+
+Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
 Route::resource('servers', ServerController::class);
 Route::post('servers/{server}/regenerate-credential', [ServerController::class, 'regenerateCredential'])

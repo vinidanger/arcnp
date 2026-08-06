@@ -269,6 +269,11 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         <dd class="col-sm-9">
                             <x-ssl-info :model="$account" />
                         </dd>
+
+                        <dt class="col-sm-3">{{ __('Disponibilidade') }}</dt>
+                        <dd class="col-sm-9">
+                            <x-uptime-badge :model="$account" />
+                        </dd>
                     </dl>
                 </div>
             </div>
@@ -433,6 +438,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                     <th>{{ __('Document root') }}</th>
                                     <th>{{ __('Status') }}</th>
                                     <th>{{ __('SSL') }}</th>
+                                    <th>{{ __('Disponibilidade') }}</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -461,6 +467,9 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                     </td>
                                     <td>
                                         <x-ssl-info :model="$account" />
+                                    </td>
+                                    <td>
+                                        <x-uptime-badge :model="$account" />
                                     </td>
                                     <td class="text-end">
                                         <a href="{{ route('admin.hosting-accounts.php.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>
@@ -507,6 +516,9 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                             </td>
                                             <td>
                                                 <x-ssl-info :model="$domain" />
+                                            </td>
+                                            <td>
+                                                <x-uptime-badge :model="$domain" />
                                             </td>
                                             <td class="text-end">
                                                 <a href="{{ route('admin.hosting-accounts.domains.php.index', [$account, $domain]) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>

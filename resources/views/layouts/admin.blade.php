@@ -59,6 +59,9 @@
                     <a href="{{ route('admin.settings.edit') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" title="{{ __('Configurações') }}">
                         <i class="bi bi-gear"></i> <span class="sidebar-label">{{ __('Configurações') }}</span>
                     </a>
+                    <a href="{{ route('admin.audit-logs.index') }}" class="nav-link {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}" title="{{ __('Log de auditoria') }}">
+                        <i class="bi bi-journal-text"></i> <span class="sidebar-label">{{ __('Log de auditoria') }}</span>
+                    </a>
                 </nav>
 
                 @include('layouts.partials.sidebar-user')

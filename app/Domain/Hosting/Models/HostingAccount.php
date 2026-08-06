@@ -37,6 +37,11 @@ class HostingAccount extends Model
         'db_master_username',
         'db_master_password',
         'waf_enabled',
+        'uptime_status',
+        'uptime_checked_at',
+        'uptime_consecutive_failures',
+        'uptime_down_since',
+        'uptime_alert_sent_at',
     ];
 
     protected function casts(): array
@@ -52,6 +57,9 @@ class HostingAccount extends Model
             'ssh_password' => 'encrypted',
             'db_master_password' => 'encrypted',
             'waf_enabled' => 'boolean',
+            'uptime_checked_at' => 'datetime',
+            'uptime_down_since' => 'datetime',
+            'uptime_alert_sent_at' => 'datetime',
         ];
     }
 

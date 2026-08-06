@@ -23,6 +23,11 @@ class Domain extends Model
         'ssl_issued_at',
         'ssl_expires_at',
         'waf_enabled',
+        'uptime_status',
+        'uptime_checked_at',
+        'uptime_consecutive_failures',
+        'uptime_down_since',
+        'uptime_alert_sent_at',
     ];
 
     protected function casts(): array
@@ -32,6 +37,9 @@ class Domain extends Model
             'ssl_issued_at' => 'datetime',
             'ssl_expires_at' => 'datetime',
             'waf_enabled' => 'boolean',
+            'uptime_checked_at' => 'datetime',
+            'uptime_down_since' => 'datetime',
+            'uptime_alert_sent_at' => 'datetime',
         ];
     }
 

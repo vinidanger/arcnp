@@ -18,6 +18,7 @@
                         <th>{{ __('Document root') }}</th>
                         <th>{{ __('Status') }}</th>
                         <th>{{ __('SSL') }}</th>
+                        <th>{{ __('Disponibilidade') }}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -46,6 +47,9 @@
                         </td>
                         <td>
                             <x-ssl-info :model="$account" />
+                        </td>
+                        <td>
+                            <x-uptime-badge :model="$account" />
                         </td>
                         <td class="text-end">
                             <a href="{{ route('client.hosting-accounts.php.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>
@@ -92,6 +96,9 @@
                             </td>
                             <td>
                                 <x-ssl-info :model="$domain" />
+                            </td>
+                            <td>
+                                <x-uptime-badge :model="$domain" />
                             </td>
                             <td class="text-end">
                                 <a href="{{ route('client.hosting-accounts.domains.php.index', [$account, $domain]) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>

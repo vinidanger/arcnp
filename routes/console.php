@@ -15,3 +15,4 @@ Schedule::command('ssl:renew')->daily();
 Schedule::command('server-metrics:prune')->daily();
 Schedule::command('security:scan-accounts')->daily();
 Schedule::command('security:check-cms-versions')->daily();
+Schedule::command('uptime:check')->everyFiveMinutes();
