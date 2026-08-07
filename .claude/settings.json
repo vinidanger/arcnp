@@ -111,7 +111,9 @@
       "Bash(npm uninstall *)",
       "Bash(xargs -I{} grep -oE \"data-bs-toggle=\\\\\"[a-z]+\\\\\"\" {})",
       "Bash(node_modules/.bin/tailwindcss -i /tmp/app-test.css -o /tmp/app-out.css)",
-      "Bash(node_modules/.bin/tailwindcss -i resources/css/app.css -o /tmp/app-out.css --cwd .)"
+      "Bash(node_modules/.bin/tailwindcss -i resources/css/app.css -o /tmp/app-out.css --cwd .)",
+      "Bash(grep -n \"phpMyAdminSso\\\\b\\\\|use App\\\\\\\\\\\\\\\\\" app/Domain/Hosting/Http/Controllers/Admin/HostingAccountController.php)",
+      "Bash(php \"C:\\\\Users\\\\vinic\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-arcnp\\\\36ea85ae-40df-4301-b2a8-183ed637f0dd\\\\scratchpad\\\\test_render_admin_quicklinks.php\")"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

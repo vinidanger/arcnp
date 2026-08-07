@@ -73,6 +73,8 @@ Route::delete('hosting-accounts/{hosting_account}/databases/{database}', [Hostin
     ->name('hosting-accounts.databases.destroy');
 Route::get('hosting-accounts/{hosting_account}/databases/{database}/phpmyadmin', [HostingAccountController::class, 'phpMyAdminSso'])
     ->name('hosting-accounts.databases.phpmyadmin');
+Route::get('hosting-accounts/{hosting_account}/databases/phpmyadmin', [HostingAccountController::class, 'phpMyAdminSsoAll'])
+    ->name('hosting-accounts.databases.phpmyadmin-all');
 Route::post('hosting-accounts/{hosting_account}/ssl', [HostingAccountController::class, 'issueSsl'])
     ->name('hosting-accounts.ssl.store');
 Route::post('hosting-accounts/{hosting_account}/waf', [HostingAccountController::class, 'updateWaf'])

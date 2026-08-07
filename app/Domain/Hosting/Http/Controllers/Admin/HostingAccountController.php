@@ -168,6 +168,28 @@ class HostingAccountController extends Controller
         return redirect()->away($server->phpMyAdminBaseUrl().'/sso-login.php?token='.urlencode($token));
     }
 
+    /**
+     * SSO via o usuário "mestre" da conta (GRANT em curinga sobre todos
+     * os bancos, ver ensureMasterDatabaseUser) — diferente de
+     * phpMyAdminSso() acima, que loga como o usuário dedicado de UM banco
+     * só. Usado pelo atalho de phpMyAdmin no topo da grade de ferramentas,
+     * onde faz mais sentido listar tudo de uma vez. Espelha
+     * Client\HostingAccountController::phpMyAdminSsoAll().
+     */
+    public function phpMyAdminSsoAll(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $hosting_account = $provisioning->ensureMasterDatabaseUser($hosting_account);
+
+        $server = $hosting_account->server;
+        $secret = $server->currentCredential->shared_secret;
+
+        $token = DatabaseSsoToken::generate($hosting_account->db_master_username, $hosting_account->db_master_password, $secret);
+
+        return redirect()->away($server->phpMyAdminBaseUrl().'/sso-login.php?token='.urlencode($token));
+    }
+
     public function issueSsl(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);

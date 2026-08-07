@@ -279,140 +279,93 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             </div>
 
             @if ($account->status === 'active')
+                @php
+                    // Mesmo padrão/agrupamento já usado na versão cliente
+                    // (ver client/hosting-accounts/show.blade.php) — cada
+                    // item é [tipo, alvo, ícone, rótulo]. "tab" troca pra
+                    // uma aba que já existe NESTA MESMA página (nav-tabs
+                    // no topo — Domínios/Bancos de Dados/Backups).
+                    $adminToolCategories = [
+                        'Site' => [
+                            ['route', 'admin.hosting-accounts.files.index', 'bi-folder2-open', 'Arquivos'],
+                            ['route', 'admin.hosting-accounts.php.index', 'bi-filetype-php', 'PHP'],
+                            ['route', 'admin.hosting-accounts.apps.index', 'bi-cpu', 'Apps'],
+                            ['route', 'admin.hosting-accounts.installer.index', 'bi-box-seam', 'Instalador'],
+                            ['route', 'admin.hosting-accounts.mime-types.index', 'bi-file-earmark-code', 'MIME Types'],
+                        ],
+                        'Domínio' => [
+                            ['tab', '#tab-domains', 'bi-globe2', 'Domínios'],
+                            ['route', 'admin.hosting-accounts.dns.index', 'bi-hdd-network', 'DNS'],
+                            ['route', 'admin.hosting-accounts.redirects.index', 'bi-signpost-split', 'Redirecionamentos'],
+                        ],
+                        'Banco de dados' => [
+                            ['tab', '#tab-databases', 'bi-database', 'Bancos de Dados'],
+                            ['url', route('admin.hosting-accounts.databases.phpmyadmin-all', $account), asset('storage/images/icons/phpmyadmin.png'), 'phpMyAdmin'],
+                            ['tab', '#tab-backups', 'bi-archive', 'Backups'],
+                        ],
+                        'E-mail' => [
+                            ['route', 'admin.hosting-accounts.mail.index', 'bi-envelope', 'E-mail'],
+                            ['route', 'admin.hosting-accounts.mail-log.index', 'bi-envelope-paper', 'Rastrear e-mails'],
+                        ],
+                        'Segurança' => [
+                            ['route', 'admin.hosting-accounts.protected-folders.index', 'bi-shield-lock', 'Proteção de pasta'],
+                            ['route', 'admin.hosting-accounts.hotlink-protection.index', 'bi-link-45deg', 'Proteção Hotlink'],
+                            ['route', 'admin.hosting-accounts.malware.index', 'bi-bug', 'Malware'],
+                        ],
+                        'Avançado' => [
+                            ['route', 'admin.hosting-accounts.ssh.index', 'bi-terminal', 'SSH'],
+                            ['route', 'admin.hosting-accounts.cron.index', 'bi-clock-history', 'Cron'],
+                            ['route', 'admin.hosting-accounts.ftp.index', 'bi-hdd-network', 'FTP'],
+                            ['terminal', null, 'bi-terminal-fill', 'Terminal'],
+                            ['route', 'admin.hosting-accounts.logs.index', 'bi-file-text', 'Logs'],
+                            ['route', 'admin.hosting-accounts.resources.index', 'bi-speedometer2', 'Recursos'],
+                        ],
+                    ];
+                @endphp
+
                 <div class="mt-3 mb-2 small text-uppercase text-secondary fw-semibold" style="letter-spacing: .04em;">{{ __('Acesso rápido') }}</div>
 
-                <div class="mb-3">
-                    <div class="small text-secondary mb-2">{{ __('Site') }}</div>
-                    <div class="row g-3">
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.files.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-folder2-open"></i></span>
-                                <div class="fw-semibold small">{{ __('Arquivos') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.php.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-filetype-php"></i></span>
-                                <div class="fw-semibold small">{{ __('PHP') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.protected-folders.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-shield-lock"></i></span>
-                                <div class="fw-semibold small">{{ __('Proteção de pasta') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.redirects.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-signpost-split"></i></span>
-                                <div class="fw-semibold small">{{ __('Redirecionamentos') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.hotlink-protection.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-link-45deg"></i></span>
-                                <div class="fw-semibold small">{{ __('Proteção Hotlink') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.logs.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-file-text"></i></span>
-                                <div class="fw-semibold small">{{ __('Logs') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.apps.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-cpu"></i></span>
-                                <div class="fw-semibold small">{{ __('Apps') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.installer.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-box-seam"></i></span>
-                                <div class="fw-semibold small">{{ __('Instalador') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.mime-types.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-file-earmark-code"></i></span>
-                                <div class="fw-semibold small">{{ __('MIME Types') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.malware.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-bug"></i></span>
-                                <div class="fw-semibold small">{{ __('Malware') }}</div>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <div class="small text-secondary mb-2">{{ __('Domínio') }}</div>
-                    <div class="row g-3">
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.dns.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-globe2"></i></span>
-                                <div class="fw-semibold small">{{ __('DNS') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.mail.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-envelope"></i></span>
-                                <div class="fw-semibold small">{{ __('E-mail') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.mail-log.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-envelope-paper"></i></span>
-                                <div class="fw-semibold small">{{ __('Rastrear e-mails') }}</div>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="small text-secondary mb-2">{{ __('Avançado') }}</div>
-                    <div class="row g-3">
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.ssh.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-terminal"></i></span>
-                                <div class="fw-semibold small">{{ __('SSH') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.cron.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-clock-history"></i></span>
-                                <div class="fw-semibold small">{{ __('Cron') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.ftp.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-hdd-network"></i></span>
-                                <div class="fw-semibold small">{{ __('FTP') }}</div>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            @if ($account->ssh_enabled)
-                                <a href="{{ $account->server->terminalBaseUrl() }}" target="_blank" rel="noopener" class="quick-link-card" title="{{ __('No terminal, use o usuário: ').$account->linux_username }}">
-                                    <span class="quick-link-icon"><i class="bi bi-terminal-fill"></i></span>
-                                    <div class="fw-semibold small">{{ __('Terminal') }}</div>
-                                </a>
-                            @else
-                                <div class="quick-link-card text-secondary" style="opacity: .5;" title="{{ __('Ative o acesso SSH primeiro.') }}">
-                                    <span class="quick-link-icon"><i class="bi bi-terminal-fill"></i></span>
-                                    <div class="fw-semibold small">{{ __('Terminal') }}</div>
+                @foreach ($adminToolCategories as $categoryName => $tools)
+                    <div class="mb-3">
+                        <div class="small text-secondary mb-2">{{ __($categoryName) }}</div>
+                        <div class="row g-3">
+                            @foreach ($tools as [$type, $target, $icon, $label])
+                                <div class="col-6 col-md-3 col-lg-2">
+                                    @if ($type === 'terminal')
+                                        @if ($account->ssh_enabled)
+                                            <a href="{{ $account->server->terminalBaseUrl() }}" target="_blank" rel="noopener" class="quick-link-card" title="{{ __('No terminal, use o usuário: ').$account->linux_username }}">
+                                                <span class="quick-link-icon"><i class="bi {{ $icon }}"></i></span>
+                                                <div class="fw-semibold small">{{ __($label) }}</div>
+                                            </a>
+                                        @else
+                                            <div class="quick-link-card text-secondary" style="opacity: .5;" title="{{ __('Ative o acesso SSH primeiro.') }}">
+                                                <span class="quick-link-icon"><i class="bi {{ $icon }}"></i></span>
+                                                <div class="fw-semibold small">{{ __($label) }}</div>
+                                            </div>
+                                        @endif
+                                    @else
+                                        @if ($type === 'route')
+                                            <a href="{{ route($target, $account) }}" class="quick-link-card">
+                                        @elseif ($type === 'tab')
+                                            <a href="{{ $target }}" data-bs-toggle="tab" data-bs-target="{{ $target }}" class="quick-link-card">
+                                        @else
+                                            <a href="{{ $target }}" target="_blank" rel="noopener" class="quick-link-card">
+                                        @endif
+                                            <span class="quick-link-icon">
+                                                @if (str_starts_with($icon, 'bi-'))
+                                                    <i class="bi {{ $icon }}"></i>
+                                                @else
+                                                    <img src="{{ $icon }}" alt="" style="width: 1.05rem; height: 1.05rem;">
+                                                @endif
+                                            </span>
+                                            <div class="fw-semibold small">{{ __($label) }}</div>
+                                        </a>
+                                    @endif
                                 </div>
-                            @endif
-                        </div>
-                        <div class="col-6 col-md-3 col-lg-2">
-                            <a href="{{ route('admin.hosting-accounts.resources.index', $account) }}" class="quick-link-card">
-                                <span class="quick-link-icon"><i class="bi bi-speedometer2"></i></span>
-                                <div class="fw-semibold small">{{ __('Recursos') }}</div>
-                            </a>
+                            @endforeach
                         </div>
                     </div>
-                </div>
+                @endforeach
             @endif
         </div>
 

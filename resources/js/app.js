@@ -131,13 +131,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const group = button.closest('.nav-tabs');
         const paneGroup = target.parentElement;
 
-        group?.querySelectorAll('.nav-link').forEach((btn) => btn.classList.remove('active'));
-        paneGroup?.querySelectorAll(':scope > .tab-pane').forEach((pane) => pane.classList.remove('active', 'show'));
+        // Sincroniza TODO trigger pra esse alvo na página inteira (não só
+        // os que ficam dentro da mesma .nav-tabs do botão clicado) — sem
+        // isso, disparar a troca por um atalho fora da barra de abas (ex.:
+        // um tile da grade "Acesso rápido" apontando pra "#tab-domains")
+        // trocava o conteúdo certo, mas a barra de abas de verdade nunca
+        // destacava a aba correspondente.
+        document.querySelectorAll('[data-bs-toggle="tab"][data-bs-target^="#tab-"]').forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.bsTarget === targetSelector);
+        });
 
-        button.classList.add('active');
+        paneGroup?.querySelectorAll(':scope > .tab-pane').forEach((pane) => pane.classList.remove('active', 'show'));
         target.classList.add('active', 'show');
     }
 
