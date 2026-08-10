@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Api\Http\Controllers\Admin\ApiClientController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\ProfileController;
@@ -9,6 +10,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
+// Pública de propósito — quem for integrar com a API não precisa ter
+// conta no Painel só pra ler a documentação ou copiar o prompt de IA.
+// As rotas da API em si continuam exigindo token (ver routes/api-v1.php);
+// isto aqui é só a PÁGINA de documentação.
+Route::get('/api-docs', [ApiClientController::class, 'publicDocs'])->name('api-docs');
 
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
     return redirect()->route(auth()->user()->isAdmin() ? 'admin.dashboard' : 'client.dashboard');

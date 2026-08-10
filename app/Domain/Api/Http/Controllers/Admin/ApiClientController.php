@@ -26,6 +26,17 @@ class ApiClientController extends Controller
     }
 
     /**
+     * Espelho de docs() sem exigir login — pensado pra ser compartilhado
+     * com quem vai desenvolver a integração (não precisa ter conta no
+     * Painel só pra ler a documentação ou copiar o prompt de IA). Rota
+     * registrada fora de qualquer grupo autenticado, ver routes/web.php.
+     */
+    public function publicDocs()
+    {
+        return view('api-docs.index', ['endpoints' => $this->apiEndpointCatalog()]);
+    }
+
+    /**
      * Fonte única dos endpoints — usada pelo gerador de prompt de
      * integração (docs.blade.php), pra nunca ficar fora de sincronia
      * com o que routes/api-v1.php de fato expõe. Mesmo agrupamento/
