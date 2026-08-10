@@ -50,6 +50,58 @@ Accept: application/json</pre>
         </div>
     </div>
 
+    <div class="card mb-4 border-primary">
+        <div class="card-body">
+            <h2 class="h6">{{ __('Prompt pronto pra integrar com IA') }}</h2>
+            <p class="small text-secondary mb-3">
+                {{ __('Copie o texto abaixo e cole na IA que você usa pra desenvolver (Claude, ChatGPT, Cursor etc.) — ela recebe o contexto da API pronto pra implementar a integração no seu sistema. Desmarque o que não quiser incluir; por padrão vai tudo.') }}
+            </p>
+
+            <div class="d-flex gap-2 mb-2">
+                <button type="button" id="ai-select-all" class="btn btn-sm btn-outline-secondary">{{ __('Selecionar todos') }}</button>
+                <button type="button" id="ai-select-none" class="btn btn-sm btn-outline-secondary">{{ __('Selecionar nenhum') }}</button>
+            </div>
+
+            @php
+                // groupBy() reindexa DENTRO de cada grupo (não preserva o
+                // índice original) — sem isso, checkboxes de grupos
+                // diferentes acabariam com o mesmo "value" e o JS
+                // (endpoints[value]) pegaria o item errado. Marca o
+                // índice real no array plano ANTES de agrupar.
+                $indexedEndpoints = collect($endpoints)->map(fn ($endpoint, $i) => $endpoint + ['index' => $i]);
+            @endphp
+            <div class="row mb-3">
+                @foreach ($indexedEndpoints->groupBy('group') as $groupName => $groupEndpoints)
+                    <div class="col-md-6 mb-2">
+                        <div class="fw-semibold small mb-1">{{ $groupName }}</div>
+                        @foreach ($groupEndpoints as $endpoint)
+                            @php
+                                $methodBadge = match ($endpoint['method']) {
+                                    'GET' => 'success',
+                                    'DELETE' => 'danger',
+                                    default => 'primary',
+                                };
+                            @endphp
+                            <div class="form-check">
+                                <input class="form-check-input ai-endpoint-checkbox" type="checkbox" value="{{ $endpoint['index'] }}" id="ai-ep-{{ $endpoint['index'] }}" checked>
+                                <label class="form-check-label small" for="ai-ep-{{ $endpoint['index'] }}">
+                                    <span class="badge text-bg-{{ $methodBadge }} me-1" style="font-size: .65rem;">{{ $endpoint['method'] }}</span>
+                                    <code>{{ $endpoint['path'] }}</code>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="ai-prompt-textarea" class="small text-secondary mb-0">{{ __('Prompt gerado') }}</label>
+                <button type="button" id="ai-prompt-copy" class="btn btn-sm btn-primary">{{ __('Copiar prompt') }}</button>
+            </div>
+            <textarea id="ai-prompt-textarea" class="form-control font-monospace small" rows="10" readonly></textarea>
+        </div>
+    </div>
+
     <h2 class="h5 mt-4 mb-3">{{ __('Descoberta') }}</h2>
 
     <div class="card mb-3">
@@ -483,4 +535,71 @@ Accept: application/json</pre>
             <p class="small text-secondary mt-2 mb-0">{{ __('Formato de "data" é o que o Agent devolve (uso de CPU/memória/processos) — pode variar por versão do Agent.') }}</p>
         </div>
     </div>
+
+    <script>
+        (function () {
+            const endpoints = @json(collect($endpoints)->values());
+            const baseUrl = @json($base);
+            const checkboxes = document.querySelectorAll('.ai-endpoint-checkbox');
+            const textarea = document.getElementById('ai-prompt-textarea');
+            const copyBtn = document.getElementById('ai-prompt-copy');
+
+            function buildPrompt() {
+                const selected = Array.from(checkboxes)
+                    .filter((cb) => cb.checked)
+                    .map((cb) => endpoints[parseInt(cb.value, 10)]);
+
+                if (selected.length === 0) {
+                    textarea.value = '{{ __('Selecione ao menos um endpoint acima.') }}';
+                    return;
+                }
+
+                const lines = [];
+                lines.push('Quero integrar minha aplicação com a API do Arcn Painel (hospedagem), v1.');
+                lines.push('');
+                lines.push('URL base: ' + baseUrl);
+                lines.push('Autenticação: header "Authorization: Bearer SEU_TOKEN" (gerado em Admin > Integrações de API) + "Accept: application/json" em toda requisição.');
+                lines.push('Limite de requisições: 60 por minuto por token — trate HTTP 429 (esperar e repetir).');
+                lines.push('Erros: HTTP 422 (validação ou falha ao executar) e 404 (recurso inexistente) trazem { "message": "..." }; 422 de validação também traz "errors" por campo.');
+                lines.push('Paginação: só "GET /hosting-accounts" é paginada (query "page"/"per_page", máximo 100) — resposta com "data"/"links"/"meta".');
+                lines.push('Nunca exponha nem guarde o token em código-cliente/frontend público — mantenha só no backend.');
+                lines.push('');
+                lines.push('Implemente a integração cobrindo estes ' + selected.length + ' endpoint(s):');
+                lines.push('');
+
+                let currentGroup = null;
+                selected.forEach((ep) => {
+                    if (ep.group !== currentGroup) {
+                        currentGroup = ep.group;
+                        lines.push('## ' + currentGroup);
+                    }
+                    lines.push('- ' + ep.method + ' ' + baseUrl + ep.path + ' — ' + ep.summary);
+                });
+
+                textarea.value = lines.join('\n');
+            }
+
+            checkboxes.forEach((cb) => cb.addEventListener('change', buildPrompt));
+
+            document.getElementById('ai-select-all').addEventListener('click', () => {
+                checkboxes.forEach((cb) => { cb.checked = true; });
+                buildPrompt();
+            });
+
+            document.getElementById('ai-select-none').addEventListener('click', () => {
+                checkboxes.forEach((cb) => { cb.checked = false; });
+                buildPrompt();
+            });
+
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(textarea.value).then(() => {
+                    const original = copyBtn.textContent;
+                    copyBtn.textContent = '{{ __('Copiado!') }}';
+                    setTimeout(() => { copyBtn.textContent = original; }, 1500);
+                });
+            });
+
+            buildPrompt();
+        })();
+    </script>
 </x-admin-layout>
