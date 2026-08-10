@@ -525,7 +525,6 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
 
     @unless ($uiTemplate === 'cpanel')
         @include('client.hosting-accounts.partials._add-domain-modal')
-        @include('client.hosting-accounts.partials._staging-clone-modal')
         @include('client.hosting-accounts.partials._add-database-modal')
     @endunless
 </x-client-layout>

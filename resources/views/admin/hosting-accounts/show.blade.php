@@ -382,14 +382,9 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h2 class="h6 mb-0">{{ __('Domínios adicionais / subdomínios') }}</h2>
                         @if ($account->status === 'active')
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#staging-clone-modal">
-                                    <i class="bi bi-files"></i> {{ __('Criar cópia de teste (staging)') }}
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#add-domain-modal">
-                                    <i class="bi bi-plus-lg"></i> {{ __('Adicionar domínio') }}
-                                </button>
-                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#add-domain-modal">
+                                <i class="bi bi-plus-lg"></i> {{ __('Adicionar domínio') }}
+                            </button>
                         @endif
                     </div>
 
@@ -449,12 +444,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                                 </tr>
                                 @foreach ($account->domains as $domain)
                                         <tr>
-                                            <td>
-                                                {{ $domain->domain }}
-                                                @if ($domain->is_staging)
-                                                    <span class="badge text-bg-warning" title="{{ __('Cópia de teste — não sincroniza com produção') }}">{{ __('STAGING') }}</span>
-                                                @endif
-                                            </td>
+                                            <td>{{ $domain->domain }}</td>
                                             <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
                                             <td>
                                                 @php
@@ -704,34 +694,6 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
                 <button type="submit" class="btn btn-primary">{{ __('Adicionar') }}</button>
-            </div>
-        </form>
-    </x-modal>
-
-    {{-- Modal: clonar site pra staging --}}
-    <x-modal name="staging-clone-modal" maxWidth="sm" :show="$errors->has('subdomain_label')">
-        <form method="POST" action="{{ route('admin.hosting-accounts.domains.staging-clone.store', $account) }}">
-            @csrf
-            <div class="modal-header">
-                <h5 class="modal-title">{{ __('Criar cópia de teste (staging)') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="small text-secondary">
-                    {{ __('Cria um subdomínio novo com uma cópia dos arquivos (e do banco de dados, se houver) do domínio principal. É um retrato do momento atual — não sincroniza depois, é só pra testar.') }}
-                </p>
-                <div class="mb-0">
-                    <x-input-label for="subdomain-label" value="{{ __('Prefixo do subdomínio') }}" class="small mb-1" />
-                    <div class="input-group">
-                        <x-text-input id="subdomain-label" name="subdomain_label" type="text" value="staging" required autofocus />
-                        <span class="input-group-text">.{{ $account->primary_domain }}</span>
-                    </div>
-                    <x-input-error :messages="$errors->get('subdomain_label')" class="mt-2" />
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
-                <button type="submit" class="btn btn-primary">{{ __('Criar cópia') }}</button>
             </div>
         </form>
     </x-modal>

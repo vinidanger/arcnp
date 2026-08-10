@@ -3,14 +3,9 @@
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 class="h6 mb-0">{{ __('Domínios adicionais / subdomínios') }}</h2>
             @if ($account->status === 'active')
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#staging-clone-modal">
-                        <i class="bi bi-files"></i> {{ __('Criar cópia de teste (staging)') }}
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#add-domain-modal">
-                        <i class="bi bi-plus-lg"></i> {{ __('Adicionar domínio') }}
-                    </button>
-                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#add-domain-modal">
+                    <i class="bi bi-plus-lg"></i> {{ __('Adicionar domínio') }}
+                </button>
             @endif
         </div>
 
@@ -70,12 +65,7 @@
                     </tr>
                     @foreach ($account->domains as $domain)
                         <tr>
-                            <td>
-                                {{ $domain->domain }}
-                                @if ($domain->is_staging)
-                                    <span class="badge text-bg-warning" title="{{ __('Cópia de teste — não sincroniza com produção') }}">{{ __('STAGING') }}</span>
-                                @endif
-                            </td>
+                            <td>{{ $domain->domain }}</td>
                             <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
                             <td>
                                 @php

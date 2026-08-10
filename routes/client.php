@@ -47,8 +47,6 @@ Route::post('hosting-accounts/{hosting_account}/domains', [HostingAccountControl
     ->name('hosting-accounts.domains.store');
 Route::delete('hosting-accounts/{hosting_account}/domains/{domain}', [HostingAccountController::class, 'destroyDomain'])
     ->name('hosting-accounts.domains.destroy');
-Route::post('hosting-accounts/{hosting_account}/domains/staging-clone', [HostingAccountController::class, 'storeStagingClone'])
-    ->name('hosting-accounts.domains.staging-clone.store');
 Route::patch('hosting-accounts/{hosting_account}/public-path', [HostingAccountController::class, 'updatePublicPath'])
     ->name('hosting-accounts.public-path.update');
 Route::patch('hosting-accounts/{hosting_account}/domains/{domain}/public-path', [HostingAccountController::class, 'updateDomainPublicPath'])

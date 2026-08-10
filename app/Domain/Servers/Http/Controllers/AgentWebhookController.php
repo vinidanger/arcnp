@@ -76,10 +76,6 @@ class AgentWebhookController extends Controller
             $this->applyMalwareScanResult($job);
         }
 
-        if ($job->action === 'database.clone') {
-            $this->applyDatabaseCloneResult($job);
-        }
-
         if ($job->action === 'ssl.renew_all' && $job->status === 'completed') {
             $this->applySslRenewResult($job);
         }
@@ -327,28 +323,6 @@ class AgentWebhookController extends Controller
         } elseif ($job->status === 'failed') {
             $scan->update(['status' => 'failed', 'error' => $job->error, 'completed_at' => now()]);
         }
-    }
-
-    /**
-     * Clone de staging (item 3) — usa o id do Domain de staging embutido
-     * no payload original (mesmo padrão de applyBackupResult()/backup_id).
-     * Sucesso não precisa fazer nada (o arquivo/wp-config já foram
-     * ajustados de forma síncrona antes do dispatch); falha marca o
-     * domínio como erro, já que só é descoberta depois — o clone de
-     * arquivos/DB já tinham sido criados síncronos até aqui.
-     */
-    private function applyDatabaseCloneResult(AgentJob $job): void
-    {
-        $domainId = $job->payload['staging_domain_id'] ?? null;
-
-        if (! $domainId || $job->status !== 'failed') {
-            return;
-        }
-
-        Domain::whereKey($domainId)->update([
-            'status' => 'error',
-            'last_error' => 'Falha ao clonar os dados do banco: '.($job->error ?? 'erro desconhecido'),
-        ]);
     }
 
     /**
