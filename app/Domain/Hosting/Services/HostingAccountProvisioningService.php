@@ -353,6 +353,7 @@ class HostingAccountProvisioningService
                     $this->runStep($account->server, 'app.rewrite_wp_config_db', [
                         'username' => $account->linux_username,
                         'dest_domain' => $stagingDomainName,
+                        'dest_subdir' => $wordpressInstallation->path,
                         'db_name' => $stagingDatabase->db_name,
                         'db_username' => $stagingDatabase->db_username,
                         'db_password' => $stagingDatabase->db_password,
