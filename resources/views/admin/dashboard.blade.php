@@ -113,6 +113,57 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h6 mb-0">{{ __('Últimas ações sensíveis') }}</h2>
+                        <a href="{{ route('admin.audit-logs.index') }}" class="btn btn-sm btn-outline-primary">{{ __('Ver log completo') }}</a>
+                    </div>
+
+                    @forelse ($auditLogs as $log)
+                        <div class="d-flex justify-content-between align-items-center py-2 {{ ! $loop->last ? 'border-bottom' : '' }}">
+                            <div>
+                                <span class="small">{{ $log->subject_type }}: {{ $log->subject_label }}</span>
+                                <div class="small text-secondary">{{ $log->user_name ?? __('Sistema') }} · {{ $log->created_at?->diffForHumans() }}</div>
+                            </div>
+                            <span class="badge text-bg-{{ match ($log->action) { 'created' => 'success', 'deleted' => 'danger', default => 'secondary' } }}">
+                                {{ __($log->action) }}
+                            </span>
+                        </div>
+                    @empty
+                        <p class="small text-secondary mb-0">{{ __('Nenhuma ação registrada ainda.') }}</p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">{{ __('Contas fora do ar agora') }}</h2>
+
+                    @forelse ($downTargets as $target)
+                        <div class="d-flex justify-content-between align-items-center py-2 {{ ! $loop->last ? 'border-bottom' : '' }}">
+                            <div>
+                                @if ($target['account'])
+                                    <a href="{{ route('admin.hosting-accounts.show', $target['account']) }}">{{ $target['label'] }}</a>
+                                    <div class="small text-secondary">{{ $target['account']->client?->name }}</div>
+                                @else
+                                    {{ $target['label'] }}
+                                @endif
+                            </div>
+                            <span class="badge text-bg-danger">{{ $target['down_since']?->diffForHumans() }}</span>
+                        </div>
+                    @empty
+                        <p class="small text-secondary mb-0">{{ __('Nada fora do ar agora — tudo no ar.') }}</p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Acesso rápido, por categoria — mesmo agrupamento do menu lateral --}}
     <h2 class="h6 text-secondary mb-3">{{ __('Acesso rápido') }}</h2>
 

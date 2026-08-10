@@ -168,6 +168,11 @@ class HostingAccount extends Model
         return $this->hasMany(Ticket::class)->latest();
     }
 
+    public function trafficStats(): HasMany
+    {
+        return $this->hasMany(DomainTrafficStat::class);
+    }
+
     /**
      * Agrupado num where(function...) de propósito: sem isso, encadear
      * depois de uma relação já filtrada (ex.: hostingAccounts() do

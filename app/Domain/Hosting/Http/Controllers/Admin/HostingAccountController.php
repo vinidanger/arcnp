@@ -25,7 +25,10 @@ class HostingAccountController extends Controller
     {
         $this->authorize('viewAny', HostingAccount::class);
 
-        $accounts = HostingAccount::with(['client', 'server', 'plan'])
+        $accounts = HostingAccount::with([
+            'client', 'server', 'plan', 'appInstallations',
+            'malwareScans' => fn ($q) => $q->latest()->limit(1),
+        ])
             ->when($request->filled('search'), fn ($q) => $q->where('primary_domain', 'like', '%'.$request->string('search').'%'))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->latest()
@@ -401,6 +404,35 @@ class HostingAccountController extends Controller
         $provisioning->removeDomain($domain);
 
         return back()->with('status', 'Domínio removido.');
+    }
+
+    /**
+     * Clone de staging (item 3, "4 ideias criativas") — mesma lógica do
+     * lado cliente, espelhada pro admin.
+     */
+    public function storeStagingClone(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        if ($hosting_account->status !== 'active') {
+            return back()->with('error', 'A conta precisa estar ativa para criar uma cópia de teste.');
+        }
+
+        $data = $request->validate([
+            'subdomain_label' => [
+                'required',
+                'string',
+                'regex:/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i',
+            ],
+        ]);
+
+        try {
+            $domain = $provisioning->cloneToStaging($hosting_account, strtolower($data['subdomain_label']));
+
+            return back()->with('status', "Cópia de teste criada em {$domain->domain}.");
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao criar a cópia de teste: '.$e->getMessage());
+        }
     }
 
     public function updatePublicPath(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)

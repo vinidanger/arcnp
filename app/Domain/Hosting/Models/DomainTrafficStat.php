@@ -5,21 +5,24 @@ namespace App\Domain\Hosting\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class HostingDatabase extends Model
+class DomainTrafficStat extends Model
 {
     protected $fillable = [
         'hosting_account_id',
-        'db_name',
-        'db_username',
-        'db_password',
-        'is_staging',
+        'domain',
+        'date',
+        'hits',
+        'unique_visitors',
+        'top_paths',
+        'status_counts',
     ];
 
     protected function casts(): array
     {
         return [
-            'db_password' => 'encrypted',
-            'is_staging' => 'boolean',
+            'date' => 'date',
+            'top_paths' => 'array',
+            'status_counts' => 'array',
         ];
     }
 

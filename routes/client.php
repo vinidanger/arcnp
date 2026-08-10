@@ -3,6 +3,7 @@
 use App\Domain\Hosting\Http\Controllers\Client\CronJobController;
 use App\Domain\Hosting\Http\Controllers\Client\DnsZoneController;
 use App\Domain\Hosting\Http\Controllers\Client\DomainLogController;
+use App\Domain\Hosting\Http\Controllers\Client\TrafficStatsController;
 use App\Domain\Hosting\Http\Controllers\Client\FileManagerController;
 use App\Domain\Hosting\Http\Controllers\Client\FolderProtectionController;
 use App\Domain\Hosting\Http\Controllers\Client\AppInstallerController;
@@ -46,6 +47,8 @@ Route::post('hosting-accounts/{hosting_account}/domains', [HostingAccountControl
     ->name('hosting-accounts.domains.store');
 Route::delete('hosting-accounts/{hosting_account}/domains/{domain}', [HostingAccountController::class, 'destroyDomain'])
     ->name('hosting-accounts.domains.destroy');
+Route::post('hosting-accounts/{hosting_account}/domains/staging-clone', [HostingAccountController::class, 'storeStagingClone'])
+    ->name('hosting-accounts.domains.staging-clone.store');
 Route::patch('hosting-accounts/{hosting_account}/public-path', [HostingAccountController::class, 'updatePublicPath'])
     ->name('hosting-accounts.public-path.update');
 Route::patch('hosting-accounts/{hosting_account}/domains/{domain}/public-path', [HostingAccountController::class, 'updateDomainPublicPath'])
@@ -150,6 +153,8 @@ Route::delete('hosting-accounts/{hosting_account}/mail/{mail_domain}', [MailDoma
     ->name('hosting-accounts.mail.destroy');
 Route::post('hosting-accounts/{hosting_account}/mail/{mail_domain}/dns-records', [MailDomainController::class, 'createDnsRecords'])
     ->name('hosting-accounts.mail.dns-records.store');
+Route::post('hosting-accounts/{hosting_account}/mail/{mail_domain}/check-health', [MailDomainController::class, 'checkHealth'])
+    ->name('hosting-accounts.mail.check-health');
 Route::post('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes', [MailDomainController::class, 'storeMailbox'])
     ->name('hosting-accounts.mail.mailboxes.store');
 Route::put('hosting-accounts/{hosting_account}/mail/{mail_domain}/mailboxes/{mailbox}/password', [MailDomainController::class, 'updateMailboxPassword'])
@@ -190,6 +195,8 @@ Route::put('hosting-accounts/{hosting_account}/hotlink-protection', [HotlinkProt
 
 Route::get('hosting-accounts/{hosting_account}/logs', [DomainLogController::class, 'index'])
     ->name('hosting-accounts.logs.index');
+Route::get('hosting-accounts/{hosting_account}/traffic', [TrafficStatsController::class, 'index'])
+    ->name('hosting-accounts.traffic.index');
 Route::get('hosting-accounts/{hosting_account}/mail-log', [MailLogController::class, 'index'])
     ->name('hosting-accounts.mail-log.index');
 

@@ -12,7 +12,21 @@ class MailDomain extends Model
         'hosting_account_id',
         'domain',
         'dkim_txt_value',
+        'spf_valid',
+        'dkim_valid',
+        'dmarc_valid',
+        'health_checked_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'spf_valid' => 'boolean',
+            'dkim_valid' => 'boolean',
+            'dmarc_valid' => 'boolean',
+            'health_checked_at' => 'datetime',
+        ];
+    }
 
     public function hostingAccount(): BelongsTo
     {

@@ -113,7 +113,16 @@
       "Bash(node_modules/.bin/tailwindcss -i /tmp/app-test.css -o /tmp/app-out.css)",
       "Bash(node_modules/.bin/tailwindcss -i resources/css/app.css -o /tmp/app-out.css --cwd .)",
       "Bash(grep -n \"phpMyAdminSso\\\\b\\\\|use App\\\\\\\\\\\\\\\\\" app/Domain/Hosting/Http/Controllers/Admin/HostingAccountController.php)",
-      "Bash(php \"C:\\\\Users\\\\vinic\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-arcnp\\\\36ea85ae-40df-4301-b2a8-183ed637f0dd\\\\scratchpad\\\\test_render_admin_quicklinks.php\")"
+      "Bash(php \"C:\\\\Users\\\\vinic\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-arcnp\\\\36ea85ae-40df-4301-b2a8-183ed637f0dd\\\\scratchpad\\\\test_render_admin_quicklinks.php\")",
+      "Bash(php -l app/Http/Controllers/Admin/DashboardController.php)",
+      "Bash(php -l resources/views/admin/dashboard.blade.php)",
+      "Bash(php \"C:\\\\Users\\\\vinic\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-arcnp\\\\36ea85ae-40df-4301-b2a8-183ed637f0dd\\\\scratchpad\\\\test_dashboard_cards.php\")",
+      "Bash(rm -f \"C:\\\\Users\\\\vinic\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-arcnp\\\\36ea85ae-40df-4301-b2a8-183ed637f0dd\\\\scratchpad\\\\test_dashboard_cards.php\")",
+      "Bash(php -l app/Support/SecurityScore.php)",
+      "Bash(php -l resources/views/components/security-score-badge.blade.php)",
+      "Bash(grep -n 'status_label\\($account->status\\)\\\\|<th>\\\\|</tr>' resources/views/admin/hosting-accounts/index.blade.php)",
+      "Bash(php \"C:\\\\Users\\\\vinic\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-arcnp\\\\36ea85ae-40df-4301-b2a8-183ed637f0dd\\\\scratchpad\\\\test_security_score.php\")",
+      "Bash(tasklist)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\arcnp-agent\\bootstrap",

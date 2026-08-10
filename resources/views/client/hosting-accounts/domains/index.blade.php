@@ -13,4 +13,5 @@
 
     @include('client.hosting-accounts.partials._domains-table')
     @include('client.hosting-accounts.partials._add-domain-modal')
+    @include('client.hosting-accounts.partials._staging-clone-modal')
 </x-client-layout>

@@ -69,6 +69,25 @@
 
     <div class="card mb-3">
         <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2 class="h6 mb-1">{{ __('Saúde de e-mail') }}</h2>
+                    <p class="small text-secondary mb-2">
+                        {{ __('Checagem real do DNS público — se o SPF/DKIM/DMARC estão de fato publicados, se o PTR do servidor bate, e se o IP não está numa blacklist conhecida.') }}
+                    </p>
+                </div>
+                <form method="POST" action="{{ route('client.hosting-accounts.mail.check-health', [$account, $mailDomain]) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">{{ __('Verificar agora') }}</button>
+                </form>
+            </div>
+
+            <x-email-health-badge :mail-domain="$mailDomain" :server="$account->server" />
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
             <h2 class="h6 mb-1">{{ __('Registros MX') }}</h2>
             <p class="small text-secondary mb-2">
                 {{ __('Definem pra onde o e-mail desse domínio deve ser entregue. Se o e-mail é hospedado nesse servidor, aponte pro hostname de e-mail dele.') }}

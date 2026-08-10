@@ -9,6 +9,7 @@ use App\Domain\Hosting\Models\Mailbox;
 use App\Domain\Hosting\Models\MailFilter;
 use App\Domain\Hosting\Models\MailForwarder;
 use App\Domain\Hosting\Services\DnsZoneService;
+use App\Domain\Hosting\Services\EmailHealthService;
 use App\Domain\Hosting\Services\MailboxService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -266,6 +267,22 @@ class MailDomainController extends Controller
             return back()->with('status', 'Encaminhamento removido.');
         } catch (Throwable $e) {
             return back()->with('error', 'Falha ao remover encaminhamento: '.$e->getMessage());
+        }
+    }
+
+    public function checkHealth(HostingAccount $hosting_account, MailDomain $mail_domain, EmailHealthService $health)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($mail_domain->hosting_account_id === $hosting_account->id, 404);
+
+        try {
+            $health->checkMailDomain($mail_domain);
+            $health->checkServer($hosting_account->server);
+
+            return back()->with('status', 'Saúde de e-mail verificada.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao verificar: '.$e->getMessage());
         }
     }
 

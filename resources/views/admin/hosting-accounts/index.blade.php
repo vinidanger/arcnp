@@ -47,6 +47,7 @@
                         <th>{{ __('Plano') }}</th>
                         <th>{{ __('Username') }}</th>
                         <th>{{ __('Status') }}</th>
+                        <th>{{ __('Segurança') }}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -69,13 +70,14 @@
                                 @endphp
                                 <span class="badge text-bg-{{ $badge }}">{{ status_label($account->status) }}</span>
                             </td>
+                            <td><x-security-score-badge :account="$account" /></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.hosting-accounts.show', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('Ver') }}</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-secondary py-4">{{ __('Nenhuma conta de hospedagem ainda.') }}</td>
+                            <td colspan="8" class="text-center text-secondary py-4">{{ __('Nenhuma conta de hospedagem ainda.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

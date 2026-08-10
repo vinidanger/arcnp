@@ -16,3 +16,7 @@ Schedule::command('server-metrics:prune')->daily();
 Schedule::command('security:scan-accounts')->daily();
 Schedule::command('security:check-cms-versions')->daily();
 Schedule::command('uptime:check')->everyFiveMinutes();
+Schedule::command('email:check-health')->daily();
+// 23:55 de propósito — precisa rodar ANTES do logrotate diário (ver
+// deploy/README.md do Agent), senão lê um arquivo já truncado/rotacionado.
+Schedule::command('traffic:collect')->dailyAt('23:55');

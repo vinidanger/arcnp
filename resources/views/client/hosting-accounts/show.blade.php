@@ -152,6 +152,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                 ]],
                 'Avançado' => ['bi-gear', [
                     ['route', 'client.hosting-accounts.logs.index', 'bi-file-text', 'Logs'],
+                    ['route', 'client.hosting-accounts.traffic.index', 'bi-graph-up', 'Estatísticas'],
                     ['route', 'client.hosting-accounts.cron.index', 'bi-clock-history', 'Cron'],
                     ['route', 'client.hosting-accounts.ftp.index', 'bi-hdd-network', 'FTP'],
                     ['route', 'client.hosting-accounts.resources.index', 'bi-speedometer2', 'Recursos'],
@@ -237,6 +238,10 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         <div class="cpanel-info-row">
                             <dt>{{ __('Disponibilidade') }}</dt>
                             <dd><x-uptime-badge :model="$account" /></dd>
+                        </div>
+                        <div class="cpanel-info-row">
+                            <dt>{{ __('Segurança') }}</dt>
+                            <dd><x-security-score-badge :account="$account" :detailed="true" /></dd>
                         </div>
                     </dl>
 
@@ -391,6 +396,11 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                         <dd class="col-sm-9">
                             <x-uptime-badge :model="$account" />
                         </dd>
+
+                        <dt class="col-sm-3">{{ __('Segurança') }}</dt>
+                        <dd class="col-sm-9">
+                            <x-security-score-badge :account="$account" :detailed="true" />
+                        </dd>
                     </dl>
                 </div>
             </div>
@@ -437,6 +447,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                             ['route', 'client.hosting-accounts.ftp.index', 'bi-hdd-network', 'FTP'],
                             ['terminal', null, 'bi-terminal-fill', 'Terminal'],
                             ['route', 'client.hosting-accounts.logs.index', 'bi-file-text', 'Logs'],
+                    ['route', 'client.hosting-accounts.traffic.index', 'bi-graph-up', 'Estatísticas'],
                             ['route', 'client.hosting-accounts.resources.index', 'bi-speedometer2', 'Recursos'],
                         ],
                     ];
@@ -514,6 +525,7 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
 
     @unless ($uiTemplate === 'cpanel')
         @include('client.hosting-accounts.partials._add-domain-modal')
+        @include('client.hosting-accounts.partials._staging-clone-modal')
         @include('client.hosting-accounts.partials._add-database-modal')
     @endunless
 </x-client-layout>

@@ -339,6 +339,37 @@ class HostingAccountController extends Controller
         return back()->with('status', 'Domínio removido.');
     }
 
+    /**
+     * Clone de staging (item 3, "4 ideias criativas") — cria um
+     * subdomínio novo com uma cópia estática dos arquivos (+ banco,
+     * quando existir) de produção. Não sincroniza depois, é um
+     * snapshot pra testar.
+     */
+    public function storeStagingClone(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        if ($hosting_account->status !== 'active') {
+            return back()->with('error', 'A conta precisa estar ativa para criar uma cópia de teste.');
+        }
+
+        $data = $request->validate([
+            'subdomain_label' => [
+                'required',
+                'string',
+                'regex:/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i',
+            ],
+        ]);
+
+        try {
+            $domain = $provisioning->cloneToStaging($hosting_account, strtolower($data['subdomain_label']));
+
+            return back()->with('status', "Cópia de teste criada em {$domain->domain}.");
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao criar a cópia de teste: '.$e->getMessage());
+        }
+    }
+
     public function updatePublicPath(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);

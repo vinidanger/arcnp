@@ -37,6 +37,9 @@ class Server extends Model
         'mem_percent',
         'server_info',
         'server_info_collected_at',
+        'ptr_matches_mail_hostname',
+        'ip_blacklisted',
+        'mail_health_checked_at',
     ];
 
     protected function casts(): array
@@ -45,6 +48,9 @@ class Server extends Model
             'last_heartbeat_at' => 'datetime',
             'server_info' => 'array',
             'server_info_collected_at' => 'datetime',
+            'ptr_matches_mail_hostname' => 'boolean',
+            'ip_blacklisted' => 'boolean',
+            'mail_health_checked_at' => 'datetime',
         ];
     }
 
