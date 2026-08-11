@@ -27,13 +27,12 @@
                         <td>{{ $account->primary_domain }}</td>
                         <td><span class="badge text-bg-primary">{{ __('Principal') }}</span></td>
                         <td>
-                            <form method="POST" action="{{ route('client.hosting-accounts.public-path.update', $account) }}" class="d-flex align-items-center gap-1">
-                                @csrf
-                                @method('PATCH')
-                                <code class="small">public_html{{ $account->public_path ? '/'.$account->public_path : '' }}</code>
-                                <input type="text" name="public_path" value="{{ $account->public_path }}" placeholder="public" class="form-control form-control-sm" style="width: 6rem;">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('OK') }}</button>
-                            </form>
+                            <code class="small">public_html{{ $account->public_path ? '/'.$account->public_path : '' }}</code>
+                            @if ($account->status === 'active')
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-1" data-bs-toggle="modal" data-bs-target="#docroot-modal-primary" title="{{ __('Editar document root') }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                            @endif
                         </td>
                         <td>
                             @php
@@ -52,48 +51,74 @@
                             <x-uptime-badge :model="$account" />
                         </td>
                         <td class="text-end">
-                            <a href="{{ route('client.hosting-accounts.php.index', $account) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>
-                            <form method="POST" action="{{ route('client.hosting-accounts.waf.update', $account) }}" class="d-inline"
-                                  onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
-                                @csrf
-                                <input type="hidden" name="enabled" value="{{ $account->waf_enabled ? '0' : '1' }}">
-                                <button type="submit" class="btn btn-sm btn-outline-{{ $account->waf_enabled ? 'success' : 'secondary' }}" title="{{ __('Proteção contra exploits web (ModSecurity)') }}">
-                                    {{ __('WAF') }}: {{ $account->waf_enabled ? __('ligado') : __('desligado') }}
-                                </button>
-                            </form>
-                            <form method="POST" action="{{ route('client.hosting-accounts.cache.update', $account) }}" class="d-inline"
-                                  onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
-                                @csrf
-                                <input type="hidden" name="enabled" value="{{ $account->cache_enabled ? '0' : '1' }}">
-                                <button type="submit" class="btn btn-sm btn-outline-{{ $account->cache_enabled ? 'success' : 'secondary' }}" title="{{ __('Cache de página (fastcgi_cache)') }}">
-                                    {{ __('Cache') }}: {{ $account->cache_enabled ? __('ligado') : __('desligado') }}
-                                </button>
-                            </form>
-                            @if ($account->cache_enabled)
-                                <form method="POST" action="{{ route('client.hosting-accounts.cache.purge', $account) }}" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Limpar cache') }}</button>
-                                </form>
-                            @endif
+                            <div class="d-inline-flex align-items-center gap-1">
+                                @if ($account->waf_enabled)
+                                    <span class="badge text-bg-success" title="{{ __('WAF ligado') }}"><i class="bi bi-shield-check"></i></span>
+                                @endif
+                                @if ($account->cache_enabled)
+                                    <span class="badge text-bg-success" title="{{ __('Cache ligado') }}"><i class="bi bi-speedometer2"></i></span>
+                                @endif
+                                <x-dropdown align="end">
+                                    <x-slot name="trigger">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+                                    </x-slot>
+                                    <x-slot name="content">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('client.hosting-accounts.php.index', $account) }}">
+                                                <i class="bi bi-filetype-php me-1"></i> {{ __('PHP') }}
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <form method="POST" action="{{ route('client.hosting-accounts.waf.update', $account) }}"
+                                                  onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
+                                                @csrf
+                                                <input type="hidden" name="enabled" value="{{ $account->waf_enabled ? '0' : '1' }}">
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="bi bi-shield-{{ $account->waf_enabled ? 'check' : 'slash' }} me-1"></i>
+                                                    {{ __('WAF') }}: {{ $account->waf_enabled ? __('ligado') : __('desligado') }}
+                                                </button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form method="POST" action="{{ route('client.hosting-accounts.cache.update', $account) }}"
+                                                  onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
+                                                @csrf
+                                                <input type="hidden" name="enabled" value="{{ $account->cache_enabled ? '0' : '1' }}">
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="bi bi-speedometer2 me-1"></i>
+                                                    {{ __('Cache') }}: {{ $account->cache_enabled ? __('ligado') : __('desligado') }}
+                                                </button>
+                                            </form>
+                                        </li>
+                                        @if ($account->cache_enabled)
+                                            <li>
+                                                <form method="POST" action="{{ route('client.hosting-accounts.cache.purge', $account) }}">
+                                                    @csrf
+                                                    <button type="submit" class="dropdown-item"><i class="bi bi-arrow-clockwise me-1"></i> {{ __('Limpar cache') }}</button>
+                                                </form>
+                                            </li>
+                                        @endif
+                                    </x-slot>
+                                </x-dropdown>
+                            </div>
                         </td>
                     </tr>
                     @foreach ($account->domains as $domain)
+                        @php
+                            $domainBase = $domain->isOutsidePublicHtml()
+                                ? "domains/{$domain->domain}/public_html"
+                                : "public_html/{$domain->subdirectory}";
+                        @endphp
                         <tr>
                             <td>{{ $domain->domain }}</td>
                             <td>{{ $domain->type === 'addon' ? __('Adicional') : __('Subdomínio') }}</td>
                             <td>
-                                @php
-                                    $domainBase = $domain->isOutsidePublicHtml()
-                                        ? "domains/{$domain->domain}/public_html"
-                                        : "public_html/{$domain->subdirectory}";
-                                @endphp
-                                <form method="POST" action="{{ route('client.hosting-accounts.domains.public-path.update', [$account, $domain]) }}" class="d-flex align-items-center gap-1">
-                                    @csrf
-                                    @method('PATCH')
-                                    <code class="small">{{ $domainBase }}{{ $domain->public_path ? '/'.$domain->public_path : '' }}</code>
-                                    <input type="text" name="public_path" value="{{ $domain->public_path }}" placeholder="public" class="form-control form-control-sm" style="width: 6rem;">
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('OK') }}</button>
-                                </form>
+                                <code class="small">{{ $domainBase }}{{ $domain->public_path ? '/'.$domain->public_path : '' }}</code>
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-1" data-bs-toggle="modal" data-bs-target="#docroot-modal-{{ $domain->id }}" title="{{ __('Editar document root') }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
                             </td>
                             <td>
                                 @php
@@ -115,36 +140,67 @@
                                 <x-uptime-badge :model="$domain" />
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('client.hosting-accounts.domains.php.index', [$account, $domain]) }}" class="btn btn-sm btn-outline-secondary">{{ __('PHP') }}</a>
-                                <form method="POST" action="{{ route('client.hosting-accounts.domains.waf.update', [$account, $domain]) }}" class="d-inline"
-                                      onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
-                                    @csrf
-                                    <input type="hidden" name="enabled" value="{{ $domain->waf_enabled ? '0' : '1' }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-{{ $domain->waf_enabled ? 'success' : 'secondary' }}" title="{{ __('Proteção contra exploits web (ModSecurity)') }}">
-                                        {{ __('WAF') }}: {{ $domain->waf_enabled ? __('ligado') : __('desligado') }}
-                                    </button>
-                                </form>
-                                <form method="POST" action="{{ route('client.hosting-accounts.domains.cache.update', [$account, $domain]) }}" class="d-inline"
-                                      onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
-                                    @csrf
-                                    <input type="hidden" name="enabled" value="{{ $domain->cache_enabled ? '0' : '1' }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-{{ $domain->cache_enabled ? 'success' : 'secondary' }}" title="{{ __('Cache de página (fastcgi_cache)') }}">
-                                        {{ __('Cache') }}: {{ $domain->cache_enabled ? __('ligado') : __('desligado') }}
-                                    </button>
-                                </form>
-                                @if ($domain->cache_enabled)
-                                    <form method="POST" action="{{ route('client.hosting-accounts.domains.cache.purge', [$account, $domain]) }}" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Limpar cache') }}</button>
-                                    </form>
-                                @endif
-                                <form method="POST" action="{{ route('client.hosting-accounts.domains.destroy', [$account, $domain]) }}"
-                                      class="d-inline"
-                                      onsubmit="return confirm('{{ __('Remove esse domínio. Continuar?') }}')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Remover') }}</button>
-                                </form>
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    @if ($domain->waf_enabled)
+                                        <span class="badge text-bg-success" title="{{ __('WAF ligado') }}"><i class="bi bi-shield-check"></i></span>
+                                    @endif
+                                    @if ($domain->cache_enabled)
+                                        <span class="badge text-bg-success" title="{{ __('Cache ligado') }}"><i class="bi bi-speedometer2"></i></span>
+                                    @endif
+                                    <x-dropdown align="end">
+                                        <x-slot name="trigger">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-three-dots"></i>
+                                            </button>
+                                        </x-slot>
+                                        <x-slot name="content">
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('client.hosting-accounts.domains.php.index', [$account, $domain]) }}">
+                                                    <i class="bi bi-filetype-php me-1"></i> {{ __('PHP') }}
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <form method="POST" action="{{ route('client.hosting-accounts.domains.waf.update', [$account, $domain]) }}"
+                                                      onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
+                                                    @csrf
+                                                    <input type="hidden" name="enabled" value="{{ $domain->waf_enabled ? '0' : '1' }}">
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-shield-{{ $domain->waf_enabled ? 'check' : 'slash' }} me-1"></i>
+                                                        {{ __('WAF') }}: {{ $domain->waf_enabled ? __('ligado') : __('desligado') }}
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form method="POST" action="{{ route('client.hosting-accounts.domains.cache.update', [$account, $domain]) }}"
+                                                      onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
+                                                    @csrf
+                                                    <input type="hidden" name="enabled" value="{{ $domain->cache_enabled ? '0' : '1' }}">
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-speedometer2 me-1"></i>
+                                                        {{ __('Cache') }}: {{ $domain->cache_enabled ? __('ligado') : __('desligado') }}
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            @if ($domain->cache_enabled)
+                                                <li>
+                                                    <form method="POST" action="{{ route('client.hosting-accounts.domains.cache.purge', [$account, $domain]) }}">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item"><i class="bi bi-arrow-clockwise me-1"></i> {{ __('Limpar cache') }}</button>
+                                                    </form>
+                                                </li>
+                                            @endif
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <form method="POST" action="{{ route('client.hosting-accounts.domains.destroy', [$account, $domain]) }}"
+                                                      onsubmit="return confirm('{{ __('Remove esse domínio. Continuar?') }}')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-1"></i> {{ __('Remover') }}</button>
+                                                </form>
+                                            </li>
+                                        </x-slot>
+                                    </x-dropdown>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -157,3 +213,50 @@
         @endunless
     </div>
 </div>
+
+@if ($account->status === 'active')
+    <x-modal name="docroot-modal-primary" maxWidth="sm">
+        <form method="POST" action="{{ route('client.hosting-accounts.public-path.update', $account) }}">
+            @csrf
+            @method('PATCH')
+            <div class="modal-header">
+                <h5 class="modal-title">{{ __('Document root — :domain', ['domain' => $account->primary_domain]) }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <x-input-label for="public_path-primary" value="{{ __('Subpasta dentro de public_html') }}" class="small mb-1" />
+                <x-text-input id="public_path-primary" name="public_path" type="text" :value="$account->public_path" placeholder="{{ __('vazio = raiz') }}" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('Salvar') }}</button>
+            </div>
+        </form>
+    </x-modal>
+@endif
+
+@foreach ($account->domains as $domain)
+    @php
+        $domainBase = $domain->isOutsidePublicHtml()
+            ? "domains/{$domain->domain}/public_html"
+            : "public_html/{$domain->subdirectory}";
+    @endphp
+    <x-modal name="docroot-modal-{{ $domain->id }}" maxWidth="sm">
+        <form method="POST" action="{{ route('client.hosting-accounts.domains.public-path.update', [$account, $domain]) }}">
+            @csrf
+            @method('PATCH')
+            <div class="modal-header">
+                <h5 class="modal-title">{{ __('Document root — :domain', ['domain' => $domain->domain]) }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <x-input-label for="public_path-{{ $domain->id }}" value="{{ __('Subpasta dentro de :base', ['base' => $domainBase]) }}" class="small mb-1" />
+                <x-text-input id="public_path-{{ $domain->id }}" name="public_path" type="text" :value="$domain->public_path" placeholder="{{ __('vazio = raiz') }}" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('Salvar') }}</button>
+            </div>
+        </form>
+    </x-modal>
+@endforeach
