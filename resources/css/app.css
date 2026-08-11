@@ -301,6 +301,57 @@ html.sidebar-collapsed #sidebar-toggle i {
     transform: rotate(180deg);
 }
 
+/* Menu mobile — abaixo de 992px o sidebar vira um drawer fora do fluxo
+   normal (position: fixed), escondido por padrão (translateX -100%) e
+   revelado por cima do conteúdo via a classe html.sidebar-mobile-open
+   (JS em app.js). Ignora o estado "retraído" (ícone só) do desktop —
+   no mobile o drawer sempre abre com os rótulos visíveis, senão vira
+   um menu de ícone sem legenda dentro de uma tela que já é estreita. */
+.mobile-nav-toggle {
+    display: none;
+}
+
+.sidebar-backdrop {
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    .mobile-nav-toggle {
+        display: inline-flex;
+    }
+
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        z-index: 1045;
+        width: 15.5rem !important;
+        min-width: 15.5rem !important;
+        transform: translateX(-100%);
+        box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.25);
+    }
+
+    html.sidebar-mobile-open .app-sidebar {
+        transform: translateX(0);
+    }
+
+    html.sidebar-mobile-open .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 1040;
+    }
+
+    /* Dentro do drawer mobile, rótulo sempre visível — mesmo se o
+       usuário tinha retraído o menu (só ícone) numa sessão desktop
+       anterior; sidebar-collapsed é preferência de tela grande. */
+    html.sidebar-collapsed .app-sidebar .sidebar-label {
+        display: inline;
+    }
+}
+
 .theme-icon-dark {
     display: none;
 }

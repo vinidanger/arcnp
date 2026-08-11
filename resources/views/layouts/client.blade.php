@@ -140,10 +140,16 @@
                 </aside>
             @endif
 
+            <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
             <div class="flex flex-col flex-1 min-w-0">
                 @if ($uiTemplate === 'cpanel')
                     <header class="cpanel-topbar">
                         <div class="flex items-center justify-between gap-3 px-4 md:px-6 py-3">
+                            <button type="button" id="mobile-nav-toggle" class="mobile-nav-toggle shrink-0 items-center justify-center w-9 h-9 rounded border border-line-strong text-text-dim hover:border-accent hover:text-accent" title="{{ __('Abrir menu') }}">
+                                <i class="bi bi-list" style="font-size: 1.1rem;"></i>
+                            </button>
+
                             <div class="flex-1 min-w-0 relative">
                                 @if ($navAccount instanceof \App\Domain\Hosting\Models\HostingAccount && ! request()->routeIs('*.hosting-accounts.show') && ! request()->routeIs('client.dashboard'))
                                     <a href="{{ route('client.hosting-accounts.show', $navAccount) }}"
@@ -197,6 +203,10 @@
                 @else
                     <header class="border-b border-line bg-panel">
                         <div class="flex items-center justify-between gap-3 px-4 md:px-6 py-3">
+                            <button type="button" id="mobile-nav-toggle" class="mobile-nav-toggle shrink-0 items-center justify-center w-9 h-9 rounded border border-line-strong text-text-dim hover:border-accent hover:text-accent" title="{{ __('Abrir menu') }}">
+                                <i class="bi bi-list" style="font-size: 1.1rem;"></i>
+                            </button>
+
                             <div class="flex-1 min-w-0">
                                 {{-- $navAccount já foi resolvido lá em cima, antes da sidebar
                                      (mesma fonte, reaproveitada aqui pro back-link). --}}

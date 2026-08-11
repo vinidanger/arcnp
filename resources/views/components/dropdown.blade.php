@@ -1,7 +1,7 @@
 @props(['align' => 'end', 'contentClasses' => '', 'dropup' => false])
 
 <div class="dropdown {{ $dropup ? 'dropup' : '' }}">
-    <div class="dropdown-toggle" data-bs-toggle="dropdown">
+    <div class="dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed">
         {{ $trigger }}
     </div>
 

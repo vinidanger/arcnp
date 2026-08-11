@@ -20,6 +20,39 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ---------------------------------------------------------------------
+// Menu lateral em telas pequenas (< 992px) — vira um drawer fora do
+// fluxo normal (ver .app-sidebar em app.css), aberto/fechado via
+// html.sidebar-mobile-open. Sem persistência em localStorage (sempre
+// começa fechado a cada carregamento de página, diferente do estado
+// retraído/expandido do desktop, que é uma preferência duradoura).
+// ---------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    const mobileToggle = document.getElementById('mobile-nav-toggle');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const sidebar = document.querySelector('.app-sidebar');
+
+    if (! mobileToggle || ! backdrop) {
+        return;
+    }
+
+    const closeMobileNav = () => document.documentElement.classList.remove('sidebar-mobile-open');
+
+    mobileToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('sidebar-mobile-open');
+    });
+
+    backdrop.addEventListener('click', closeMobileNav);
+
+    // Navegar por um link do menu fecha o drawer — sem isso, a próxima
+    // página carregaria com o menu ainda aberto por cima do conteúdo.
+    sidebar?.addEventListener('click', (event) => {
+        if (event.target.closest('a.nav-link')) {
+            closeMobileNav();
+        }
+    });
+});
+
+// ---------------------------------------------------------------------
 // Tema claro/escuro — mesma lógica de persistência do menu lateral.
 // Estado inicial já aplicado no <head> (theme-init).
 // ---------------------------------------------------------------------
