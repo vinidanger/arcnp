@@ -29,6 +29,7 @@ class UpdateServerRequest extends FormRequest
             'memory_mb' => ['nullable', 'integer', 'min:1'],
             'disk_gb' => ['nullable', 'integer', 'min:1'],
             'mysql_service_name' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z0-9_.-]+$/'],
+            'http3_enabled' => ['boolean'],
         ];
     }
 }

@@ -61,6 +61,20 @@
                                     {{ __('WAF') }}: {{ $account->waf_enabled ? __('ligado') : __('desligado') }}
                                 </button>
                             </form>
+                            <form method="POST" action="{{ route('client.hosting-accounts.cache.update', $account) }}" class="d-inline"
+                                  onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
+                                @csrf
+                                <input type="hidden" name="enabled" value="{{ $account->cache_enabled ? '0' : '1' }}">
+                                <button type="submit" class="btn btn-sm btn-outline-{{ $account->cache_enabled ? 'success' : 'secondary' }}" title="{{ __('Cache de página (fastcgi_cache)') }}">
+                                    {{ __('Cache') }}: {{ $account->cache_enabled ? __('ligado') : __('desligado') }}
+                                </button>
+                            </form>
+                            @if ($account->cache_enabled)
+                                <form method="POST" action="{{ route('client.hosting-accounts.cache.purge', $account) }}" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Limpar cache') }}</button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                     @foreach ($account->domains as $domain)
@@ -110,6 +124,20 @@
                                         {{ __('WAF') }}: {{ $domain->waf_enabled ? __('ligado') : __('desligado') }}
                                     </button>
                                 </form>
+                                <form method="POST" action="{{ route('client.hosting-accounts.domains.cache.update', [$account, $domain]) }}" class="d-inline"
+                                      onsubmit="return confirm('{{ __('Isso reescreve a configuração desse domínio no servidor — o site fica fora do ar por um instante. Continuar?') }}')">
+                                    @csrf
+                                    <input type="hidden" name="enabled" value="{{ $domain->cache_enabled ? '0' : '1' }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-{{ $domain->cache_enabled ? 'success' : 'secondary' }}" title="{{ __('Cache de página (fastcgi_cache)') }}">
+                                        {{ __('Cache') }}: {{ $domain->cache_enabled ? __('ligado') : __('desligado') }}
+                                    </button>
+                                </form>
+                                @if ($domain->cache_enabled)
+                                    <form method="POST" action="{{ route('client.hosting-accounts.domains.cache.purge', [$account, $domain]) }}" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Limpar cache') }}</button>
+                                    </form>
+                                @endif
                                 <form method="POST" action="{{ route('client.hosting-accounts.domains.destroy', [$account, $domain]) }}"
                                       class="d-inline"
                                       onsubmit="return confirm('{{ __('Remove esse domínio. Continuar?') }}')">

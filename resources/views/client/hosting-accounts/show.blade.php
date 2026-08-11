@@ -135,6 +135,8 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                     ['route', 'client.hosting-accounts.files.index', 'bi-folder2-open', 'Arquivos'],
                     ['route', 'client.hosting-accounts.backups.index', 'bi-archive', 'Backups'],
                     ['route', 'client.hosting-accounts.mime-types.index', 'bi-file-earmark-code', 'MIME Types'],
+                    ['route', 'client.hosting-accounts.image-optimization.index', 'bi-images', 'Otimizar imagens'],
+                    ['route', 'client.hosting-accounts.redis.index', 'bi-lightning-charge', 'Cache de objeto'],
                 ]],
                 'Bancos de Dados' => ['bi-database', [
                     ['route', 'client.hosting-accounts.databases.index', 'bi-database', 'Bancos de Dados'],
@@ -421,6 +423,8 @@ DB_PASSWORD={{ session('plain_db_password') }}</pre>
                             ['route', 'client.hosting-accounts.apps.index', 'bi-cpu', 'Apps'],
                             ['route', 'client.hosting-accounts.installer.index', 'bi-box-seam', 'Instalador'],
                             ['route', 'client.hosting-accounts.mime-types.index', 'bi-file-earmark-code', 'MIME Types'],
+                            ['route', 'client.hosting-accounts.image-optimization.index', 'bi-images', 'Otimizar imagens'],
+                            ['route', 'client.hosting-accounts.redis.index', 'bi-lightning-charge', 'Cache de objeto'],
                         ],
                         'Domínio' => [
                             ['tab', '#tab-domains', 'bi-globe2', 'Domínios'],

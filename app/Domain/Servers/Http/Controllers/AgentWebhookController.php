@@ -6,6 +6,7 @@ use App\Domain\Hosting\Models\AppInstallation;
 use App\Domain\Hosting\Models\Domain;
 use App\Domain\Hosting\Models\HostingAccount;
 use App\Domain\Hosting\Models\HostingBackup;
+use App\Domain\Hosting\Models\ImageOptimization;
 use App\Domain\Hosting\Models\MalwareScan;
 use App\Domain\Hosting\Services\FolderProtectionService;
 use App\Domain\Hosting\Services\HostingAccountProvisioningService;
@@ -74,6 +75,10 @@ class AgentWebhookController extends Controller
 
         if ($job->action === 'security.scan_account') {
             $this->applyMalwareScanResult($job);
+        }
+
+        if ($job->action === 'web.optimize_images') {
+            $this->applyImageOptimizationResult($job);
         }
 
         if ($job->action === 'ssl.renew_all' && $job->status === 'completed') {
@@ -322,6 +327,37 @@ class AgentWebhookController extends Controller
             }
         } elseif ($job->status === 'failed') {
             $scan->update(['status' => 'failed', 'error' => $job->error, 'completed_at' => now()]);
+        }
+    }
+
+    /**
+     * Usa o id do ImageOptimization embutido no payload original do
+     * dispatch (mesmo padrão de applyMalwareScanResult()/scan_id).
+     */
+    private function applyImageOptimizationResult(AgentJob $job): void
+    {
+        $optimizationId = $job->payload['image_optimization_id'] ?? null;
+
+        if (! $optimizationId) {
+            return;
+        }
+
+        $optimization = ImageOptimization::find($optimizationId);
+
+        if (! $optimization) {
+            return;
+        }
+
+        if ($job->status === 'completed') {
+            $optimization->update([
+                'status' => 'completed',
+                'processed_count' => $job->result['processed'] ?? 0,
+                'converted_count' => $job->result['converted'] ?? 0,
+                'skipped_count' => $job->result['skipped'] ?? 0,
+                'completed_at' => now(),
+            ]);
+        } elseif ($job->status === 'failed') {
+            $optimization->update(['status' => 'failed', 'error' => $job->error, 'completed_at' => now()]);
         }
     }
 

@@ -46,6 +46,7 @@ class HostedAppService
                 'port' => $port,
                 'ssl_active' => $sslActive,
                 'waf_enabled' => $wafEnabled,
+                'http3_enabled' => $account->server->http3_enabled ?? false,
             ]);
 
             if ($job->status !== 'completed') {
@@ -73,6 +74,7 @@ class HostedAppService
             'php_version' => $account->php_version,
             'ssl_active' => $sslActive,
             'waf_enabled' => $wafEnabled,
+            'http3_enabled' => $account->server->http3_enabled ?? false,
         ]);
 
         if ($job->status !== 'completed') {

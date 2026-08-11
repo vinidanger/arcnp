@@ -98,3 +98,15 @@
     <div class="form-text">{{ __('mysqld (MySQL) ou mariadb (MariaDB), conforme o que foi instalado manualmente no servidor — usado só pra mostrar o status desse serviço na aba "Serviços".') }}</div>
     <x-input-error :messages="$errors->get('mysql_service_name')" class="mt-2" />
 </div>
+
+<div class="mb-3">
+    <x-input-label for="http3_enabled" value="{{ __('HTTP/3 (QUIC)') }}" />
+    <select id="http3_enabled" name="http3_enabled" class="form-select">
+        <option value="0" @selected(! old('http3_enabled', $server?->http3_enabled ?? false))>{{ __('Desligado') }}</option>
+        <option value="1" @selected(old('http3_enabled', $server?->http3_enabled ?? false))>{{ __('Ligado') }}</option>
+    </select>
+    <div class="form-text">
+        {{ __('Só ligue depois de confirmar manualmente que o nginx desse servidor já foi recompilado com suporte a QUIC (binário + lib TLS trocados) — ver seção 52 do deploy/README.md do Agent. Ligar sem isso feito quebra TODOS os vhosts SSL do servidor no próximo re-render.') }}
+    </div>
+    <x-input-error :messages="$errors->get('http3_enabled')" class="mt-2" />
+</div>

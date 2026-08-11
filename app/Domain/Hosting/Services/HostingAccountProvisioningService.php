@@ -72,7 +72,7 @@ class HostingAccountProvisioningService
             $this->syncPhpPools($account);
             $completed[] = 'pool';
 
-            $this->runStep($server, 'web.create_vhost', ['username' => $username, 'domain' => $domain, 'php_version' => $phpVersion, 'public_path' => $account->public_path, 'waf_enabled' => $account->waf_enabled ?? false]);
+            $this->runStep($server, 'web.create_vhost', ['username' => $username, 'domain' => $domain, 'php_version' => $phpVersion, 'public_path' => $account->public_path, 'waf_enabled' => $account->waf_enabled ?? false, 'cache_enabled' => $account->cache_enabled ?? false, 'cache_version' => $account->cache_version ?? 1]);
             $completed[] = 'vhost';
 
             $account->update(['status' => 'active', 'last_provision_error' => null]);
@@ -115,6 +115,12 @@ class HostingAccountProvisioningService
         if ($account->db_master_username) {
             $this->client->dispatch($account->server, 'database.delete_master_user', [
                 'db_username' => $account->db_master_username,
+            ]);
+        }
+
+        if ($account->redis_username) {
+            $this->client->dispatch($account->server, 'redis.delete_user', [
+                'username' => $account->redis_username,
             ]);
         }
 
@@ -163,6 +169,8 @@ class HostingAccountProvisioningService
                 'subdir' => $subdir,
                 'php_version' => $domain->php_version,
                 'waf_enabled' => $domain->waf_enabled ?? false,
+                'cache_enabled' => $domain->cache_enabled ?? false,
+                'cache_version' => $domain->cache_version ?? 1,
             ]);
 
             $domain->update(['status' => 'active']);
@@ -269,6 +277,50 @@ class HostingAccountProvisioningService
         return $account->fresh();
     }
 
+    /**
+     * Usuário Redis "de cache de objeto" da conta — cópia 1:1 de
+     * ensureMasterDatabaseUser(), mesma filosofia (sob demanda, não no
+     * provisionamento; idempotente). Isolamento por ACL de prefixo
+     * (~{username}:*), não por "banco nomeado" (Redis não tem isso) —
+     * ver App\Services\System\RedisAdmin (Agent) e seção 51 do
+     * deploy/README.md. Sem limite de memória aplicado de verdade
+     * nesta v1 (advisory), diferente do banco (maxmemory do Redis é
+     * da instância inteira, não por usuário ACL).
+     */
+    public function ensureRedisUser(HostingAccount $account): HostingAccount
+    {
+        if ($account->redis_username && $account->redis_password) {
+            return $account;
+        }
+
+        $this->regenerateRedisPassword($account);
+
+        return $account->fresh();
+    }
+
+    /**
+     * "ACL SETUSER ... reset ..." (RedisAdmin, Agent) substitui a
+     * regra inteira do usuário — reaplicar com senha nova é seguro
+     * tanto pra gerar credencial pela primeira vez quanto pra trocar
+     * depois, mesmo padrão de SshAccessService::regeneratePassword().
+     */
+    public function regenerateRedisPassword(HostingAccount $account): string
+    {
+        $redisPassword = Str::password(24);
+
+        $this->runStep($account->server, 'redis.create_user', [
+            'username' => $account->linux_username,
+            'password' => $redisPassword,
+        ]);
+
+        $account->update([
+            'redis_username' => $account->linux_username,
+            'redis_password' => $redisPassword,
+        ]);
+
+        return $redisPassword;
+    }
+
     public function deleteDatabase(HostingDatabase $database): void
     {
         $account = $database->hostingAccount;
@@ -298,6 +350,9 @@ class HostingAccountProvisioningService
             'php_version' => $domain ? $domain->php_version : $account->php_version,
             'public_path' => $domain ? $domain->public_path : $account->public_path,
             'waf_enabled' => ($domain ? $domain->waf_enabled : $account->waf_enabled) ?? false,
+            'cache_enabled' => ($domain ? $domain->cache_enabled : $account->cache_enabled) ?? false,
+            'cache_version' => ($domain ? $domain->cache_version : $account->cache_version) ?? 1,
+            'http3_enabled' => $account->server->http3_enabled ?? false,
         ]);
 
         if ($domain) {
@@ -321,6 +376,9 @@ class HostingAccountProvisioningService
             'ssl_active' => $account->ssl_status === 'active',
             'public_path' => $publicPath,
             'waf_enabled' => $account->waf_enabled ?? false,
+            'cache_enabled' => $account->cache_enabled ?? false,
+            'cache_version' => $account->cache_version ?? 1,
+            'http3_enabled' => $account->server->http3_enabled ?? false,
         ]);
 
         $account->update(['public_path' => $publicPath]);
@@ -342,6 +400,9 @@ class HostingAccountProvisioningService
             'ssl_active' => $domain->ssl_status === 'active',
             'public_path' => $publicPath,
             'waf_enabled' => $domain->waf_enabled ?? false,
+            'cache_enabled' => $domain->cache_enabled ?? false,
+            'cache_version' => $domain->cache_version ?? 1,
+            'http3_enabled' => $account->server->http3_enabled ?? false,
         ]);
 
         $domain->update(['public_path' => $publicPath]);
@@ -364,6 +425,9 @@ class HostingAccountProvisioningService
             'ssl_active' => ($domain ? $domain->ssl_status : $account->ssl_status) === 'active',
             'public_path' => $domain ? $domain->public_path : $account->public_path,
             'waf_enabled' => $enabled,
+            'cache_enabled' => ($domain ? $domain->cache_enabled : $account->cache_enabled) ?? false,
+            'cache_version' => ($domain ? $domain->cache_version : $account->cache_version) ?? 1,
+            'http3_enabled' => $account->server->http3_enabled ?? false,
         ]);
 
         if ($domain) {
@@ -371,6 +435,59 @@ class HostingAccountProvisioningService
         } else {
             $account->update(['waf_enabled' => $enabled]);
         }
+    }
+
+    /**
+     * Cache de página (fastcgi_cache, ver seção 49 do deploy/README.md
+     * do Agent) — liga/desliga pra um domínio específico, mesmo molde
+     * de updateWafEnabled() (reescreve o vhost preservando o resto).
+     * $domain null = domínio principal da conta.
+     */
+    public function updateCacheEnabled(HostingAccount $account, ?Domain $domain, bool $enabled): void
+    {
+        $this->syncVhostCache($account, $domain, $enabled, ($domain ? $domain->cache_version : $account->cache_version) ?? 1);
+
+        if ($domain) {
+            $domain->update(['cache_enabled' => $enabled]);
+        } else {
+            $account->update(['cache_enabled' => $enabled]);
+        }
+    }
+
+    /**
+     * "Purgar" não apaga nada do disco — incrementa cache_version (que
+     * está embutida na própria fastcgi_cache_key do vhost) e reescreve
+     * o vhost. As entradas da versão anterior ficam órfãs, recicladas
+     * sozinhas pelo cache manager do nginx (inactive/max_size).
+     */
+    public function purgeCache(HostingAccount $account, ?Domain $domain): void
+    {
+        $newVersion = (($domain ? $domain->cache_version : $account->cache_version) ?? 1) + 1;
+
+        $this->syncVhostCache($account, $domain, ($domain ? $domain->cache_enabled : $account->cache_enabled) ?? false, $newVersion);
+
+        if ($domain) {
+            $domain->update(['cache_version' => $newVersion]);
+        } else {
+            $account->update(['cache_version' => $newVersion]);
+        }
+    }
+
+    private function syncVhostCache(HostingAccount $account, ?Domain $domain, bool $cacheEnabled, int $cacheVersion): void
+    {
+        $this->runStep($account->server, 'web.update_document_root', [
+            'username' => $account->linux_username,
+            'domain' => $domain ? $domain->domain : $account->primary_domain,
+            'location' => $domain?->isOutsidePublicHtml() ? 'outside' : 'inside',
+            'subdir' => $domain?->subdirectory,
+            'php_version' => $domain ? $domain->php_version : $account->php_version,
+            'ssl_active' => ($domain ? $domain->ssl_status : $account->ssl_status) === 'active',
+            'public_path' => $domain ? $domain->public_path : $account->public_path,
+            'waf_enabled' => ($domain ? $domain->waf_enabled : $account->waf_enabled) ?? false,
+            'cache_enabled' => $cacheEnabled,
+            'cache_version' => $cacheVersion,
+            'http3_enabled' => $account->server->http3_enabled ?? false,
+        ]);
     }
 
     /**
@@ -509,6 +626,9 @@ class HostingAccountProvisioningService
                 'ssl_active' => $account->ssl_status === 'active',
                 'public_path' => $account->public_path,
                 'waf_enabled' => $account->waf_enabled ?? false,
+                'cache_enabled' => $account->cache_enabled ?? false,
+                'cache_version' => $account->cache_version ?? 1,
+                'http3_enabled' => $server->http3_enabled ?? false,
             ]);
             // Reescrever o vhost do zero (stub) apaga qualquer bloco
             // customizado injetado nele — reinjeta os que existirem.
@@ -532,6 +652,9 @@ class HostingAccountProvisioningService
                 'ssl_active' => $domain->ssl_status === 'active',
                 'public_path' => $domain->public_path,
                 'waf_enabled' => $domain->waf_enabled ?? false,
+                'cache_enabled' => $domain->cache_enabled ?? false,
+                'cache_version' => $domain->cache_version ?? 1,
+                'http3_enabled' => $server->http3_enabled ?? false,
             ]);
             $this->folderProtections->resyncIfNeeded($account, $domain->domain);
             $this->siteRedirects->resyncIfNeeded($account, $domain->domain);

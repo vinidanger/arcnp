@@ -12,6 +12,8 @@ use App\Domain\Hosting\Http\Controllers\Client\FtpAccountController;
 use App\Domain\Hosting\Http\Controllers\Client\HostedAppController;
 use App\Domain\Hosting\Http\Controllers\Client\HostingAccountController;
 use App\Domain\Hosting\Http\Controllers\Client\HotlinkProtectionController;
+use App\Domain\Hosting\Http\Controllers\Client\ImageOptimizationController;
+use App\Domain\Hosting\Http\Controllers\Client\RedisCacheController;
 use App\Domain\Hosting\Http\Controllers\Client\MimeTypeController;
 use App\Domain\Hosting\Http\Controllers\Client\MailDomainController;
 use App\Domain\Hosting\Http\Controllers\Client\MailLogController;
@@ -29,6 +31,14 @@ Route::post('hosting-accounts/{hosting_account}/waf', [HostingAccountController:
     ->name('hosting-accounts.waf.update');
 Route::post('hosting-accounts/{hosting_account}/domains/{domain}/waf', [HostingAccountController::class, 'updateDomainWaf'])
     ->name('hosting-accounts.domains.waf.update');
+Route::post('hosting-accounts/{hosting_account}/cache', [HostingAccountController::class, 'updateCache'])
+    ->name('hosting-accounts.cache.update');
+Route::post('hosting-accounts/{hosting_account}/domains/{domain}/cache', [HostingAccountController::class, 'updateDomainCache'])
+    ->name('hosting-accounts.domains.cache.update');
+Route::post('hosting-accounts/{hosting_account}/cache/purge', [HostingAccountController::class, 'purgeCache'])
+    ->name('hosting-accounts.cache.purge');
+Route::post('hosting-accounts/{hosting_account}/domains/{domain}/cache/purge', [HostingAccountController::class, 'purgeDomainCache'])
+    ->name('hosting-accounts.domains.cache.purge');
 Route::get('hosting-accounts/{hosting_account}/domains', [HostingAccountController::class, 'domainsIndex'])
     ->name('hosting-accounts.domains.index');
 Route::get('hosting-accounts/{hosting_account}/databases', [HostingAccountController::class, 'databasesIndex'])
@@ -235,6 +245,14 @@ Route::post('hosting-accounts/{hosting_account}/malware/restore', [MalwareScanCo
     ->name('hosting-accounts.malware.restore');
 Route::post('hosting-accounts/{hosting_account}/malware/ignore', [MalwareScanController::class, 'ignore'])
     ->name('hosting-accounts.malware.ignore');
+Route::get('hosting-accounts/{hosting_account}/image-optimization', [ImageOptimizationController::class, 'index'])
+    ->name('hosting-accounts.image-optimization.index');
+Route::post('hosting-accounts/{hosting_account}/image-optimization', [ImageOptimizationController::class, 'store'])
+    ->name('hosting-accounts.image-optimization.store');
+Route::get('hosting-accounts/{hosting_account}/redis', [RedisCacheController::class, 'index'])
+    ->name('hosting-accounts.redis.index');
+Route::post('hosting-accounts/{hosting_account}/redis/regenerate', [RedisCacheController::class, 'regenerate'])
+    ->name('hosting-accounts.redis.regenerate');
 
 Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
 Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');

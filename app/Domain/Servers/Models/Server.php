@@ -30,6 +30,7 @@ class Server extends Model
         'memory_mb',
         'disk_gb',
         'mysql_service_name',
+        'http3_enabled',
         'agent_status',
         'last_heartbeat_at',
         'load_avg',
@@ -51,6 +52,7 @@ class Server extends Model
             'ptr_matches_mail_hostname' => 'boolean',
             'ip_blacklisted' => 'boolean',
             'mail_health_checked_at' => 'datetime',
+            'http3_enabled' => 'boolean',
         ];
     }
 

@@ -36,7 +36,11 @@ class HostingAccount extends Model
         'ssh_password',
         'db_master_username',
         'db_master_password',
+        'redis_username',
+        'redis_password',
         'waf_enabled',
+        'cache_enabled',
+        'cache_version',
         'uptime_status',
         'uptime_checked_at',
         'uptime_consecutive_failures',
@@ -56,7 +60,9 @@ class HostingAccount extends Model
             'ssh_enabled' => 'boolean',
             'ssh_password' => 'encrypted',
             'db_master_password' => 'encrypted',
+            'redis_password' => 'encrypted',
             'waf_enabled' => 'boolean',
+            'cache_enabled' => 'boolean',
             'uptime_checked_at' => 'datetime',
             'uptime_down_since' => 'datetime',
             'uptime_alert_sent_at' => 'datetime',
@@ -96,6 +102,11 @@ class HostingAccount extends Model
     public function malwareScans(): HasMany
     {
         return $this->hasMany(MalwareScan::class)->latest();
+    }
+
+    public function imageOptimizations(): HasMany
+    {
+        return $this->hasMany(ImageOptimization::class)->latest();
     }
 
     public function malwareIgnoredFiles(): HasMany

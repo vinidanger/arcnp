@@ -242,6 +242,66 @@ class HostingAccountController extends Controller
         }
     }
 
+    public function updateCache(Request $request, HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        $data = $request->validate(['enabled' => ['required', 'boolean']]);
+
+        try {
+            $provisioning->updateCacheEnabled($hosting_account, null, $data['enabled']);
+
+            return back()->with('status', $data['enabled'] ? 'Cache ativado pro domínio principal.' : 'Cache desativado pro domínio principal.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao alterar o cache: '.$e->getMessage());
+        }
+    }
+
+    public function updateDomainCache(Request $request, HostingAccount $hosting_account, Domain $domain, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($domain->hosting_account_id === $hosting_account->id, 404);
+
+        $data = $request->validate(['enabled' => ['required', 'boolean']]);
+
+        try {
+            $provisioning->updateCacheEnabled($hosting_account, $domain, $data['enabled']);
+
+            return back()->with('status', $data['enabled'] ? "Cache ativado pra {$domain->domain}." : "Cache desativado pra {$domain->domain}.");
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao alterar o cache: '.$e->getMessage());
+        }
+    }
+
+    public function purgeCache(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        try {
+            $provisioning->purgeCache($hosting_account, null);
+
+            return back()->with('status', 'Cache do domínio principal limpo.');
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao limpar o cache: '.$e->getMessage());
+        }
+    }
+
+    public function purgeDomainCache(HostingAccount $hosting_account, Domain $domain, HostingAccountProvisioningService $provisioning)
+    {
+        $this->authorize('update', $hosting_account);
+
+        abort_unless($domain->hosting_account_id === $hosting_account->id, 404);
+
+        try {
+            $provisioning->purgeCache($hosting_account, $domain);
+
+            return back()->with('status', "Cache de {$domain->domain} limpo.");
+        } catch (Throwable $e) {
+            return back()->with('error', 'Falha ao limpar o cache: '.$e->getMessage());
+        }
+    }
+
     public function suspend(HostingAccount $hosting_account, HostingAccountProvisioningService $provisioning)
     {
         $this->authorize('update', $hosting_account);
